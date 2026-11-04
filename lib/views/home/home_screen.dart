@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
+import '../../data/models/user_model.dart';
 import '../../providers/auth_provider.dart';
 import '../widgets/app_app_bar.dart';
-import '../widgets/app_natural_footer.dart';
+import '../widgets/app_floating_glass_footer.dart';
 import '../games/common_player/common_player_screen.dart';
 import '../games/five_clubs/five_clubs_screen.dart';
 import '../games/football_grid/football_grid_screen.dart';
@@ -27,115 +28,133 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
     final user = auth.currentUser;
+    final bottomInset = MediaQuery.of(context).padding.bottom;
 
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: const AppTopBar(title: 'Futbol Trivia'),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // User Status Header Card
-              Container(
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: AppColors.surface,
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: AppColors.border),
-                ),
-                child: Row(
+        bottom: false,
+        child: Stack(
+          children: [
+            // Scrollable Content Layer
+            Positioned.fill(
+              child: SingleChildScrollView(
+                padding: EdgeInsets.fromLTRB(16, 8, 16, bottomInset + 100),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        color: AppColors.deepPurple,
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: AppColors.gold, width: 1.2),
-                      ),
-                      child: Center(
-                        child: Text(
-                          user?.avatar.isNotEmpty == true ? user!.avatar : 'KP',
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w800,
-                            color: AppColors.gold,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            user?.username ?? 'Kaptan',
-                            style: const TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w700,
-                              color: Colors.white,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            '${user?.favoriteTeam ?? "Galatasaray"} • ${user?.rankTitle ?? "Genc Yetenek"}',
-                            style: const TextStyle(
-                              fontSize: 11,
-                              color: AppColors.textMuted,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: AppColors.surfaceLight,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Row(
-                        children: [
-                          const Icon(Icons.star_outline, size: 14, color: AppColors.gold),
-                          const SizedBox(width: 4),
-                          Text(
-                            '${user?.points ?? 0} XP',
-                            style: const TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.gold,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                    // User Status Header Card
+                    _buildUserHeaderCard(user),
+
+                    const SizedBox(height: 18),
+
+                    // Modular Content based on _activeTab
+                    if (_activeTab == 0) ...[
+                      _buildGamesSection(context),
+                    ] else if (_activeTab == 1) ...[
+                      const LeaderboardScreen(isEmbedded: true),
+                    ] else ...[
+                      const ProfileScreen(isEmbedded: true),
+                    ],
                   ],
                 ),
               ),
+            ),
 
-              const SizedBox(height: 18),
-
-              // Modular Content based on _activeTab
-              if (_activeTab == 0) ...[
-                _buildGamesSection(context),
-              ] else if (_activeTab == 1) ...[
-                const LeaderboardScreen(isEmbedded: true),
-              ] else ...[
-                const ProfileScreen(isEmbedded: true),
-              ],
-
-              // Natural Flow Footer (Not fixed, sits at end of scroll flow)
-              AppNaturalFooter(
+            // Persistent Floating Glass Footer (Always visible, non-sticky floating island)
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: bottomInset > 0 ? bottomInset + 4 : 12,
+              child: AppFloatingGlassFooter(
                 activeIndex: _activeTab,
                 onTabSelected: (index) {
                   setState(() => _activeTab = index);
                 },
               ),
-            ],
-          ),
+            ),
+          ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildUserHeaderCard(UserModel? user) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: AppColors.deepPurple,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: AppColors.gold, width: 1.2),
+            ),
+            child: Center(
+              child: Text(
+                user?.avatar.isNotEmpty == true ? user!.avatar : 'KP',
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.gold,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  user?.username ?? 'Kaptan',
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  '${user?.favoriteTeam ?? "Galatasaray"} • ${user?.rankTitle ?? "Genc Yetenek"}',
+                  style: const TextStyle(
+                    fontSize: 11,
+                    color: AppColors.textMuted,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: AppColors.surfaceLight,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.star_outline, size: 14, color: AppColors.gold),
+                const SizedBox(width: 4),
+                Text(
+                  '${user?.points ?? 0} XP',
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.gold,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
