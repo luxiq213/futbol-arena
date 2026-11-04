@@ -177,7 +177,7 @@ class _LoginScreenState extends State<LoginScreen> {
               // LOGIN BUTTON
               CustomButton(
                 text: 'Giriş Yap',
-                backgroundColor: AppColors.deepPurple,
+                backgroundColor: AppColors.pitchGreen,
                 textColor: AppColors.textPrimary,
                 isLoading: auth.isLoading,
                 onPressed: _onLogin,

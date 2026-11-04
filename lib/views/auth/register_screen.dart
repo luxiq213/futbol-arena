@@ -212,9 +212,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         width: 48,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: isSelected ? AppColors.deepPurple : AppColors.surface,
+                          color: isSelected ? AppColors.darkGreen : AppColors.surface,
                           border: Border.all(
-                            color: isSelected ? AppColors.gold : AppColors.border,
+                            color: isSelected ? AppColors.pitchGreen : AppColors.border,
                             width: isSelected ? 2 : 1,
                           ),
                         ),
@@ -273,7 +273,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               // REGISTER BUTTON
               CustomButton(
                 text: 'Hesap Oluştur ve Başla',
-                backgroundColor: AppColors.deepPurple,
+                backgroundColor: AppColors.pitchGreen,
                 textColor: AppColors.textPrimary,
                 isLoading: auth.isLoading,
                 onPressed: _onRegister,

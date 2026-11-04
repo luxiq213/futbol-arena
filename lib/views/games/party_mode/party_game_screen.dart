@@ -89,7 +89,7 @@ class PartyGameScreen extends StatelessWidget {
                               width: 36,
                               height: 36,
                               decoration: BoxDecoration(
-                                color: AppColors.deepPurple,
+                                color: AppColors.pitchGreen,
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Center(
@@ -254,7 +254,7 @@ class PartyGameScreen extends StatelessWidget {
                             child: CustomButton(
                               text: 'Bildim',
                               icon: Icons.check,
-                              backgroundColor: AppColors.deepPurple,
+                              backgroundColor: AppColors.pitchGreen,
                               textColor: Colors.white,
                               height: 48,
                               onPressed: () => provider.playerKnew(),
@@ -306,7 +306,7 @@ class PartyGameScreen extends StatelessWidget {
                                 child: CustomButton(
                                   text: 'Siradaki Tur',
                                   icon: Icons.arrow_forward,
-                                  backgroundColor: AppColors.deepPurple,
+                                  backgroundColor: AppColors.pitchGreen,
                                   textColor: Colors.white,
                                   height: 44,
                                   onPressed: () => provider.continueNextTurn(),

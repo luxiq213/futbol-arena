@@ -63,7 +63,7 @@ class CustomButton extends StatelessWidget {
       );
     }
 
-    final bg = backgroundColor ?? AppColors.deepPurple;
+    final bg = backgroundColor ?? AppColors.pitchGreen;
 
     return Container(
       height: height,
@@ -71,7 +71,7 @@ class CustomButton extends StatelessWidget {
         color: onPressed == null ? AppColors.surfaceLight : bg,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: onPressed == null ? Colors.transparent : AppColors.borderPurple,
+          color: onPressed == null ? Colors.transparent : AppColors.borderGreen,
           width: 1.0,
         ),
       ),

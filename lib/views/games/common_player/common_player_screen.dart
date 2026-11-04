@@ -137,7 +137,7 @@ class CommonPlayerScreen extends StatelessWidget {
                                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                                   decoration: BoxDecoration(
                                     color: game.isAllFound
-                                        ? AppColors.deepPurple
+                                        ? AppColors.pitchGreen
                                         : AppColors.surfaceLight,
                                     borderRadius: BorderRadius.circular(8),
                                   ),
@@ -164,12 +164,12 @@ class CommonPlayerScreen extends StatelessWidget {
                               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                               decoration: BoxDecoration(
                                 color: game.isSuccessFeedback
-                                    ? AppColors.deepPurple.withValues(alpha: 0.3)
+                                    ? AppColors.pitchGreen.withValues(alpha: 0.3)
                                     : AppColors.error.withValues(alpha: 0.15),
                                 borderRadius: BorderRadius.circular(10),
                                 border: Border.all(
                                   color: game.isSuccessFeedback
-                                      ? AppColors.deepPurple
+                                      ? AppColors.pitchGreen
                                       : AppColors.error,
                                 ),
                               ),
@@ -260,7 +260,7 @@ class CommonPlayerScreen extends StatelessWidget {
                                           width: 32,
                                           height: 32,
                                           decoration: BoxDecoration(
-                                            color: AppColors.deepPurple,
+                                            color: AppColors.pitchGreen,
                                             borderRadius: BorderRadius.circular(6),
                                           ),
                                           child: const Center(
@@ -366,7 +366,7 @@ class CommonPlayerScreen extends StatelessWidget {
                           child: CustomButton(
                             text: game.isAllFound ? 'Sonraki Tur' : 'Cevaplari Gör',
                             height: 44,
-                            backgroundColor: AppColors.deepPurple,
+                            backgroundColor: AppColors.pitchGreen,
                             textColor: Colors.white,
                             icon: game.isAllFound ? Icons.arrow_forward : Icons.visibility_outlined,
                             onPressed: () {

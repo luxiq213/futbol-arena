@@ -29,7 +29,7 @@ class ActiveRoomScreen extends StatelessWidget {
                 const SizedBox(height: 12),
                 ElevatedButton(
                   onPressed: () => Navigator.pop(context),
-                  style: ElevatedButton.styleFrom(backgroundColor: AppColors.deepPurple),
+                  style: ElevatedButton.styleFrom(backgroundColor: AppColors.pitchGreen),
                   child: const Text('Geri Dön', style: TextStyle(color: Colors.white)),
                 ),
               ],
@@ -177,7 +177,7 @@ class ActiveRoomScreen extends StatelessWidget {
                             height: 38,
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
-                              color: AppColors.deepPurple,
+                              color: AppColors.pitchGreen,
                               border: Border.all(color: AppColors.borderActive),
                             ),
                             child: Center(
@@ -258,7 +258,7 @@ class ActiveRoomScreen extends StatelessWidget {
               if (isHost) ...[
                 CustomButton(
                   text: 'Düelloyu Başlat',
-                  backgroundColor: AppColors.deepPurple,
+                  backgroundColor: AppColors.pitchGreen,
                   textColor: AppColors.textPrimary,
                   height: 52,
                   onPressed: () {
@@ -271,7 +271,7 @@ class ActiveRoomScreen extends StatelessWidget {
               ] else ...[
                 CustomButton(
                   text: myParticipant.isReady ? 'Hazır Durumu İptal Et' : 'Hazırım',
-                  backgroundColor: myParticipant.isReady ? AppColors.surfaceLight : AppColors.deepPurple,
+                  backgroundColor: myParticipant.isReady ? AppColors.surfaceLight : AppColors.pitchGreen,
                   textColor: AppColors.textPrimary,
                   height: 52,
                   onPressed: () {

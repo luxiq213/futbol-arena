@@ -5,7 +5,8 @@ import 'package:futbol_party/views/home/home_screen.dart';
 void main() {
   testWidgets('FutbolPartyApp smoke test and home render', (WidgetTester tester) async {
     await tester.pumpWidget(const FutbolPartyApp());
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 200));
 
     // Verify HomeScreen is rendered
     expect(find.byType(HomeScreen), findsOneWidget);

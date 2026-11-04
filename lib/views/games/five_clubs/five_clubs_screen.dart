@@ -205,9 +205,9 @@ class FiveClubsScreen extends StatelessWidget {
                         Container(
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: AppColors.deepPurple.withValues(alpha: 0.3),
+                            color: AppColors.pitchGreen.withValues(alpha: 0.3),
                             borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: AppColors.borderPurple),
+                            border: Border.all(color: AppColors.borderGreen),
                           ),
                           child: Text(
                             game.feedback!,
@@ -274,7 +274,7 @@ class FiveClubsScreen extends StatelessWidget {
                       CustomButton(
                         text: 'Sonraki 5 Kulüp',
                         icon: Icons.arrow_forward,
-                        backgroundColor: AppColors.deepPurple,
+                        backgroundColor: AppColors.pitchGreen,
                         textColor: Colors.white,
                         onPressed: () {
                           context.read<AuthProvider>().addPoints(game.userScore * 100);
@@ -342,7 +342,7 @@ class FiveClubsScreen extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
               color: isWinner
-                  ? AppColors.deepPurple
+                  ? AppColors.pitchGreen
                   : AppColors.surfaceLight,
               borderRadius: BorderRadius.circular(6),
             ),

@@ -59,8 +59,9 @@ class AppTopBar extends StatelessWidget implements PreferredSizeWidget {
                     width: 22,
                     height: 22,
                     decoration: BoxDecoration(
-                      color: AppColors.deepPurple,
+                      color: AppColors.darkGreen,
                       borderRadius: BorderRadius.circular(5),
+                      border: Border.all(color: AppColors.pitchGreen, width: 0.8),
                     ),
                     child: Center(
                       child: Text(
@@ -68,7 +69,7 @@ class AppTopBar extends StatelessWidget implements PreferredSizeWidget {
                         style: const TextStyle(
                           fontSize: 9,
                           fontWeight: FontWeight.w700,
-                          color: Colors.white,
+                          color: AppColors.greenLight,
                         ),
                       ),
                     ),

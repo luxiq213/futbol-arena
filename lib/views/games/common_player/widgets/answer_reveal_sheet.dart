@@ -77,7 +77,7 @@ class AnswerRevealSheet extends StatelessWidget {
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     color: isFound
-                        ? AppColors.deepPurple.withValues(alpha: 0.25)
+                        ? AppColors.pitchGreen.withValues(alpha: 0.25)
                         : AppColors.surfaceLight,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
@@ -92,7 +92,7 @@ class AnswerRevealSheet extends StatelessWidget {
                         height: 32,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: isFound ? AppColors.deepPurple : AppColors.surface,
+                          color: isFound ? AppColors.pitchGreen : AppColors.surface,
                         ),
                         child: Center(
                           child: Icon(

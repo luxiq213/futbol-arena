@@ -5,6 +5,7 @@ import '../../data/models/user_model.dart';
 import '../../providers/auth_provider.dart';
 import '../widgets/app_app_bar.dart';
 import '../widgets/app_floating_glass_footer.dart';
+import '../widgets/stadium_background.dart';
 import '../games/common_player/common_player_screen.dart';
 import '../games/five_clubs/five_clubs_screen.dart';
 import '../games/football_grid/football_grid_screen.dart';
@@ -33,21 +34,21 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: const AppTopBar(title: 'Futbol Trivia'),
-      body: SafeArea(
-        bottom: false,
+      body: StadiumBackground(
+        showGrass: true,
         child: Stack(
           children: [
             // Scrollable Content Layer
             Positioned.fill(
               child: SingleChildScrollView(
-                padding: EdgeInsets.fromLTRB(16, 8, 16, bottomInset + 100),
+                padding: EdgeInsets.fromLTRB(14, 6, 14, bottomInset + 80),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    // User Status Header Card
+                    // Compact User Status Header Card
                     _buildUserHeaderCard(user),
 
-                    const SizedBox(height: 18),
+                    const SizedBox(height: 10),
 
                     // Modular Content based on _activeTab
                     if (_activeTab == 0) ...[
@@ -62,11 +63,11 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
 
-            // Persistent Floating Glass Footer (Always visible, non-sticky floating island)
+            // Persistent Colorless Floating Glass Footer
             Positioned(
               left: 0,
               right: 0,
-              bottom: bottomInset > 0 ? bottomInset + 4 : 12,
+              bottom: bottomInset > 0 ? bottomInset + 2 : 8,
               child: AppFloatingGlassFooter(
                 activeIndex: _activeTab,
                 onTabSelected: (index) {
@@ -82,51 +83,54 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildUserHeaderCard(UserModel? user) {
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
       decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.border),
+        color: AppColors.surface.withValues(alpha: 0.85),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: AppColors.borderGreen.withValues(alpha: 0.3),
+          width: 0.8,
+        ),
       ),
       child: Row(
         children: [
           Container(
-            width: 44,
-            height: 44,
+            width: 32,
+            height: 32,
             decoration: BoxDecoration(
-              color: AppColors.deepPurple,
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: AppColors.gold, width: 1.2),
+              color: AppColors.darkGreen,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: AppColors.pitchGreen, width: 1.0),
             ),
             child: Center(
               child: Text(
                 user?.avatar.isNotEmpty == true ? user!.avatar : 'KP',
                 style: const TextStyle(
-                  fontSize: 16,
+                  fontSize: 12,
                   fontWeight: FontWeight.w800,
-                  color: AppColors.gold,
+                  color: AppColors.greenLight,
                 ),
               ),
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 9),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
                   user?.username ?? 'Kaptan',
                   style: const TextStyle(
-                    fontSize: 15,
+                    fontSize: 13,
                     fontWeight: FontWeight.w700,
                     color: Colors.white,
                   ),
                 ),
-                const SizedBox(height: 2),
                 Text(
                   '${user?.favoriteTeam ?? "Galatasaray"} • ${user?.rankTitle ?? "Genc Yetenek"}',
                   style: const TextStyle(
-                    fontSize: 11,
+                    fontSize: 10,
                     color: AppColors.textMuted,
                   ),
                 ),
@@ -134,19 +138,21 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
             decoration: BoxDecoration(
               color: AppColors.surfaceLight,
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(6),
+              border: Border.all(color: AppColors.border),
             ),
             child: Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.star_outline, size: 14, color: AppColors.gold),
-                const SizedBox(width: 4),
+                const Icon(Icons.star_outline, size: 12, color: AppColors.gold),
+                const SizedBox(width: 3),
                 Text(
                   '${user?.points ?? 0} XP',
                   style: const TextStyle(
-                    fontSize: 12,
+                    fontSize: 10.5,
                     fontWeight: FontWeight.w700,
                     color: AppColors.gold,
                   ),
@@ -167,13 +173,13 @@ class _HomeScreenState extends State<HomeScreen> {
         const Text(
           'OYUN MODLARI',
           style: TextStyle(
-            fontSize: 11,
+            fontSize: 10,
             fontWeight: FontWeight.w800,
-            letterSpacing: 1.0,
-            color: AppColors.gold,
+            letterSpacing: 0.8,
+            color: AppColors.pitchGreen,
           ),
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 6),
 
         // Mode 1: Ortak Oyuncu Düellosu (3-2-1)
         GameModeCard(
@@ -181,7 +187,7 @@ class _HomeScreenState extends State<HomeScreen> {
           subtitle: 'Iki dev kulüp armasini gör, her iki takimda oynamis efsaneyi bul.',
           icon: Icons.compare_arrows_rounded,
           tag: 'KLASİK DÜELLO',
-          tagColor: AppColors.gold,
+          tagColor: AppColors.pitchGreen,
           onTap: () {
             Navigator.push(
               context,
@@ -196,7 +202,7 @@ class _HomeScreenState extends State<HomeScreen> {
           subtitle: 'Ekrana gelen 5 kulübün en cogunda forma giymis futbolcuyu tespit et.',
           icon: Icons.shield_outlined,
           tag: 'REKOR ANALİZİ',
-          tagColor: AppColors.silver,
+          tagColor: AppColors.greenLight,
           onTap: () {
             Navigator.push(
               context,
@@ -226,7 +232,7 @@ class _HomeScreenState extends State<HomeScreen> {
           subtitle: 'Masada arkadaslarinla elden ele oynayin. Süre bitmeden ortak oyuncuyu söyle!',
           icon: Icons.alarm_outlined,
           tag: 'PARTİ MODU',
-          tagColor: AppColors.lavender,
+          tagColor: AppColors.silver,
           onTap: () {
             Navigator.push(
               context,
@@ -241,7 +247,7 @@ class _HomeScreenState extends State<HomeScreen> {
           subtitle: '6 haneli oda kodu olustur, uzaktaki arkadaslarinla ayni anda yaris.',
           icon: Icons.cell_tower_outlined,
           tag: 'ÇOK OYUNCULU',
-          tagColor: AppColors.silver,
+          tagColor: AppColors.pitchGreen,
           onTap: () {
             Navigator.push(
               context,

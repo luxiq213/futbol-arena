@@ -64,7 +64,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('Profil güncellendi.'),
-        backgroundColor: AppColors.deepPurple,
+        backgroundColor: AppColors.pitchGreen,
       ),
     );
   }
@@ -99,9 +99,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 width: 64,
                 height: 64,
                 decoration: BoxDecoration(
-                  color: AppColors.deepPurple,
+                  color: AppColors.darkGreen,
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: AppColors.gold, width: 1.5),
+                  border: Border.all(color: AppColors.pitchGreen, width: 1.5),
                 ),
                 child: Center(
                   child: Text(
@@ -211,10 +211,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   margin: const EdgeInsets.symmetric(horizontal: 2),
                   padding: const EdgeInsets.symmetric(vertical: 8),
                   decoration: BoxDecoration(
-                    color: isSelected ? AppColors.deepPurple : AppColors.surface,
+                    color: isSelected ? AppColors.darkGreen : AppColors.surface,
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
-                      color: isSelected ? AppColors.gold : AppColors.border,
+                      color: isSelected ? AppColors.pitchGreen : AppColors.border,
                     ),
                   ),
                   child: Center(
@@ -272,7 +272,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         CustomButton(
           text: 'Degisiklikleri Kaydet',
           icon: Icons.check,
-          backgroundColor: AppColors.deepPurple,
+          backgroundColor: AppColors.pitchGreen,
           textColor: Colors.white,
           onPressed: _saveProfile,
         ),

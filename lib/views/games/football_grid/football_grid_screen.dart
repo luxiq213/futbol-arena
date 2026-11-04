@@ -116,9 +116,9 @@ class FootballGridScreen extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                         margin: const EdgeInsets.only(bottom: 12),
                         decoration: BoxDecoration(
-                          color: AppColors.deepPurple.withValues(alpha: 0.3),
+                          color: AppColors.pitchGreen.withValues(alpha: 0.3),
                           borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: AppColors.borderPurple),
+                          border: Border.all(color: AppColors.borderGreen),
                         ),
                         child: Text(
                           grid.feedback!,
@@ -310,7 +310,7 @@ class FootballGridScreen extends StatelessWidget {
                       padding: const EdgeInsets.all(6),
                       decoration: BoxDecoration(
                         color: cell.isSolved
-                            ? AppColors.deepPurple.withValues(alpha: 0.35)
+                            ? AppColors.pitchGreen.withValues(alpha: 0.35)
                             : (isSelected ? AppColors.surfaceLight : AppColors.surface),
                         borderRadius: BorderRadius.circular(10),
                         border: Border.all(

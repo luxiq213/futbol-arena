@@ -7,9 +7,9 @@ class AppTheme {
     return ThemeData(
       brightness: Brightness.dark,
       scaffoldBackgroundColor: AppColors.background,
-      primaryColor: AppColors.deepPurple,
+      primaryColor: AppColors.pitchGreen,
       colorScheme: const ColorScheme.dark(
-        primary: AppColors.deepPurple,
+        primary: AppColors.pitchGreen,
         secondary: AppColors.gold,
         surface: AppColors.surface,
         error: AppColors.error,
@@ -82,7 +82,7 @@ class AppTheme {
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.deepPurple,
+          backgroundColor: AppColors.pitchGreen,
           foregroundColor: Colors.white,
           elevation: 0,
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),

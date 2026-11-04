@@ -79,7 +79,7 @@ class _SearchGuessBarState extends State<SearchGuessBar> {
               height: 48,
               width: 48,
               decoration: BoxDecoration(
-                color: AppColors.deepPurple,
+                color: AppColors.pitchGreen,
                 borderRadius: BorderRadius.circular(14),
                 border: Border.all(color: AppColors.border),
               ),

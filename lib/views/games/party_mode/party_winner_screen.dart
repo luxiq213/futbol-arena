@@ -153,7 +153,7 @@ class PartyWinnerScreen extends StatelessWidget {
               CustomButton(
                 text: 'Yeniden Baslat',
                 icon: Icons.refresh,
-                backgroundColor: AppColors.deepPurple,
+                backgroundColor: AppColors.pitchGreen,
                 textColor: Colors.white,
                 onPressed: () {
                   provider.startGame();

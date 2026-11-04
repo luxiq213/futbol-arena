@@ -16,46 +16,30 @@ class AppFloatingGlassFooter extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+      margin: const EdgeInsets.fromLTRB(16, 0, 16, 10),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(26),
+        borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.40),
-            blurRadius: 24,
-            offset: const Offset(0, 10),
-            spreadRadius: 0,
-          ),
-          BoxShadow(
-            color: AppColors.deepPurple.withValues(alpha: 0.18),
-            blurRadius: 18,
-            offset: const Offset(0, 4),
+            color: Colors.black.withValues(alpha: 0.45),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(26),
+        borderRadius: BorderRadius.circular(24),
         child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+          filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
             decoration: BoxDecoration(
-              // Translucent frosted glass effect
-              color: AppColors.surface.withValues(alpha: 0.58),
-              borderRadius: BorderRadius.circular(26),
+              // Neutral, colorless dark smoked glass
+              color: const Color(0xFF0C1322).withValues(alpha: 0.68),
+              borderRadius: BorderRadius.circular(24),
               border: Border.all(
-                color: Colors.white.withValues(alpha: 0.16),
-                width: 1.2,
-              ),
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Colors.white.withValues(alpha: 0.12),
-                  Colors.white.withValues(alpha: 0.02),
-                  AppColors.deepPurple.withValues(alpha: 0.15),
-                ],
-                stops: const [0.0, 0.45, 1.0],
+                color: Colors.white.withValues(alpha: 0.12),
+                width: 1.0,
               ),
             ),
             child: Row(
@@ -69,7 +53,7 @@ class AppFloatingGlassFooter extends StatelessWidget {
                     isActive: activeIndex == 0,
                   ),
                 ),
-                const SizedBox(width: 6),
+                const SizedBox(width: 4),
                 // 2. Sıralama
                 Expanded(
                   child: _buildGlassTabItem(
@@ -79,7 +63,7 @@ class AppFloatingGlassFooter extends StatelessWidget {
                     isActive: activeIndex == 1,
                   ),
                 ),
-                const SizedBox(width: 6),
+                const SizedBox(width: 4),
                 // 3. Profil
                 Expanded(
                   child: _buildGlassTabItem(
@@ -106,54 +90,61 @@ class AppFloatingGlassFooter extends StatelessWidget {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(18),
         onTap: () {
           GameFeedback.tick();
           onTabSelected(index);
         },
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 220),
+          duration: const Duration(milliseconds: 180),
           curve: Curves.easeInOut,
-          padding: const EdgeInsets.symmetric(vertical: 8),
+          padding: const EdgeInsets.symmetric(vertical: 7),
           decoration: BoxDecoration(
+            // Colorless frosted capsule for active tab
             color: isActive
-                ? AppColors.deepPurple.withValues(alpha: 0.65)
+                ? Colors.white.withValues(alpha: 0.10)
                 : Colors.transparent,
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(18),
             border: Border.all(
               color: isActive
-                  ? AppColors.gold.withValues(alpha: 0.55)
+                  ? Colors.white.withValues(alpha: 0.20)
                   : Colors.transparent,
               width: 1.0,
             ),
-            boxShadow: isActive
-                ? [
-                    BoxShadow(
-                      color: AppColors.gold.withValues(alpha: 0.15),
-                      blurRadius: 10,
-                      offset: const Offset(0, 2),
-                    ),
-                  ]
-                : null,
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(
                 icon,
-                color: isActive ? AppColors.gold : AppColors.silver.withValues(alpha: 0.7),
-                size: 20,
+                color: isActive
+                    ? Colors.white
+                    : const Color(0xFF94A3B8).withValues(alpha: 0.65),
+                size: 19,
               ),
-              const SizedBox(height: 3),
+              const SizedBox(height: 2),
               Text(
                 label,
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
-                  color: isActive ? AppColors.gold : AppColors.silver.withValues(alpha: 0.7),
+                  color: isActive
+                      ? Colors.white
+                      : const Color(0xFF94A3B8).withValues(alpha: 0.65),
                   letterSpacing: 0.2,
                 ),
               ),
+              if (isActive) ...[
+                const SizedBox(height: 2),
+                Container(
+                  width: 12,
+                  height: 2,
+                  decoration: BoxDecoration(
+                    color: AppColors.pitchGreen,
+                    borderRadius: BorderRadius.circular(1),
+                  ),
+                ),
+              ],
             ],
           ),
         ),

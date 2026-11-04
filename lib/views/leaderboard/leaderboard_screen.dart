@@ -49,7 +49,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                   child: Container(
                     padding: const EdgeInsets.symmetric(vertical: 8),
                     decoration: BoxDecoration(
-                      color: !lbProvider.isFriendsTab ? AppColors.deepPurple : Colors.transparent,
+                      color: !lbProvider.isFriendsTab ? AppColors.darkGreen : Colors.transparent,
                       borderRadius: BorderRadius.circular(9),
                     ),
                     child: Center(
@@ -82,7 +82,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                   child: Container(
                     padding: const EdgeInsets.symmetric(vertical: 8),
                     decoration: BoxDecoration(
-                      color: lbProvider.isFriendsTab ? AppColors.deepPurple : Colors.transparent,
+                      color: lbProvider.isFriendsTab ? AppColors.darkGreen : Colors.transparent,
                       borderRadius: BorderRadius.circular(9),
                     ),
                     child: Center(
@@ -130,7 +130,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               decoration: BoxDecoration(
                 color: item.isCurrentUser
-                    ? AppColors.deepPurple.withValues(alpha: 0.25)
+                    ? AppColors.darkGreen.withValues(alpha: 0.35)
                     : AppColors.surface,
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(

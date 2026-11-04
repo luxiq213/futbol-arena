@@ -16,7 +16,7 @@ class GameModeCard extends StatelessWidget {
     required this.subtitle,
     required this.icon,
     required this.tag,
-    this.tagColor = AppColors.gold,
+    this.tagColor = AppColors.pitchGreen,
     required this.onTap,
     this.isComingSoon = false,
   });
@@ -24,92 +24,113 @@ class GameModeCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: const EdgeInsets.only(bottom: 7),
       decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(16),
+        color: AppColors.surface.withValues(alpha: 0.85),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: isComingSoon ? AppColors.border : AppColors.borderPurple,
+          color: isComingSoon
+              ? AppColors.border
+              : AppColors.borderGreen.withValues(alpha: 0.25),
           width: 1.0,
         ),
       ),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(12),
           onTap: onTap,
           child: Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
             child: Row(
               children: [
-                // Clean Icon Box
+                // Compact Icon Box
                 Container(
-                  width: 46,
-                  height: 46,
+                  width: 36,
+                  height: 36,
                   decoration: BoxDecoration(
                     color: AppColors.surfaceLight,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppColors.border),
+                    borderRadius: BorderRadius.circular(9),
+                    border: Border.all(
+                      color: AppColors.border,
+                      width: 0.8,
+                    ),
                   ),
                   child: Center(
                     child: Icon(
                       icon,
                       color: tagColor,
-                      size: 22,
+                      size: 18,
                     ),
                   ),
                 ),
-                const SizedBox(width: 14),
-                // Text Information
+                const SizedBox(width: 10),
+
+                // Text Information (Title + Subtitle + Tag)
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       Row(
                         children: [
+                          Expanded(
+                            child: Text(
+                              title,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.white,
+                                letterSpacing: -0.2,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 6),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
                             decoration: BoxDecoration(
-                              color: tagColor.withValues(alpha: 0.15),
+                              color: tagColor.withValues(alpha: 0.12),
                               borderRadius: BorderRadius.circular(4),
+                              border: Border.all(
+                                color: tagColor.withValues(alpha: 0.35),
+                                width: 0.6,
+                              ),
                             ),
                             child: Text(
                               tag,
                               style: TextStyle(
                                 color: tagColor,
-                                fontSize: 9,
+                                fontSize: 8,
                                 fontWeight: FontWeight.w700,
-                                letterSpacing: 0.6,
+                                letterSpacing: 0.4,
                               ),
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 5),
-                      Text(
-                        title,
-                        style: const TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white,
-                        ),
-                      ),
                       const SizedBox(height: 2),
                       Text(
                         subtitle,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
-                          fontSize: 12,
+                          fontSize: 10.5,
                           color: AppColors.textSecondary,
-                          height: 1.3,
                         ),
                       ),
                     ],
                   ),
                 ),
-                Icon(
-                  isComingSoon ? Icons.lock_outline : Icons.chevron_right,
-                  color: isComingSoon ? AppColors.textMuted : AppColors.textSecondary,
-                  size: 20,
+
+                const SizedBox(width: 6),
+
+                // Compact Trailing Arrow
+                const Icon(
+                  Icons.chevron_right,
+                  color: AppColors.textMuted,
+                  size: 16,
                 ),
               ],
             ),

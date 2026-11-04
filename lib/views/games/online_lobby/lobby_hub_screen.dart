@@ -147,7 +147,7 @@ class _LobbyHubScreenState extends State<LobbyHubScreen> {
                     CustomButton(
                       text: 'Yeni Oda Kur',
                       icon: Icons.add_circle_outline,
-                      backgroundColor: AppColors.deepPurple,
+                      backgroundColor: AppColors.pitchGreen,
                       textColor: Colors.white,
                       isLoading: roomProvider.isCreatingRoom,
                       onPressed: _onCreateRoom,

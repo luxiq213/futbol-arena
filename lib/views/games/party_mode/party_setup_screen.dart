@@ -113,7 +113,7 @@ class _PartySetupScreenState extends State<PartySetupScreen> {
                               margin: const EdgeInsets.symmetric(horizontal: 4),
                               padding: const EdgeInsets.symmetric(vertical: 10),
                               decoration: BoxDecoration(
-                                color: isSelected ? AppColors.deepPurple : AppColors.surface,
+                                color: isSelected ? AppColors.pitchGreen : AppColors.surface,
                                 borderRadius: BorderRadius.circular(10),
                                 border: Border.all(
                                   color: isSelected ? AppColors.gold : AppColors.border,
@@ -237,7 +237,7 @@ class _PartySetupScreenState extends State<PartySetupScreen> {
                           height: 44,
                           width: 44,
                           decoration: BoxDecoration(
-                            color: AppColors.deepPurple,
+                            color: AppColors.pitchGreen,
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(color: AppColors.border),
                           ),
@@ -324,7 +324,7 @@ class _PartySetupScreenState extends State<PartySetupScreen> {
                     CustomButton(
                       text: 'Düelloyu Baslat',
                       icon: Icons.play_arrow_outlined,
-                      backgroundColor: AppColors.deepPurple,
+                      backgroundColor: AppColors.pitchGreen,
                       textColor: Colors.white,
                       height: 48,
                       onPressed: () {
