@@ -1,5 +1,12 @@
 import 'package:flutter/material.dart';
 
+enum BadgePattern {
+  stripesVertical, // Fenerbahçe, Beşiktaş, Barcelona, Juventus, Milan, Inter, Atletico
+  halves,          // Galatasaray, Monaco
+  diagonalSash,    // Trabzonspor, Porto
+  solidWithTrim,   // Real Madrid, Chelsea, Liverpool, Bayern, Dortmund, PSG, Arsenal, Man City
+}
+
 class ClubModel {
   final String id;
   final String name;
@@ -8,7 +15,8 @@ class ClubModel {
   final String league;
   final Color primaryColor;
   final Color secondaryColor;
-  final String badgeText;
+  final Color? accentColor;
+  final BadgePattern pattern;
 
   const ClubModel({
     required this.id,
@@ -18,7 +26,8 @@ class ClubModel {
     required this.league,
     required this.primaryColor,
     required this.secondaryColor,
-    required this.badgeText,
+    this.accentColor,
+    this.pattern = BadgePattern.solidWithTrim,
   });
 
   Map<String, dynamic> toJson() => {
@@ -27,6 +36,6 @@ class ClubModel {
     'shortName': shortName,
     'country': country,
     'league': league,
-    'badgeText': badgeText,
+    'pattern': pattern.name,
   };
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../data/models/club_model.dart';
+import '../../../widgets/club_crest_widget.dart';
 
 class ClubCard extends StatelessWidget {
   final ClubModel club;
@@ -15,18 +16,18 @@ class ClubCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.all(isCompact ? 12 : 16),
+      padding: EdgeInsets.all(isCompact ? 10 : 16),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(22),
         border: Border.all(
-          color: club.primaryColor.withOpacity(0.6),
-          width: 2,
+          color: club.primaryColor.withValues(alpha: 0.5),
+          width: 1.5,
         ),
         boxShadow: [
           BoxShadow(
-            color: club.primaryColor.withOpacity(0.18),
-            blurRadius: 18,
+            color: club.primaryColor.withValues(alpha: 0.15),
+            blurRadius: 16,
             offset: const Offset(0, 4),
           ),
         ],
@@ -34,27 +35,14 @@ class ClubCard extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Club Badge / Emoji
-          Container(
-            width: isCompact ? 54 : 68,
-            height: isCompact ? 54 : 68,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: LinearGradient(
-                colors: [club.primaryColor, club.secondaryColor],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              border: Border.all(color: Colors.white24, width: 2),
-            ),
-            child: Center(
-              child: Text(
-                club.badgeText,
-                style: TextStyle(fontSize: isCompact ? 22 : 28),
-              ),
-            ),
+          // Geometric Shield Crest
+          ClubCrestWidget(
+            club: club,
+            size: isCompact ? 50 : 66,
           ),
-          const SizedBox(height: 10),
+
+          SizedBox(height: isCompact ? 8 : 12),
+
           // Club Name
           Text(
             club.name,
@@ -62,12 +50,13 @@ class ClubCard extends StatelessWidget {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
-              fontSize: isCompact ? 14 : 17,
+              fontSize: isCompact ? 13 : 16,
               fontWeight: FontWeight.w800,
               color: AppColors.textPrimary,
             ),
           ),
           const SizedBox(height: 4),
+
           // League & Country pill
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
