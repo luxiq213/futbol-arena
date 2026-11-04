@@ -25,11 +25,12 @@ class ActiveRoomScreen extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text('Oda bulunamadı'),
+                const Text('Oda bulunamadı', style: TextStyle(color: AppColors.textPrimary)),
                 const SizedBox(height: 12),
                 ElevatedButton(
                   onPressed: () => Navigator.pop(context),
-                  child: const Text('Geri Dön'),
+                  style: ElevatedButton.styleFrom(backgroundColor: AppColors.deepPurple),
+                  child: const Text('Geri Dön', style: TextStyle(color: Colors.white)),
                 ),
               ],
             ),
@@ -50,11 +51,12 @@ class ActiveRoomScreen extends StatelessWidget {
         elevation: 0,
         title: Text(
           room.gameTitle,
-          style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 17),
+          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.exit_to_app, color: AppColors.crimson),
+            icon: const Icon(Icons.exit_to_app, color: AppColors.error),
+            tooltip: 'Odadan Ayrıl',
             onPressed: () {
               roomProvider.leaveRoom();
               Navigator.pop(context);
@@ -72,26 +74,19 @@ class ActiveRoomScreen extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  gradient: AppColors.cardGradient,
-                  borderRadius: BorderRadius.circular(24),
-                  border: Border.all(color: AppColors.pitchGreen, width: 1.5),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.pitchGreen.withOpacity(0.18),
-                      blurRadius: 20,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: AppColors.borderActive, width: 1.5),
                 ),
                 child: Column(
                   children: [
                     const Text(
                       'ODA KODU',
                       style: TextStyle(
-                        fontSize: 12,
+                        fontSize: 11,
                         letterSpacing: 2,
                         fontWeight: FontWeight.w700,
-                        color: AppColors.textSecondary,
+                        color: AppColors.textMuted,
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -101,15 +96,15 @@ class ActiveRoomScreen extends StatelessWidget {
                         Text(
                           room.code,
                           style: const TextStyle(
-                            fontSize: 34,
+                            fontSize: 32,
                             fontWeight: FontWeight.w900,
                             letterSpacing: 4,
-                            color: AppColors.pitchGreen,
+                            color: AppColors.gold,
                           ),
                         ),
                         const SizedBox(width: 12),
                         IconButton(
-                          icon: const Icon(Icons.copy, color: AppColors.pitchGreen),
+                          icon: const Icon(Icons.copy_outlined, color: AppColors.gold, size: 20),
                           tooltip: 'Kodu Kopyala',
                           onPressed: () {
                             Clipboard.setData(ClipboardData(text: room.code));
@@ -126,7 +121,7 @@ class ActiveRoomScreen extends StatelessWidget {
                     const SizedBox(height: 4),
                     const Text(
                       'Arkadaşlarını beklerken hazır duruma geçebilirsin',
-                      style: TextStyle(fontSize: 11, color: AppColors.textMuted),
+                      style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
                     ),
                   ],
                 ),
@@ -143,7 +138,7 @@ class ActiveRoomScreen extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w700,
-                      color: Colors.white,
+                      color: AppColors.textPrimary,
                     ),
                   ),
                   Text(
@@ -151,7 +146,7 @@ class ActiveRoomScreen extends StatelessWidget {
                     style: const TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.pitchGreen,
+                      color: AppColors.gold,
                     ),
                   ),
                 ],
@@ -161,23 +156,41 @@ class ActiveRoomScreen extends StatelessWidget {
               Expanded(
                 child: ListView.separated(
                   itemCount: room.participants.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 10),
+                  separatorBuilder: (context, index) => const SizedBox(height: 10),
                   itemBuilder: (context, index) {
                     final p = room.participants[index];
                     final isMe = p.id == currentUserId;
 
                     return Container(
-                      padding: const EdgeInsets.all(14),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                       decoration: BoxDecoration(
                         color: isMe ? AppColors.surfaceLight : AppColors.surface,
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(14),
                         border: Border.all(
-                          color: p.isReady ? AppColors.pitchGreen : AppColors.cardBorder,
+                          color: p.isReady ? AppColors.gold : AppColors.border,
                         ),
                       ),
                       child: Row(
                         children: [
-                          Text(p.avatar, style: const TextStyle(fontSize: 24)),
+                          Container(
+                            width: 38,
+                            height: 38,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: AppColors.deepPurple,
+                              border: Border.all(color: AppColors.borderActive),
+                            ),
+                            child: Center(
+                              child: Text(
+                                p.avatar,
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.gold,
+                                ),
+                              ),
+                            ),
+                          ),
                           const SizedBox(width: 12),
                           Expanded(
                             child: Column(
@@ -188,21 +201,22 @@ class ActiveRoomScreen extends StatelessWidget {
                                     Text(
                                       p.name + (isMe ? ' (Sen)' : ''),
                                       style: TextStyle(
-                                        fontSize: 15,
-                                        fontWeight: isMe ? FontWeight.w800 : FontWeight.w600,
-                                        color: Colors.white,
+                                        fontSize: 14,
+                                        fontWeight: isMe ? FontWeight.w700 : FontWeight.w600,
+                                        color: AppColors.textPrimary,
                                       ),
                                     ),
                                     if (p.isHost) ...[
-                                      const SizedBox(width: 6),
+                                      const SizedBox(width: 8),
                                       Container(
                                         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                         decoration: BoxDecoration(
-                                          color: AppColors.gold.withOpacity(0.2),
+                                          color: AppColors.surface,
                                           borderRadius: BorderRadius.circular(6),
+                                          border: Border.all(color: AppColors.gold, width: 0.8),
                                         ),
                                         child: const Text(
-                                          '👑 Kurucu',
+                                          'Kurucu',
                                           style: TextStyle(
                                             color: AppColors.gold,
                                             fontSize: 10,
@@ -220,16 +234,16 @@ class ActiveRoomScreen extends StatelessWidget {
                             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                             decoration: BoxDecoration(
                               color: p.isReady
-                                  ? AppColors.pitchGreen.withOpacity(0.18)
-                                  : AppColors.crimson.withOpacity(0.18),
-                              borderRadius: BorderRadius.circular(10),
+                                  ? AppColors.success.withValues(alpha: 0.15)
+                                  : AppColors.error.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
-                              p.isReady ? 'HAZIR ✅' : 'BEKLİYOR...',
+                              p.isReady ? 'Hazır' : 'Bekliyor',
                               style: TextStyle(
-                                color: p.isReady ? AppColors.pitchGreen : AppColors.crimson,
+                                color: p.isReady ? AppColors.success : AppColors.error,
                                 fontSize: 11,
-                                fontWeight: FontWeight.w800,
+                                fontWeight: FontWeight.w700,
                               ),
                             ),
                           ),
@@ -243,10 +257,10 @@ class ActiveRoomScreen extends StatelessWidget {
               // ACTION BUTTON
               if (isHost) ...[
                 CustomButton(
-                  text: 'DÜELLOYU BAŞLAT! ⚽',
-                  gradient: AppColors.pitchGradient,
-                  textColor: Colors.black87,
-                  height: 56,
+                  text: 'Düelloyu Başlat',
+                  backgroundColor: AppColors.deepPurple,
+                  textColor: AppColors.textPrimary,
+                  height: 52,
                   onPressed: () {
                     Navigator.pushReplacement(
                       context,
@@ -256,11 +270,10 @@ class ActiveRoomScreen extends StatelessWidget {
                 ),
               ] else ...[
                 CustomButton(
-                  text: myParticipant.isReady ? 'Hazır Durumu İptal Et' : 'HAZIRIM! ✅',
-                  gradient: myParticipant.isReady ? null : AppColors.pitchGradient,
-                  backgroundColor: myParticipant.isReady ? AppColors.surfaceLight : null,
-                  textColor: myParticipant.isReady ? Colors.white : Colors.black87,
-                  height: 56,
+                  text: myParticipant.isReady ? 'Hazır Durumu İptal Et' : 'Hazırım',
+                  backgroundColor: myParticipant.isReady ? AppColors.surfaceLight : AppColors.deepPurple,
+                  textColor: AppColors.textPrimary,
+                  height: 52,
                   onPressed: () {
                     if (currentUserId != null) {
                       roomProvider.toggleReady(currentUserId);

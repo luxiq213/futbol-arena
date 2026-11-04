@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../providers/party_mode_game_provider.dart';
-import '../../widgets/stadium_background.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/countdown_overlay.dart';
 import '../common_player/widgets/club_card.dart';
@@ -31,72 +29,80 @@ class PartyGameScreen extends StatelessWidget {
         _showExitConfirmation(context, provider);
       },
       child: Scaffold(
+        backgroundColor: AppColors.background,
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           elevation: 0,
+          iconTheme: const IconThemeData(color: Colors.white),
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
             onPressed: () => _showExitConfirmation(context, provider),
           ),
           title: const Text(
-            '3-2-1 Bomba!',
-            style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18),
+            '3-2-1 Düello Turlari',
+            style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
           ),
           actions: [
-            // Active Players Pill
             Container(
               margin: const EdgeInsets.only(right: 16),
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
                 color: AppColors.surface,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppColors.cardBorder),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: AppColors.border),
               ),
               child: Row(
                 children: [
-                  const Text('👥', style: TextStyle(fontSize: 12)),
+                  const Icon(Icons.group_outlined, size: 14, color: AppColors.gold),
                   const SizedBox(width: 4),
                   Text(
                     '${provider.activePlayers.length} Hayatta',
-                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+                    style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Colors.white),
                   ),
                 ],
               ),
             ),
           ],
         ),
-        body: StadiumBackground(
+        body: SafeArea(
           child: Stack(
             children: [
-              // MAIN ROUND PLAY SCREEN
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: Column(
                   children: [
-                    // CURRENT PLAYER CARD
+                    // Active Player Turn Banner
                     if (curPlayer != null)
                       Container(
-                        padding: const EdgeInsets.all(14),
+                        padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              curPlayer.isEliminated
-                                  ? Colors.grey.shade800
-                                  : AppColors.electricBlue.withOpacity(0.35),
-                              AppColors.surface,
-                            ],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                          borderRadius: BorderRadius.circular(20),
+                          color: AppColors.surface,
+                          borderRadius: BorderRadius.circular(14),
                           border: Border.all(
-                            color: AppColors.electricBlue,
-                            width: 1.5,
+                            color: curPlayer.isEliminated ? AppColors.border : AppColors.gold,
+                            width: 1.2,
                           ),
                         ),
                         child: Row(
                           children: [
-                            Text(curPlayer.avatar, style: const TextStyle(fontSize: 32)),
+                            Container(
+                              width: 36,
+                              height: 36,
+                              decoration: BoxDecoration(
+                                color: AppColors.deepPurple,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Center(
+                                child: Text(
+                                  curPlayer.avatar,
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w800,
+                                    color: AppColors.gold,
+                                  ),
+                                ),
+                              ),
+                            ),
                             const SizedBox(width: 12),
                             Expanded(
                               child: Column(
@@ -105,52 +111,54 @@ class PartyGameScreen extends StatelessWidget {
                                   const Text(
                                     'SIRADAKİ OYUNCU',
                                     style: TextStyle(
-                                      fontSize: 11,
-                                      letterSpacing: 1.5,
+                                      fontSize: 10,
+                                      letterSpacing: 1.0,
                                       fontWeight: FontWeight.w700,
-                                      color: AppColors.electricBlue,
+                                      color: AppColors.gold,
                                     ),
                                   ),
                                   Text(
                                     curPlayer.name,
                                     style: const TextStyle(
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.w900,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w800,
                                       color: Colors.white,
                                     ),
                                   ),
                                 ],
                               ),
                             ),
-                            // Lives counter
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.end,
                               children: [
                                 const Text(
                                   'Kalan Can',
-                                  style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                                  style: TextStyle(fontSize: 10, color: AppColors.textMuted),
                                 ),
                                 const SizedBox(height: 2),
                                 Row(
                                   children: List.generate(
                                     curPlayer.lives,
-                                    (_) => const Text('❤️', style: TextStyle(fontSize: 16)),
+                                    (_) => const Padding(
+                                      padding: EdgeInsets.symmetric(horizontal: 1),
+                                      child: Icon(Icons.favorite, size: 14, color: AppColors.error),
+                                    ),
                                   ),
                                 ),
                               ],
                             ),
                           ],
                         ),
-                      ).animate().slideY(begin: -0.2, duration: 300.ms),
+                      ),
 
                     const SizedBox(height: 14),
 
-                    // TIMER RING / BOMB PROGRESS
+                    // Timer Dial
                     _buildTimerRing(provider),
 
                     const SizedBox(height: 14),
 
-                    // TWO CLUBS DISPLAY
+                    // Two Clubs Display
                     if (clubA != null && clubB != null)
                       Row(
                         children: [
@@ -158,59 +166,64 @@ class PartyGameScreen extends StatelessWidget {
                           Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 8),
                             child: Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: const BoxDecoration(
-                                shape: BoxShape.circle,
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
                                 color: AppColors.surfaceLight,
+                                borderRadius: BorderRadius.circular(6),
+                                border: Border.all(color: AppColors.border),
                               ),
                               child: const Text(
                                 'VS',
                                 style: TextStyle(
                                   color: AppColors.gold,
-                                  fontWeight: FontWeight.w900,
-                                  fontSize: 12,
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 11,
                                 ),
                               ),
                             ),
                           ),
                           Expanded(child: ClubCard(club: clubB, isCompact: true)),
                         ],
-                      ).animate().scale(duration: 250.ms),
+                      ),
 
                     const SizedBox(height: 12),
 
-                    // REVEALED ANSWERS (If toggled or round ended)
+                    // Revealed answers list if requested
                     if (provider.answersRevealed)
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
                           color: AppColors.surface,
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: AppColors.gold),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: AppColors.border),
                         ),
                         child: Column(
                           children: [
                             const Text(
-                              'Oynayan Efsaneler:',
+                              'Ortak Efsaneler:',
                               style: TextStyle(
-                                fontSize: 13,
+                                fontSize: 12,
                                 fontWeight: FontWeight.w700,
                                 color: AppColors.gold,
                               ),
                             ),
                             const SizedBox(height: 6),
                             Wrap(
-                              spacing: 8,
-                              runSpacing: 6,
+                              spacing: 6,
+                              runSpacing: 4,
                               children: provider.currentMutualPlayers.map((p) {
-                                return Chip(
-                                  backgroundColor: AppColors.surfaceLight,
-                                  label: Text(
+                                return Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.surfaceLight,
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: Text(
                                     p.name,
                                     style: const TextStyle(
                                       color: Colors.white,
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w600,
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w500,
                                     ),
                                   ),
                                 );
@@ -218,30 +231,32 @@ class PartyGameScreen extends StatelessWidget {
                             ),
                           ],
                         ),
-                      ).animate().fadeIn(),
+                      ),
 
                     const Spacer(),
 
-                    // CONTROLS FOR IN-ROUND OR ROUND RESULT
+                    // In-Round Buttons
                     if (provider.phase == PartyPhase.inRound)
                       Row(
                         children: [
                           Expanded(
                             child: CustomButton(
-                              text: 'PAS / YANDI ❌',
-                              backgroundColor: AppColors.crimson,
-                              textColor: Colors.white,
-                              height: 54,
+                              text: 'Pas / Yandi',
+                              icon: Icons.close,
+                              backgroundColor: AppColors.surfaceLight,
+                              textColor: AppColors.error,
+                              height: 48,
                               onPressed: () => provider.playerPassed(),
                             ),
                           ),
                           const SizedBox(width: 12),
                           Expanded(
                             child: CustomButton(
-                              text: 'BİLDİ! ✅',
-                              gradient: AppColors.pitchGradient,
-                              textColor: Colors.black87,
-                              height: 54,
+                              text: 'Bildim',
+                              icon: Icons.check,
+                              backgroundColor: AppColors.deepPurple,
+                              textColor: Colors.white,
+                              height: 48,
                               onPressed: () => provider.playerKnew(),
                             ),
                           ),
@@ -251,48 +266,49 @@ class PartyGameScreen extends StatelessWidget {
                       Column(
                         children: [
                           Container(
-                            padding: const EdgeInsets.all(14),
+                            padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
-                              color: AppColors.crimson.withOpacity(0.18),
-                              borderRadius: BorderRadius.circular(16),
-                              border: Border.all(color: AppColors.crimson),
+                              color: AppColors.error.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(color: AppColors.error.withValues(alpha: 0.5)),
                             ),
                             child: Row(
                               children: [
-                                const Text('💥', style: TextStyle(fontSize: 28)),
-                                const SizedBox(width: 12),
+                                const Icon(Icons.alarm_off, color: AppColors.error, size: 20),
+                                const SizedBox(width: 10),
                                 Expanded(
                                   child: Text(
-                                    '${curPlayer?.name ?? "Oyuncu"} sürede bilemedi ve 1 can kaybetti!',
+                                    '${curPlayer?.name ?? "Oyuncu"} sürede bilemedi ve 1 can kaybetti.',
                                     style: const TextStyle(
                                       color: Colors.white,
-                                      fontWeight: FontWeight.w700,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
                                     ),
                                   ),
                                 ),
                               ],
                             ),
                           ),
-                          const SizedBox(height: 12),
+                          const SizedBox(height: 10),
                           Row(
                             children: [
                               Expanded(
                                 child: CustomButton(
-                                  text: provider.answersRevealed
-                                      ? 'Cevapları Gizle'
-                                      : 'Cevapları Gör 👁️',
+                                  text: provider.answersRevealed ? 'Gizle' : 'Cevaplari Gör',
                                   isOutlined: true,
-                                  height: 48,
+                                  icon: Icons.visibility_outlined,
+                                  height: 44,
                                   onPressed: () => provider.toggleShowAnswers(),
                                 ),
                               ),
-                              const SizedBox(width: 12),
+                              const SizedBox(width: 10),
                               Expanded(
                                 child: CustomButton(
-                                  text: 'Sıradaki Tur',
-                                  gradient: AppColors.pitchGradient,
-                                  textColor: Colors.black87,
-                                  height: 48,
+                                  text: 'Siradaki Tur',
+                                  icon: Icons.arrow_forward,
+                                  backgroundColor: AppColors.deepPurple,
+                                  textColor: Colors.white,
+                                  height: 44,
                                   onPressed: () => provider.continueNextTurn(),
                                 ),
                               ),
@@ -306,7 +322,7 @@ class PartyGameScreen extends StatelessWidget {
                 ),
               ),
 
-              // 3-2-1 COUNTDOWN OVERLAY
+              // Countdown 3-2-1 Overlay
               if (provider.phase == PartyPhase.countdown321)
                 CountdownOverlay(count: provider.countdownNumber),
             ],
@@ -321,24 +337,22 @@ class PartyGameScreen extends StatelessWidget {
     final total = provider.selectedTimerDuration;
     final progress = total > 0 ? (timeLeft / total) : 0.0;
 
-    Color timerColor = AppColors.pitchGreen;
+    Color timerColor = AppColors.gold;
     if (timeLeft <= 3) {
-      timerColor = AppColors.crimson;
-    } else if (timeLeft <= 5) {
-      timerColor = AppColors.orange;
+      timerColor = AppColors.error;
     }
 
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.symmetric(vertical: 4),
       child: Stack(
         alignment: Alignment.center,
         children: [
           SizedBox(
-            width: 100,
-            height: 100,
+            width: 80,
+            height: 80,
             child: CircularProgressIndicator(
               value: progress,
-              strokeWidth: 8,
+              strokeWidth: 6,
               backgroundColor: AppColors.surfaceLight,
               valueColor: AlwaysStoppedAnimation<Color>(timerColor),
             ),
@@ -349,14 +363,14 @@ class PartyGameScreen extends StatelessWidget {
               Text(
                 '$timeLeft',
                 style: TextStyle(
-                  fontSize: 32,
+                  fontSize: 26,
                   fontWeight: FontWeight.w900,
                   color: timerColor,
                 ),
               ),
               const Text(
-                'saniye',
-                style: TextStyle(fontSize: 10, color: AppColors.textSecondary),
+                'sn',
+                style: TextStyle(fontSize: 10, color: AppColors.textMuted),
               ),
             ],
           ),
@@ -370,19 +384,19 @@ class PartyGameScreen extends StatelessWidget {
       context: context,
       builder: (_) => AlertDialog(
         backgroundColor: AppColors.surface,
-        title: const Text('Oyundan Çıkılsın mı?'),
-        content: const Text('Parti oyunu sonlandırılacak.'),
+        title: const Text('Oyundan Çıkılsın mı?', style: TextStyle(fontSize: 16)),
+        content: const Text('Mevcut düello oturumu sonlandirilacak.', style: TextStyle(fontSize: 13)),
         actions: [
           TextButton(
             child: const Text('Devam Et', style: TextStyle(color: AppColors.textSecondary)),
             onPressed: () => Navigator.pop(context),
           ),
           TextButton(
-            child: const Text('Çık', style: TextStyle(color: AppColors.crimson)),
+            child: const Text('Çık', style: TextStyle(color: AppColors.error)),
             onPressed: () {
               provider.resetToSetup();
-              Navigator.pop(context); // dialog
-              Navigator.pop(context); // game screen
+              Navigator.pop(context);
+              Navigator.pop(context);
             },
           ),
         ],

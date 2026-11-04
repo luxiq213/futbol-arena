@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../providers/auth_provider.dart';
 import '../../../../providers/online_room_provider.dart';
-import '../../widgets/stadium_background.dart';
 import '../../widgets/custom_button.dart';
 import 'active_room_screen.dart';
 
@@ -53,7 +52,7 @@ class _LobbyHubScreenState extends State<LobbyHubScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(roomProvider.errorMessage ?? 'Odaya katılırken hata oluştu.'),
-          backgroundColor: AppColors.crimson,
+          backgroundColor: AppColors.error,
         ),
       );
     }
@@ -64,100 +63,55 @@ class _LobbyHubScreenState extends State<LobbyHubScreen> {
     final roomProvider = context.watch<OnlineRoomProvider>();
 
     return Scaffold(
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.white),
         title: const Text(
           'Online Meydan Okuma',
-          style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18),
+          style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
         ),
       ),
-      body: StadiumBackground(
+      body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // HEADER CARD
+              // Header Card
               Container(
-                padding: const EdgeInsets.all(20),
+                padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  gradient: AppColors.blueGradient,
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.electricBlue.withOpacity(0.3),
-                      blurRadius: 20,
-                      offset: const Offset(0, 6),
-                    ),
-                  ],
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: AppColors.border),
                 ),
                 child: const Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
                       children: [
-                        Text('🌐', style: TextStyle(fontSize: 28)),
+                        Icon(Icons.cell_tower_outlined, color: AppColors.gold, size: 22),
                         SizedBox(width: 10),
                         Text(
-                          'Online Oda Kur & Katıl',
+                          'Online Lobi & Oda Daveti',
                           style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w800,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
                             color: Colors.white,
                           ),
                         ),
                       ],
                     ),
-                    SizedBox(height: 8),
+                    SizedBox(height: 6),
                     Text(
-                      'Farklı yerlerdeki arkadaşlarınla oda kodu paylaşarak aynı anda düelloya girin!',
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: Colors.white70,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 28),
-
-              // CREATE ROOM SECTION
-              Container(
-                padding: const EdgeInsets.all(18),
-                decoration: BoxDecoration(
-                  color: AppColors.surface,
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: AppColors.cardBorder),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Yeni Bir Lobi Başlat',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    const Text(
-                      'Odayı oluşturduktan sonra 6 haneli kodu arkadaşlarına yolla.',
+                      'Farklı yerlerdeki arkadaşlarınla 6 haneli oda kodu paylaşarak aynı anda düelloya katılın.',
                       style: TextStyle(
                         fontSize: 12,
                         color: AppColors.textSecondary,
+                        height: 1.3,
                       ),
-                    ),
-                    const SizedBox(height: 16),
-                    CustomButton(
-                      text: 'Yeni Oda Oluştur',
-                      icon: Icons.add_circle_outline,
-                      gradient: AppColors.pitchGradient,
-                      textColor: Colors.black87,
-                      isLoading: roomProvider.isCreatingRoom,
-                      onPressed: _onCreateRoom,
                     ),
                   ],
                 ),
@@ -165,53 +119,89 @@ class _LobbyHubScreenState extends State<LobbyHubScreen> {
 
               const SizedBox(height: 20),
 
-              // JOIN ROOM SECTION
+              // Create Room Section
               Container(
-                padding: const EdgeInsets.all(18),
+                padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   color: AppColors.surface,
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: AppColors.cardBorder),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: AppColors.border),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text(
-                      'Arkadaşının Odasına Katıl',
+                      'Yeni Lobi Oluştur',
                       style: TextStyle(
-                        fontSize: 16,
+                        fontSize: 14,
                         fontWeight: FontWeight.w700,
                         color: Colors.white,
                       ),
                     ),
                     const SizedBox(height: 4),
                     const Text(
-                      'Arkadaşından aldığın oda kodunu buraya gir.',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: AppColors.textSecondary,
-                      ),
+                      'Oda oluşturulduktan sonra kodu arkadaşına ileterek maçı başlat.',
+                      style: TextStyle(fontSize: 11, color: AppColors.textMuted),
                     ),
                     const SizedBox(height: 14),
+                    CustomButton(
+                      text: 'Yeni Oda Kur',
+                      icon: Icons.add_circle_outline,
+                      backgroundColor: AppColors.deepPurple,
+                      textColor: Colors.white,
+                      isLoading: roomProvider.isCreatingRoom,
+                      onPressed: _onCreateRoom,
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              // Join Room Section
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: AppColors.border),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Odaya Katıl',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    const Text(
+                      'Arkadaşından aldığın 6 haneli kodu buraya gir.',
+                      style: TextStyle(fontSize: 11, color: AppColors.textMuted),
+                    ),
+                    const SizedBox(height: 12),
                     TextField(
                       controller: _codeController,
                       textCapitalization: TextCapitalization.characters,
                       style: const TextStyle(
-                        fontSize: 18,
+                        fontSize: 16,
                         fontWeight: FontWeight.w800,
                         letterSpacing: 3,
-                        color: AppColors.pitchGreen,
+                        color: AppColors.gold,
                       ),
                       decoration: InputDecoration(
                         hintText: 'Örn: FTB789',
-                        prefixIcon: const Icon(Icons.vpn_key, color: AppColors.pitchGreen),
+                        prefixIcon: const Icon(Icons.vpn_key_outlined, color: AppColors.gold, size: 18),
                         suffixIcon: IconButton(
-                          icon: const Icon(Icons.arrow_forward_rounded, color: AppColors.pitchGreen),
+                          icon: const Icon(Icons.arrow_forward_rounded, color: AppColors.gold, size: 18),
                           onPressed: _onJoinRoom,
                         ),
                       ),
                     ),
-                    const SizedBox(height: 14),
+                    const SizedBox(height: 12),
                     CustomButton(
                       text: 'Odaya Gir',
                       isOutlined: true,

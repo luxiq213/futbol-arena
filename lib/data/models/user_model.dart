@@ -2,7 +2,7 @@ class UserModel {
   final String id;
   final String username;
   final String email;
-  final String avatar;
+  final String avatar; // Avatar role: captain, scout, striker, maestro, etc.
   final String favoriteTeam;
   final int points;
   final int matchesPlayed;
@@ -49,11 +49,11 @@ class UserModel {
   }
 
   String get rankTitle {
-    if (points >= 5000) return '🏆 Şampiyonlar Ligi Efsanesi';
-    if (points >= 3000) return '🥇 Ballon d\'Or Adayı';
-    if (points >= 1500) return '🥈 Süper Lig Yıldızı';
-    if (points >= 500) return '🥉 Scout Şefi';
-    return '⚽ Genç Yetenek';
+    if (points >= 5000) return 'Sampiyonlar Ligi Efsanesi';
+    if (points >= 3000) return 'Altin Top Adayi';
+    if (points >= 1500) return 'Süper Lig Yildizi';
+    if (points >= 500) return 'Bas Scout';
+    return 'Genc Yetenek';
   }
 
   Map<String, dynamic> toJson() => {
@@ -72,9 +72,9 @@ class UserModel {
   factory UserModel.fromJson(Map<String, dynamic> json) {
     return UserModel(
       id: json['id'] ?? '',
-      username: json['username'] ?? 'Futbolcu',
+      username: json['username'] ?? 'Kaptan',
       email: json['email'] ?? '',
-      avatar: json['avatar'] ?? '⚽',
+      avatar: json['avatar'] ?? 'captain',
       favoriteTeam: json['favoriteTeam'] ?? 'Galatasaray',
       points: json['points'] ?? 0,
       matchesPlayed: json['matchesPlayed'] ?? 0,

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../providers/party_mode_game_provider.dart';
-import '../../widgets/stadium_background.dart';
 import '../../widgets/custom_button.dart';
 import 'party_game_screen.dart';
 
@@ -36,50 +35,53 @@ class _PartySetupScreenState extends State<PartySetupScreen> {
       child: Consumer<PartyModeGameProvider>(
         builder: (context, provider, _) {
           return Scaffold(
+            backgroundColor: AppColors.background,
             appBar: AppBar(
               backgroundColor: Colors.transparent,
               elevation: 0,
+              iconTheme: const IconThemeData(color: Colors.white),
               title: const Text(
-                '3-2-1 Bomba (Yan Yana Mod)',
-                style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18),
+                '3-2-1 Düello Modu',
+                style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
               ),
             ),
-            body: StadiumBackground(
+            body: SafeArea(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    // GAME INFO CARD
+                    // Mode Information Card
                     Container(
-                      padding: const EdgeInsets.all(16),
+                      padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(
-                        gradient: AppColors.cardGradient,
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: AppColors.cardBorder),
+                        color: AppColors.surface,
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: AppColors.border),
                       ),
                       child: const Row(
                         children: [
-                          Text('💣', style: TextStyle(fontSize: 36)),
+                          Icon(Icons.alarm, color: AppColors.gold, size: 28),
                           SizedBox(width: 14),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  'Arkadaşlarınla Masada / Yan Yana',
+                                  'Arkadaslarla Yan Yana Oynanis',
                                   style: TextStyle(
-                                    fontWeight: FontWeight.w800,
-                                    fontSize: 15,
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 14,
                                     color: Colors.white,
                                   ),
                                 ),
                                 SizedBox(height: 4),
                                 Text(
-                                  '3-2-1 sayımından sonra ekranda kulüpler belirir. Sırası gelen oyuncu süre bitmeden ortak futbolcuyu sesli söyler!',
+                                  '3-2-1 sayimindan sonra iki takim armasi belirir. Sirasi gelen oyuncu süre bitmeden ortak futbolcuyu sesli olarak söyler.',
                                   style: TextStyle(
                                     fontSize: 12,
                                     color: AppColors.textSecondary,
+                                    height: 1.3,
                                   ),
                                 ),
                               ],
@@ -91,12 +93,12 @@ class _PartySetupScreenState extends State<PartySetupScreen> {
 
                     const SizedBox(height: 20),
 
-                    // TIMER SELECTION
+                    // Turn Timer Duration
                     const Text(
-                      'Tur Başına Süre',
+                      'Tur Basina Süre',
                       style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
                         color: AppColors.textSecondary,
                       ),
                     ),
@@ -109,21 +111,21 @@ class _PartySetupScreenState extends State<PartySetupScreen> {
                             onTap: () => provider.setTimerDuration(sec),
                             child: Container(
                               margin: const EdgeInsets.symmetric(horizontal: 4),
-                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              padding: const EdgeInsets.symmetric(vertical: 10),
                               decoration: BoxDecoration(
-                                color: isSelected ? AppColors.pitchGreen : AppColors.surface,
-                                borderRadius: BorderRadius.circular(14),
+                                color: isSelected ? AppColors.deepPurple : AppColors.surface,
+                                borderRadius: BorderRadius.circular(10),
                                 border: Border.all(
-                                  color: isSelected ? AppColors.pitchGreen : AppColors.cardBorder,
+                                  color: isSelected ? AppColors.gold : AppColors.border,
                                 ),
                               ),
                               child: Center(
                                 child: Text(
                                   '$sec sn',
                                   style: TextStyle(
-                                    fontWeight: FontWeight.w800,
-                                    color: isSelected ? Colors.black : Colors.white,
-                                    fontSize: 14,
+                                    fontWeight: FontWeight.w700,
+                                    color: isSelected ? AppColors.gold : Colors.white,
+                                    fontSize: 13,
                                   ),
                                 ),
                               ),
@@ -133,14 +135,14 @@ class _PartySetupScreenState extends State<PartySetupScreen> {
                       }).toList(),
                     ),
 
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 18),
 
-                    // LIVES SELECTION
+                    // Lives Selection
                     const Text(
-                      'Oyuncu Başına Can',
+                      'Oyuncu Basina Can Hakki',
                       style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
                         color: AppColors.textSecondary,
                       ),
                     ),
@@ -153,22 +155,33 @@ class _PartySetupScreenState extends State<PartySetupScreen> {
                             onTap: () => provider.setInitialLives(lives),
                             child: Container(
                               margin: const EdgeInsets.symmetric(horizontal: 4),
-                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              padding: const EdgeInsets.symmetric(vertical: 10),
                               decoration: BoxDecoration(
-                                color: isSelected ? AppColors.crimson : AppColors.surface,
-                                borderRadius: BorderRadius.circular(14),
+                                color: isSelected ? AppColors.surfaceLight : AppColors.surface,
+                                borderRadius: BorderRadius.circular(10),
                                 border: Border.all(
-                                  color: isSelected ? AppColors.crimson : AppColors.cardBorder,
+                                  color: isSelected ? AppColors.gold : AppColors.border,
                                 ),
                               ),
                               child: Center(
-                                child: Text(
-                                  '❤️ $lives Can',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.w800,
-                                    color: isSelected ? Colors.white : AppColors.textSecondary,
-                                    fontSize: 13,
-                                  ),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.favorite,
+                                      size: 14,
+                                      color: isSelected ? AppColors.error : AppColors.textMuted,
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      '$lives Can',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w700,
+                                        color: isSelected ? Colors.white : AppColors.textSecondary,
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
                             ),
@@ -177,33 +190,33 @@ class _PartySetupScreenState extends State<PartySetupScreen> {
                       }).toList(),
                     ),
 
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 22),
 
-                    // PLAYERS LIST HEADER
+                    // Player List Header
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         const Text(
                           'Oyuncu Listesi',
                           style: TextStyle(
-                            fontSize: 15,
+                            fontSize: 13,
                             fontWeight: FontWeight.w700,
-                            color: AppColors.textPrimary,
+                            color: Colors.white,
                           ),
                         ),
                         Text(
                           '${provider.players.length} Oyuncu',
                           style: const TextStyle(
-                            fontSize: 12,
+                            fontSize: 11,
                             fontWeight: FontWeight.w600,
-                            color: AppColors.pitchGreen,
+                            color: AppColors.gold,
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 8),
 
-                    // ADD PLAYER INPUT
+                    // Add Player Input
                     Row(
                       children: [
                         Expanded(
@@ -211,56 +224,75 @@ class _PartySetupScreenState extends State<PartySetupScreen> {
                             controller: _playerController,
                             textCapitalization: TextCapitalization.words,
                             onSubmitted: (_) => _addPlayer(provider),
-                            decoration: InputDecoration(
-                              hintText: 'Yeni arkadaş ekle (örn: Selin)...',
-                              prefixIcon: const Icon(Icons.person_add, color: AppColors.pitchGreen),
-                              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                            style: const TextStyle(fontSize: 13),
+                            decoration: const InputDecoration(
+                              hintText: 'Yeni oyuncu adi girin...',
+                              prefixIcon: Icon(Icons.person_add_alt, color: AppColors.gold, size: 18),
+                              contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                             ),
                           ),
                         ),
                         const SizedBox(width: 8),
                         Container(
-                          height: 50,
-                          width: 50,
+                          height: 44,
+                          width: 44,
                           decoration: BoxDecoration(
-                            color: AppColors.pitchGreen,
-                            borderRadius: BorderRadius.circular(16),
+                            color: AppColors.deepPurple,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: AppColors.border),
                           ),
                           child: IconButton(
-                            icon: const Icon(Icons.add, color: Colors.black87),
+                            icon: const Icon(Icons.add, color: Colors.white, size: 18),
                             onPressed: () => _addPlayer(provider),
                           ),
                         ),
                       ],
                     ),
 
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 10),
 
-                    // PLAYERS CHIPS
+                    // Players List
                     ListView.separated(
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
                       itemCount: provider.players.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: 8),
+                      separatorBuilder: (_, _) => const SizedBox(height: 6),
                       itemBuilder: (context, index) {
                         final player = provider.players[index];
                         return Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                           decoration: BoxDecoration(
                             color: AppColors.surface,
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: AppColors.cardBorder),
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: AppColors.border),
                           ),
                           child: Row(
                             children: [
-                              Text(player.avatar, style: const TextStyle(fontSize: 22)),
-                              const SizedBox(width: 12),
+                              Container(
+                                width: 26,
+                                height: 26,
+                                decoration: BoxDecoration(
+                                  color: AppColors.surfaceLight,
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    player.avatar,
+                                    style: const TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w700,
+                                      color: AppColors.gold,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 10),
                               Expanded(
                                 child: Text(
                                   player.name,
                                   style: const TextStyle(
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w700,
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
                                     color: Colors.white,
                                   ),
                                 ),
@@ -268,14 +300,17 @@ class _PartySetupScreenState extends State<PartySetupScreen> {
                               Row(
                                 children: List.generate(
                                   provider.initialLives,
-                                  (_) => const Text('❤️', style: TextStyle(fontSize: 12)),
+                                  (_) => const Padding(
+                                    padding: EdgeInsets.symmetric(horizontal: 1),
+                                    child: Icon(Icons.favorite, size: 13, color: AppColors.error),
+                                  ),
                                 ),
                               ),
                               const SizedBox(width: 8),
                               if (provider.players.length > 2)
-                                IconButton(
-                                  icon: const Icon(Icons.close, color: AppColors.textMuted, size: 18),
-                                  onPressed: () => provider.removePlayer(player.id),
+                                GestureDetector(
+                                  onTap: () => provider.removePlayer(player.id),
+                                  child: const Icon(Icons.close, color: AppColors.textMuted, size: 16),
                                 ),
                             ],
                           ),
@@ -283,15 +318,15 @@ class _PartySetupScreenState extends State<PartySetupScreen> {
                       },
                     ),
 
-                    const SizedBox(height: 28),
+                    const SizedBox(height: 24),
 
-                    // START BUTTON
+                    // Start Game Button
                     CustomButton(
-                      text: '3-2-1 BAŞLAT!',
-                      icon: Icons.play_arrow_rounded,
-                      gradient: AppColors.fireGradient,
+                      text: 'Düelloyu Baslat',
+                      icon: Icons.play_arrow_outlined,
+                      backgroundColor: AppColors.deepPurple,
                       textColor: Colors.white,
-                      height: 56,
+                      height: 48,
                       onPressed: () {
                         provider.startGame();
                         Navigator.push(
@@ -305,7 +340,7 @@ class _PartySetupScreenState extends State<PartySetupScreen> {
                         );
                       },
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 16),
                   ],
                 ),
               ),

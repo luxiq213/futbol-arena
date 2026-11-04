@@ -15,7 +15,7 @@ class AppTopBar extends StatelessWidget implements PreferredSizeWidget {
   });
 
   @override
-  Size get preferredSize => const Size.fromHeight(64);
+  Size get preferredSize => const Size.fromHeight(60);
 
   @override
   Widget build(BuildContext context) {
@@ -25,11 +25,12 @@ class AppTopBar extends StatelessWidget implements PreferredSizeWidget {
     return AppBar(
       backgroundColor: Colors.transparent,
       elevation: 0,
+      iconTheme: const IconThemeData(color: Colors.white),
       title: Text(
         title,
         style: const TextStyle(
-          fontSize: 20,
-          fontWeight: FontWeight.w800,
+          fontSize: 18,
+          fontWeight: FontWeight.w700,
           color: AppColors.textPrimary,
           letterSpacing: -0.3,
         ),
@@ -45,21 +46,35 @@ class AppTopBar extends StatelessWidget implements PreferredSizeWidget {
             },
             child: Container(
               margin: const EdgeInsets.only(right: 16),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
               decoration: BoxDecoration(
                 color: AppColors.surface,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: AppColors.cardBorder),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: AppColors.border),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(
-                    user.avatar,
-                    style: const TextStyle(fontSize: 16),
+                  Container(
+                    width: 22,
+                    height: 22,
+                    decoration: BoxDecoration(
+                      color: AppColors.deepPurple,
+                      borderRadius: BorderRadius.circular(5),
+                    ),
+                    child: Center(
+                      child: Text(
+                        user.avatar.isNotEmpty ? user.avatar : 'KP',
+                        style: const TextStyle(
+                          fontSize: 9,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
                   ),
-                  const SizedBox(width: 6),
-                  const Icon(Icons.star, color: AppColors.gold, size: 14),
+                  const SizedBox(width: 8),
+                  const Icon(Icons.star_outline, color: AppColors.gold, size: 14),
                   const SizedBox(width: 4),
                   Text(
                     '${user.points} XP',

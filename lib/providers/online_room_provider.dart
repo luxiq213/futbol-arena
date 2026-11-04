@@ -42,7 +42,7 @@ class OnlineRoomProvider extends ChangeNotifier {
     final friend1 = const RoomParticipant(
       id: 'mock_friend_1',
       name: 'Burak',
-      avatar: '🦅',
+      avatar: 'BK',
       isHost: false,
       isReady: true,
     );
@@ -86,7 +86,7 @@ class OnlineRoomProvider extends ChangeNotifier {
     final mockHost = const RoomParticipant(
       id: 'mock_host',
       name: 'Ahmet (Lobi Lideri)',
-      avatar: '⚽',
+      avatar: 'AH',
       isHost: true,
       isReady: true,
     );

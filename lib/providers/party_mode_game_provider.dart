@@ -65,10 +65,10 @@ class PartyModeGameProvider extends ChangeNotifier {
 
   void _initDefaultPlayers() {
     _players = [
-      PartyPlayer(id: '1', name: 'Mehmet', avatar: '🦁', lives: _initialLives),
-      PartyPlayer(id: '2', name: 'Ahmet', avatar: '⚡', lives: _initialLives),
-      PartyPlayer(id: '3', name: 'Can', avatar: '🎯', lives: _initialLives),
-      PartyPlayer(id: '4', name: 'Burak', avatar: '🦅', lives: _initialLives),
+      PartyPlayer(id: '1', name: 'Mehmet', avatar: 'MH', lives: _initialLives),
+      PartyPlayer(id: '2', name: 'Ahmet', avatar: 'AH', lives: _initialLives),
+      PartyPlayer(id: '3', name: 'Can', avatar: 'CN', lives: _initialLives),
+      PartyPlayer(id: '4', name: 'Burak', avatar: 'BK', lives: _initialLives),
     ];
   }
 
@@ -88,12 +88,13 @@ class PartyModeGameProvider extends ChangeNotifier {
 
   void addPlayer(String name) {
     if (name.trim().isEmpty) return;
-    const avatars = ['⚽', '🔥', '🦁', '🦅', '⚡', '👑', '🎯', '🚀', '💣', '🌟'];
-    final avatar = avatars[_players.length % avatars.length];
+    final initials = name.trim().length >= 2
+        ? name.trim().substring(0, 2).toUpperCase()
+        : name.trim().toUpperCase();
     _players.add(PartyPlayer(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       name: name.trim(),
-      avatar: avatar,
+      avatar: initials,
       lives: _initialLives,
     ));
     notifyListeners();

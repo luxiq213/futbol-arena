@@ -1,41 +1,39 @@
 class AppStrings {
-  static const String appName = 'Futbol Party';
-  static const String appTagline = 'Arkadaşlarınla Futbol Bilgini Yarıştır!';
+  static const String appName = 'Futbol Trivia';
+  static const String appTagline = 'Futbol Bilgini Sinayan Özgün Tahmin Arenasi';
   
   // Auth
-  static const String loginTitle = 'Giriş Yap';
-  static const String registerTitle = 'Kayıt Ol';
-  static const String guestLogin = 'Hemen Misafir Olarak Oyna';
-  static const String username = 'Kullanıcı Adı';
+  static const String loginTitle = 'Giris Yap';
+  static const String registerTitle = 'Kayit Ol';
+  static const String guestLogin = 'Misafir Olarak Devam Et';
+  static const String username = 'Kullanici Adi';
   static const String email = 'E-posta Adresi';
-  static const String password = 'Şifre';
-  static const String favoriteTeam = 'Tuttuğun Takım';
+  static const String password = 'Sifre';
+  static const String favoriteTeam = 'Tuttugun Takim';
+  
+  // Navigation Tabs
+  static const String tabGames = 'Oyunlar';
+  static const String tabLeaderboard = 'Siralama';
+  static const String tabProfile = 'Profil';
   
   // Game Modes
-  static const String commonPlayerTitle = 'Ortak Futbolcu';
-  static const String commonPlayerSubtitle = 'İki dev kulüpte de forma giymiş efsaneyi bul!';
+  static const String modeDuelTitle = 'Ortak Oyuncu Düellosu';
+  static const String modeDuelSubtitle = 'Iki dev kulüpte de forma giymis ortak futbolcuyu bul.';
   
-  static const String partyModeTitle = '3-2-1 Bomba (Yan Yana)';
-  static const String partyModeSubtitle = 'Süre dolmadan ortak oyuncuyu söyle, bombadan kurtul!';
+  static const String mode5ClubsTitle = '5 Takim 1 Oyuncu';
+  static const String mode5ClubsSubtitle = '5 kulübün en cogunda oynamis kilit futbolcuyu tespit et.';
   
-  static const String onlineLobbyTitle = 'Online Meydan Okuma';
-  static const String onlineLobbySubtitle = 'Oda kur, arkadaşına kod gönder, canlı yarış!';
+  static const String modeGridTitle = 'Futbol Grid 3x3';
+  static const String modeGridSubtitle = 'Kesisim kriterlerine uyan oyunculari yerlestir, gridi tamamla.';
   
-  // Game Action
-  static const String ready = 'Hazırım!';
-  static const String start = 'BAŞLAT';
+  // Actions
+  static const String ready = 'Hazirim';
+  static const String start = 'Baslat';
   static const String nextRound = 'Sonraki Tur';
-  static const String showAnswers = 'Cevapları Göster';
-  static const String guessPlaceholder = 'Futbolcu ismi yazın... (Örn: Sneijder, Ronaldo)';
-  static const String correct = 'DOĞRU CEVAP!';
-  static const String wrong = 'YANLIŞ CEVAP!';
-  static const String timeOut = 'SÜRE BİTTİ!';
-  static const String knew = 'Bildim!';
-  static const String passed = 'Pas / Yanma';
-  
-  // Leaderboard
-  static const String leaderboard = 'Sıralama';
-  static const String globalRanking = 'Genel Sıralama';
-  static const String friendsRanking = 'Arkadaşlarım';
-  static const String myRank = 'Benim Derecem';
+  static const String showAnswers = 'Cevaplari Görüntüle';
+  static const String guessPlaceholder = 'Futbolcu ismi yazin (Örn: Sneijder, Ronaldo)...';
+  static const String correct = 'Dogru Cevap';
+  static const String wrong = 'Yanlis Tahmin';
+  static const String timeOut = 'Süre Doldu';
+  static const String hint = 'Ipucu';
 }

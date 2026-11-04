@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import '../../core/constants/app_colors.dart';
 
 class CountdownOverlay extends StatelessWidget {
@@ -10,50 +9,36 @@ class CountdownOverlay extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: Colors.black.withOpacity(0.85),
+      color: AppColors.background.withValues(alpha: 0.92),
       child: Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             const Text(
-              'HAZIRLAN!',
+              'HAZIRLAN',
               style: TextStyle(
-                fontSize: 22,
+                fontSize: 16,
                 fontWeight: FontWeight.w700,
                 color: AppColors.textSecondary,
-                letterSpacing: 3,
+                letterSpacing: 4,
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 16),
             Text(
               '$count',
               key: ValueKey(count),
-              style: TextStyle(
-                fontSize: 120,
+              style: const TextStyle(
+                fontSize: 96,
                 fontWeight: FontWeight.w900,
-                color: count == 1 ? AppColors.pitchGreen : AppColors.gold,
-                shadows: [
-                  Shadow(
-                    color: (count == 1 ? AppColors.pitchGreen : AppColors.gold).withOpacity(0.6),
-                    blurRadius: 30,
-                  ),
-                ],
+                color: AppColors.gold,
               ),
-            )
-                .animate(key: ValueKey(count))
-                .scale(
-                  begin: const Offset(0.3, 0.3),
-                  end: const Offset(1.1, 1.1),
-                  duration: 400.ms,
-                  curve: Curves.elasticOut,
-                )
-                .fadeIn(duration: 200.ms),
-            const SizedBox(height: 20),
+            ),
+            const SizedBox(height: 16),
             const Text(
-              'Ortak futbolcuyu ilk söyleyen kazanır!',
+              'Süre dolmadan ortak futbolcuyu sesli olarak söyle.',
               style: TextStyle(
-                fontSize: 14,
-                color: AppColors.textPrimary,
+                fontSize: 13,
+                color: AppColors.silver,
               ),
             ),
           ],

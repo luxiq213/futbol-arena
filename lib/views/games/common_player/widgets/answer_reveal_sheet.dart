@@ -15,19 +15,22 @@ class AnswerRevealSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
       decoration: const BoxDecoration(
-        color: AppColors.backgroundSecondary,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        color: AppColors.surface,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        border: Border(
+          top: BorderSide(color: AppColors.border, width: 1.0),
+        ),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            width: 40,
+            width: 36,
             height: 4,
             decoration: BoxDecoration(
-              color: AppColors.cardBorder,
+              color: AppColors.border,
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -36,37 +39,36 @@ class AnswerRevealSheet extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const Text(
-                'Ortak Oyuncular Listesi',
+                'Ortak Futbolcular',
                 style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.textPrimary,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white,
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: AppColors.surface,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.cardBorder),
+                  color: AppColors.surfaceLight,
+                  borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
-                  '${players.length} Oyuncu',
+                  '${players.length} Futbolcu',
                   style: const TextStyle(
-                    fontSize: 12,
+                    fontSize: 11,
                     fontWeight: FontWeight.w700,
-                    color: AppColors.pitchGreen,
+                    color: AppColors.gold,
                   ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 14),
           Flexible(
             child: ListView.separated(
               shrinkWrap: true,
               itemCount: players.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 10),
+              separatorBuilder: (_, _) => const SizedBox(height: 8),
               itemBuilder: (context, index) {
                 final player = players[index];
                 final isFound = foundIds.contains(player.id);
@@ -74,27 +76,29 @@ class AnswerRevealSheet extends StatelessWidget {
                 return Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: isFound ? AppColors.pitchGreen.withOpacity(0.12) : AppColors.surface,
-                    borderRadius: BorderRadius.circular(16),
+                    color: isFound
+                        ? AppColors.deepPurple.withValues(alpha: 0.25)
+                        : AppColors.surfaceLight,
+                    borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: isFound ? AppColors.pitchGreen : AppColors.cardBorder,
-                      width: 1.2,
+                      color: isFound ? AppColors.gold : AppColors.border,
+                      width: 1.0,
                     ),
                   ),
                   child: Row(
                     children: [
                       Container(
-                        width: 42,
-                        height: 42,
+                        width: 32,
+                        height: 32,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: isFound ? AppColors.pitchGreen : AppColors.surfaceLight,
+                          color: isFound ? AppColors.deepPurple : AppColors.surface,
                         ),
                         child: Center(
                           child: Icon(
-                            isFound ? Icons.check : Icons.sports_soccer,
-                            color: isFound ? Colors.black87 : Colors.white70,
-                            size: 20,
+                            isFound ? Icons.check : Icons.person_outline,
+                            color: isFound ? AppColors.gold : AppColors.textMuted,
+                            size: 16,
                           ),
                         ),
                       ),
@@ -105,17 +109,17 @@ class AnswerRevealSheet extends StatelessWidget {
                           children: [
                             Text(
                               player.name,
-                              style: const TextStyle(
-                                fontSize: 15,
+                              style: TextStyle(
+                                fontSize: 13,
                                 fontWeight: FontWeight.w700,
-                                color: AppColors.textPrimary,
+                                color: isFound ? AppColors.gold : Colors.white,
                               ),
                             ),
                             const SizedBox(height: 2),
                             Text(
                               '${player.country} • ${player.position} (${player.activeYears})',
                               style: const TextStyle(
-                                fontSize: 12,
+                                fontSize: 11,
                                 color: AppColors.textSecondary,
                               ),
                             ),
@@ -124,9 +128,8 @@ class AnswerRevealSheet extends StatelessWidget {
                               Text(
                                 player.hint,
                                 style: const TextStyle(
-                                  fontSize: 11,
-                                  color: AppColors.gold,
-                                  fontStyle: FontStyle.italic,
+                                  fontSize: 10,
+                                  color: AppColors.textMuted,
                                 ),
                               ),
                             ],

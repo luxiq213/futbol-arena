@@ -33,7 +33,7 @@ class _LoginScreenState extends State<LoginScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Lütfen e-posta ve şifrenizi girin.'),
-          backgroundColor: AppColors.crimson,
+          backgroundColor: AppColors.error,
         ),
       );
       return;
@@ -63,7 +63,7 @@ class _LoginScreenState extends State<LoginScreen> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: const Text('Giriş Yap', style: TextStyle(fontWeight: FontWeight.w800)),
+        title: const Text('Giriş Yap', style: TextStyle(fontWeight: FontWeight.w700)),
       ),
       body: StadiumBackground(
         child: SingleChildScrollView(
@@ -71,36 +71,35 @@ class _LoginScreenState extends State<LoginScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const SizedBox(height: 10),
-              // Logo / Icon
+              const SizedBox(height: 12),
+              // App Emblem / Vector Badge
               Center(
                 child: Container(
-                  width: 90,
-                  height: 90,
+                  width: 80,
+                  height: 80,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    gradient: AppColors.pitchGradient,
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.pitchGreen.withOpacity(0.35),
-                        blurRadius: 20,
-                        offset: const Offset(0, 6),
-                      ),
-                    ],
+                    color: AppColors.surface,
+                    border: Border.all(color: AppColors.borderActive, width: 1.5),
                   ),
                   child: const Center(
-                    child: Text('⚽', style: TextStyle(fontSize: 44)),
+                    child: Icon(
+                      Icons.shield_outlined,
+                      color: AppColors.gold,
+                      size: 38,
+                    ),
                   ),
                 ),
               ),
               const SizedBox(height: 20),
               const Text(
-                'Futbol Party\'ye Hoş Geldin!',
+                'Futbol Arena',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 22,
-                  fontWeight: FontWeight.w900,
-                  color: Colors.white,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.textPrimary,
+                  letterSpacing: -0.5,
                 ),
               ),
               const SizedBox(height: 6),
@@ -116,10 +115,25 @@ class _LoginScreenState extends State<LoginScreen> {
               TextField(
                 controller: _emailController,
                 keyboardType: TextInputType.emailAddress,
-                style: const TextStyle(color: Colors.white),
-                decoration: const InputDecoration(
+                style: const TextStyle(color: AppColors.textPrimary),
+                decoration: InputDecoration(
                   labelText: 'E-posta veya Kullanıcı Adı',
-                  prefixIcon: Icon(Icons.email_outlined, color: AppColors.pitchGreen),
+                  labelStyle: const TextStyle(color: AppColors.textMuted),
+                  prefixIcon: const Icon(Icons.mail_outline, color: AppColors.gold),
+                  filled: true,
+                  fillColor: AppColors.surface,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: AppColors.border),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: AppColors.border),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: AppColors.gold),
+                  ),
                 ),
               ),
 
@@ -129,16 +143,31 @@ class _LoginScreenState extends State<LoginScreen> {
               TextField(
                 controller: _passwordController,
                 obscureText: _obscurePassword,
-                style: const TextStyle(color: Colors.white),
+                style: const TextStyle(color: AppColors.textPrimary),
                 decoration: InputDecoration(
                   labelText: 'Şifre',
-                  prefixIcon: const Icon(Icons.lock_outline, color: AppColors.pitchGreen),
+                  labelStyle: const TextStyle(color: AppColors.textMuted),
+                  prefixIcon: const Icon(Icons.lock_outline, color: AppColors.gold),
                   suffixIcon: IconButton(
                     icon: Icon(
-                      _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                      _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
                       color: AppColors.textMuted,
                     ),
                     onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                  ),
+                  filled: true,
+                  fillColor: AppColors.surface,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: AppColors.border),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: AppColors.border),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: AppColors.gold),
                   ),
                 ),
               ),
@@ -148,8 +177,8 @@ class _LoginScreenState extends State<LoginScreen> {
               // LOGIN BUTTON
               CustomButton(
                 text: 'Giriş Yap',
-                gradient: AppColors.pitchGradient,
-                textColor: Colors.black87,
+                backgroundColor: AppColors.deepPurple,
+                textColor: AppColors.textPrimary,
                 isLoading: auth.isLoading,
                 onPressed: _onLogin,
               ),
@@ -158,9 +187,9 @@ class _LoginScreenState extends State<LoginScreen> {
 
               // GUEST LOGIN BUTTON
               CustomButton(
-                text: 'Hemen Misafir Olarak Oyna',
+                text: 'Misafir Olarak Devam Et',
                 isOutlined: true,
-                icon: Icons.flash_on,
+                icon: Icons.bolt_outlined,
                 isLoading: auth.isLoading,
                 onPressed: _onGuestPlay,
               ),
@@ -185,8 +214,8 @@ class _LoginScreenState extends State<LoginScreen> {
                     child: const Text(
                       'Kayıt Ol',
                       style: TextStyle(
-                        color: AppColors.pitchGreen,
-                        fontWeight: FontWeight.w800,
+                        color: AppColors.gold,
+                        fontWeight: FontWeight.w700,
                         fontSize: 14,
                       ),
                     ),

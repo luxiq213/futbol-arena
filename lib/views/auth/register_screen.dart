@@ -17,10 +17,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _usernameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  String _selectedAvatar = '👑';
+  String _selectedAvatar = 'KP';
   String _selectedTeam = 'Galatasaray';
 
-  final List<String> _avatars = ['👑', '⚡', '🦁', '🦅', '🎯', '⚽', '🔥', '🧤'];
+  final List<String> _avatars = ['KP', 'SC', 'ST', 'OR', 'DF', 'KL', 'TR', 'YD'];
   final List<String> _teams = [
     'Galatasaray',
     'Fenerbahçe',
@@ -31,6 +31,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
     'Arsenal',
     'Manchester City',
     'Bayern Münih',
+    'Inter',
+    'Milan',
+    'Liverpool',
   ];
 
   @override
@@ -50,7 +53,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Lütfen tüm alanları doldurun.'),
-          backgroundColor: AppColors.crimson,
+          backgroundColor: AppColors.error,
         ),
       );
       return;
@@ -80,7 +83,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: const Text('Hesap Oluştur', style: TextStyle(fontWeight: FontWeight.w800)),
+        title: const Text('Hesap Oluştur', style: TextStyle(fontWeight: FontWeight.w700)),
       ),
       body: StadiumBackground(
         child: SingleChildScrollView(
@@ -89,11 +92,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const Text(
-                'Futbolculuk Lisansını Al!',
+                'Oyuncu Profilini Oluştur',
                 style: TextStyle(
                   fontSize: 22,
-                  fontWeight: FontWeight.w900,
-                  color: Colors.white,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.textPrimary,
+                  letterSpacing: -0.5,
                 ),
               ),
               const SizedBox(height: 6),
@@ -107,10 +111,25 @@ class _RegisterScreenState extends State<RegisterScreen> {
               // USERNAME
               TextField(
                 controller: _usernameController,
-                style: const TextStyle(color: Colors.white),
-                decoration: const InputDecoration(
+                style: const TextStyle(color: AppColors.textPrimary),
+                decoration: InputDecoration(
                   labelText: 'Kullanıcı Adı / Lakap',
-                  prefixIcon: Icon(Icons.person_outline, color: AppColors.pitchGreen),
+                  labelStyle: const TextStyle(color: AppColors.textMuted),
+                  prefixIcon: const Icon(Icons.person_outline, color: AppColors.gold),
+                  filled: true,
+                  fillColor: AppColors.surface,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: AppColors.border),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: AppColors.border),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: AppColors.gold),
+                  ),
                 ),
               ),
 
@@ -120,10 +139,25 @@ class _RegisterScreenState extends State<RegisterScreen> {
               TextField(
                 controller: _emailController,
                 keyboardType: TextInputType.emailAddress,
-                style: const TextStyle(color: Colors.white),
-                decoration: const InputDecoration(
+                style: const TextStyle(color: AppColors.textPrimary),
+                decoration: InputDecoration(
                   labelText: 'E-posta',
-                  prefixIcon: Icon(Icons.email_outlined, color: AppColors.pitchGreen),
+                  labelStyle: const TextStyle(color: AppColors.textMuted),
+                  prefixIcon: const Icon(Icons.mail_outline, color: AppColors.gold),
+                  filled: true,
+                  fillColor: AppColors.surface,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: AppColors.border),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: AppColors.border),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: AppColors.gold),
+                  ),
                 ),
               ),
 
@@ -133,19 +167,34 @@ class _RegisterScreenState extends State<RegisterScreen> {
               TextField(
                 controller: _passwordController,
                 obscureText: true,
-                style: const TextStyle(color: Colors.white),
-                decoration: const InputDecoration(
+                style: const TextStyle(color: AppColors.textPrimary),
+                decoration: InputDecoration(
                   labelText: 'Şifre',
-                  prefixIcon: Icon(Icons.lock_outline, color: AppColors.pitchGreen),
+                  labelStyle: const TextStyle(color: AppColors.textMuted),
+                  prefixIcon: const Icon(Icons.lock_outline, color: AppColors.gold),
+                  filled: true,
+                  fillColor: AppColors.surface,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: AppColors.border),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: AppColors.border),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: AppColors.gold),
+                  ),
                 ),
               ),
 
               const SizedBox(height: 18),
 
-              // AVATAR PICKER
+              // MONOGRAM AVATAR PICKER
               const Text(
-                'Profil Karakteri',
-                style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
+                'Profil Monogramı',
+                style: TextStyle(fontSize: 13, color: AppColors.textSecondary, fontWeight: FontWeight.w600),
               ),
               const SizedBox(height: 8),
               SizedBox(
@@ -153,7 +202,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 child: ListView.separated(
                   scrollDirection: Axis.horizontal,
                   itemCount: _avatars.length,
-                  separatorBuilder: (_, __) => const SizedBox(width: 8),
+                  separatorBuilder: (context, index) => const SizedBox(width: 8),
                   itemBuilder: (context, index) {
                     final av = _avatars[index];
                     final isSelected = _selectedAvatar == av;
@@ -163,13 +212,21 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         width: 48,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: isSelected ? AppColors.pitchGreen : AppColors.surface,
+                          color: isSelected ? AppColors.deepPurple : AppColors.surface,
                           border: Border.all(
-                            color: isSelected ? AppColors.pitchGreen : AppColors.cardBorder,
+                            color: isSelected ? AppColors.gold : AppColors.border,
+                            width: isSelected ? 2 : 1,
                           ),
                         ),
                         child: Center(
-                          child: Text(av, style: const TextStyle(fontSize: 20)),
+                          child: Text(
+                            av,
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                              color: isSelected ? AppColors.gold : AppColors.silver,
+                            ),
+                          ),
                         ),
                       ),
                     );
@@ -181,27 +238,27 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
               // FAVORITE TEAM
               const Text(
-                'Tuttuğun Takım',
-                style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
+                'Favori Takım',
+                style: TextStyle(fontSize: 13, color: AppColors.textSecondary, fontWeight: FontWeight.w600),
               ),
               const SizedBox(height: 8),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 decoration: BoxDecoration(
                   color: AppColors.surface,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: AppColors.cardBorder),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppColors.border),
                 ),
                 child: DropdownButtonHideUnderline(
                   child: DropdownButton<String>(
                     value: _selectedTeam,
                     isExpanded: true,
                     dropdownColor: AppColors.surface,
-                    icon: const Icon(Icons.arrow_drop_down, color: AppColors.pitchGreen),
+                    icon: const Icon(Icons.keyboard_arrow_down, color: AppColors.gold),
                     items: _teams.map((team) {
                       return DropdownMenuItem<String>(
                         value: team,
-                        child: Text(team, style: const TextStyle(color: Colors.white)),
+                        child: Text(team, style: const TextStyle(color: AppColors.textPrimary)),
                       );
                     }).toList(),
                     onChanged: (val) {
@@ -216,8 +273,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
               // REGISTER BUTTON
               CustomButton(
                 text: 'Hesap Oluştur ve Başla',
-                gradient: AppColors.pitchGradient,
-                textColor: Colors.black87,
+                backgroundColor: AppColors.deepPurple,
+                textColor: AppColors.textPrimary,
                 isLoading: auth.isLoading,
                 onPressed: _onRegister,
               ),
@@ -242,8 +299,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     child: const Text(
                       'Giriş Yap',
                       style: TextStyle(
-                        color: AppColors.pitchGreen,
-                        fontWeight: FontWeight.w800,
+                        color: AppColors.gold,
+                        fontWeight: FontWeight.w700,
                         fontSize: 14,
                       ),
                     ),

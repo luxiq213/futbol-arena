@@ -6,7 +6,6 @@ class CustomButton extends StatelessWidget {
   final String text;
   final VoidCallback? onPressed;
   final IconData? icon;
-  final Gradient? gradient;
   final Color? backgroundColor;
   final Color textColor;
   final bool isLoading;
@@ -18,12 +17,11 @@ class CustomButton extends StatelessWidget {
     required this.text,
     required this.onPressed,
     this.icon,
-    this.gradient = AppColors.pitchGradient,
     this.backgroundColor,
-    this.textColor = Colors.black87,
+    this.textColor = Colors.white,
     this.isLoading = false,
     this.isOutlined = false,
-    this.height = 54,
+    this.height = 48,
   });
 
   @override
@@ -39,22 +37,24 @@ class CustomButton extends StatelessWidget {
                 }
               : null,
           style: OutlinedButton.styleFrom(
-            side: const BorderSide(color: AppColors.pitchGreen, width: 1.5),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            side: const BorderSide(color: AppColors.border, width: 1.0),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            backgroundColor: Colors.transparent,
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               if (icon != null) ...[
-                Icon(icon, color: AppColors.pitchGreen, size: 20),
+                Icon(icon, color: AppColors.gold, size: 18),
                 const SizedBox(width: 8),
               ],
               Text(
                 text,
                 style: const TextStyle(
-                  color: AppColors.pitchGreen,
-                  fontSize: 15,
-                  fontWeight: FontWeight.w700,
+                  color: AppColors.gold,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.3,
                 ),
               ),
             ],
@@ -63,27 +63,22 @@ class CustomButton extends StatelessWidget {
       );
     }
 
+    final bg = backgroundColor ?? AppColors.deepPurple;
+
     return Container(
       height: height,
       decoration: BoxDecoration(
-        gradient: onPressed == null ? null : (backgroundColor == null ? gradient : null),
-        color: onPressed == null ? AppColors.surfaceLight : backgroundColor,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: onPressed == null
-            ? null
-            : [
-                BoxShadow(
-                  color: (gradient?.colors.first ?? backgroundColor ?? AppColors.pitchGreen)
-                      .withOpacity(0.35),
-                  blurRadius: 16,
-                  offset: const Offset(0, 6),
-                ),
-              ],
+        color: onPressed == null ? AppColors.surfaceLight : bg,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: onPressed == null ? Colors.transparent : AppColors.borderPurple,
+          width: 1.0,
+        ),
       ),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(12),
           onTap: onPressed != null && !isLoading
               ? () {
                   GameFeedback.tick();
@@ -93,10 +88,10 @@ class CustomButton extends StatelessWidget {
           child: Center(
             child: isLoading
                 ? const SizedBox(
-                    width: 24,
-                    height: 24,
+                    width: 20,
+                    height: 20,
                     child: CircularProgressIndicator(
-                      strokeWidth: 2.5,
+                      strokeWidth: 2,
                       valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                     ),
                   )
@@ -104,14 +99,14 @@ class CustomButton extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       if (icon != null) ...[
-                        Icon(icon, color: textColor, size: 20),
+                        Icon(icon, color: textColor, size: 18),
                         const SizedBox(width: 8),
                       ],
                       Text(
                         text,
                         style: TextStyle(
                           color: textColor,
-                          fontSize: 16,
+                          fontSize: 14,
                           fontWeight: FontWeight.w700,
                           letterSpacing: 0.3,
                         ),

@@ -2,6 +2,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import '../models/club_model.dart';
 import '../models/player_model.dart';
+import '../models/grid_challenge_model.dart';
 import '../../core/utils/text_normalizer.dart';
 
 class FootballDatabase {
@@ -2340,5 +2341,264 @@ class FootballDatabase {
       return matches.sublist(0, limit);
     }
     return matches;
+  }
+
+  /// 5 Clubs 1 Player Challenge sets
+  List<FiveClubsChallenge> getFiveClubsChallenges() {
+    return [
+      FiveClubsChallenge(
+        clubs: [
+          _clubs['ajax']!,
+          _clubs['juventus']!,
+          _clubs['inter']!,
+          _clubs['barcelona']!,
+          _clubs['psg']!,
+        ],
+        bestAnswer: _players.firstWhere((p) => p.id == 'zlatan_ibrahimovic'),
+        maxMatchCount: 5,
+      ),
+      FiveClubsChallenge(
+        clubs: [
+          _clubs['arsenal']!,
+          _clubs['chelsea']!,
+          _clubs['real_madrid']!,
+          _clubs['psg']!,
+          _clubs['liverpool']!,
+        ],
+        bestAnswer: _players.firstWhere((p) => p.id == 'nicolas_anelka'),
+        maxMatchCount: 5,
+      ),
+      FiveClubsChallenge(
+        clubs: [
+          _clubs['sporting']!,
+          _clubs['man_united']!,
+          _clubs['real_madrid']!,
+          _clubs['juventus']!,
+          _clubs['bayern']!,
+        ],
+        bestAnswer: _players.firstWhere((p) => p.id == 'cristiano_ronaldo'),
+        maxMatchCount: 4,
+      ),
+      FiveClubsChallenge(
+        clubs: [
+          _clubs['porto']!,
+          _clubs['atletico_madrid']!,
+          _clubs['monaco']!,
+          _clubs['chelsea']!,
+          _clubs['galatasaray']!,
+        ],
+        bestAnswer: _players.firstWhere((p) => p.id == 'radamel_falcao'),
+        maxMatchCount: 5,
+      ),
+      FiveClubsChallenge(
+        clubs: [
+          _clubs['galatasaray']!,
+          _clubs['fenerbahce']!,
+          _clubs['besiktas']!,
+          _clubs['trabzonspor']!,
+          _clubs['real_madrid']!,
+        ],
+        bestAnswer: _players.firstWhere((p) => p.id == 'burak_yilmaz'),
+        maxMatchCount: 4,
+      ),
+      FiveClubsChallenge(
+        clubs: [
+          _clubs['milan']!,
+          _clubs['monaco']!,
+          _clubs['dortmund']!,
+          _clubs['arsenal']!,
+          _clubs['chelsea']!,
+        ],
+        bestAnswer: _players.firstWhere((p) => p.id == 'aubameyang'),
+        maxMatchCount: 5,
+      ),
+      FiveClubsChallenge(
+        clubs: [
+          _clubs['sevilla']!,
+          _clubs['barcelona']!,
+          _clubs['juventus']!,
+          _clubs['psg']!,
+          _clubs['liverpool']!,
+        ],
+        bestAnswer: _players.firstWhere((p) => p.id == 'dani_alves'),
+        maxMatchCount: 4,
+      ),
+    ];
+  }
+
+  FiveClubsChallenge getRandom5ClubsChallenge() {
+    final challenges = getFiveClubsChallenges();
+    return challenges[_random.nextInt(challenges.length)];
+  }
+
+  /// Evaluate user's player choice in 5 clubs
+  int evaluatePlayerFor5Clubs(PlayerModel player, List<ClubModel> targetClubs) {
+    return targetClubs.where((c) => player.playedFor(c.id)).length;
+  }
+
+  /// 3x3 Grid Challenges
+  List<GridChallenge> getGridChallenges() {
+    return [
+      // Challenge 1
+      GridChallenge(
+        rowCriteria: [
+          GridCriterion(
+            id: 'real_madrid',
+            label: 'Real Madrid',
+            sublabel: 'La Liga',
+            isClub: true,
+            club: _clubs['real_madrid'],
+          ),
+          GridCriterion(
+            id: 'barcelona',
+            label: 'Barcelona',
+            sublabel: 'La Liga',
+            isClub: true,
+            club: _clubs['barcelona'],
+          ),
+          GridCriterion(
+            id: 'galatasaray',
+            label: 'Galatasaray',
+            sublabel: 'Süper Lig',
+            isClub: true,
+            club: _clubs['galatasaray'],
+          ),
+        ],
+        colCriteria: [
+          GridCriterion(
+            id: 'arsenal',
+            label: 'Arsenal',
+            sublabel: 'Premier League',
+            isClub: true,
+            club: _clubs['arsenal'],
+          ),
+          GridCriterion(
+            id: 'inter',
+            label: 'Inter Milan',
+            sublabel: 'Serie A',
+            isClub: true,
+            club: _clubs['inter'],
+          ),
+          GridCriterion(
+            id: 'chelsea',
+            label: 'Chelsea',
+            sublabel: 'Premier League',
+            isClub: true,
+            club: _clubs['chelsea'],
+          ),
+        ],
+      ),
+      // Challenge 2
+      GridChallenge(
+        rowCriteria: [
+          GridCriterion(
+            id: 'man_united',
+            label: 'Man United',
+            sublabel: 'Premier League',
+            isClub: true,
+            club: _clubs['man_united'],
+          ),
+          GridCriterion(
+            id: 'bayern',
+            label: 'Bayern Münih',
+            sublabel: 'Bundesliga',
+            isClub: true,
+            club: _clubs['bayern'],
+          ),
+          GridCriterion(
+            id: 'fenerbahce',
+            label: 'Fenerbahçe',
+            sublabel: 'Süper Lig',
+            isClub: true,
+            club: _clubs['fenerbahce'],
+          ),
+        ],
+        colCriteria: [
+          GridCriterion(
+            id: 'real_madrid',
+            label: 'Real Madrid',
+            sublabel: 'La Liga',
+            isClub: true,
+            club: _clubs['real_madrid'],
+          ),
+          GridCriterion(
+            id: 'juventus',
+            label: 'Juventus',
+            sublabel: 'Serie A',
+            isClub: true,
+            club: _clubs['juventus'],
+          ),
+          GridCriterion(
+            id: 'arsenal',
+            label: 'Arsenal',
+            sublabel: 'Premier League',
+            isClub: true,
+            club: _clubs['arsenal'],
+          ),
+        ],
+      ),
+      // Challenge 3
+      GridChallenge(
+        rowCriteria: [
+          GridCriterion(
+            id: 'besiktas',
+            label: 'Beşiktaş',
+            sublabel: 'Süper Lig',
+            isClub: true,
+            club: _clubs['besiktas'],
+          ),
+          GridCriterion(
+            id: 'chelsea',
+            label: 'Chelsea',
+            sublabel: 'Premier League',
+            isClub: true,
+            club: _clubs['chelsea'],
+          ),
+          GridCriterion(
+            id: 'milan',
+            label: 'AC Milan',
+            sublabel: 'Serie A',
+            isClub: true,
+            club: _clubs['milan'],
+          ),
+        ],
+        colCriteria: [
+          GridCriterion(
+            id: 'real_madrid',
+            label: 'Real Madrid',
+            sublabel: 'La Liga',
+            isClub: true,
+            club: _clubs['real_madrid'],
+          ),
+          GridCriterion(
+            id: 'barcelona',
+            label: 'Barcelona',
+            sublabel: 'La Liga',
+            isClub: true,
+            club: _clubs['barcelona'],
+          ),
+          GridCriterion(
+            id: 'arsenal',
+            label: 'Arsenal',
+            sublabel: 'Premier League',
+            isClub: true,
+            club: _clubs['arsenal'],
+          ),
+        ],
+      ),
+    ];
+  }
+
+  GridChallenge getRandom3x3GridChallenge() {
+    final challenges = getGridChallenges();
+    return challenges[_random.nextInt(challenges.length)];
+  }
+
+  bool validateGridCell(GridCriterion row, GridCriterion col, PlayerModel player) {
+    return player.matchesGridCriterion(row.id) && player.matchesGridCriterion(col.id);
+  }
+
+  List<PlayerModel> getValidPlayersForCell(GridCriterion row, GridCriterion col) {
+    return _players.where((p) => validateGridCell(row, col, p)).toList();
   }
 }

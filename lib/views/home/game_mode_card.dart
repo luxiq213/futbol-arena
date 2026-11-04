@@ -4,10 +4,9 @@ import '../../core/constants/app_colors.dart';
 class GameModeCard extends StatelessWidget {
   final String title;
   final String subtitle;
-  final String emoji;
+  final IconData icon;
   final String tag;
   final Color tagColor;
-  final Gradient gradient;
   final VoidCallback? onTap;
   final bool isComingSoon;
 
@@ -15,10 +14,9 @@ class GameModeCard extends StatelessWidget {
     super.key,
     required this.title,
     required this.subtitle,
-    required this.emoji,
+    required this.icon,
     required this.tag,
-    required this.tagColor,
-    required this.gradient,
+    this.tagColor = AppColors.gold,
     required this.onTap,
     this.isComingSoon = false,
   });
@@ -26,50 +24,43 @@ class GameModeCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 14),
+      margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: isComingSoon ? AppColors.cardBorder : tagColor.withOpacity(0.4),
-          width: 1.5,
+          color: isComingSoon ? AppColors.border : AppColors.borderPurple,
+          width: 1.0,
         ),
-        boxShadow: isComingSoon
-            ? null
-            : [
-                BoxShadow(
-                  color: tagColor.withOpacity(0.12),
-                  blurRadius: 18,
-                  offset: const Offset(0, 4),
-                ),
-              ],
       ),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          borderRadius: BorderRadius.circular(22),
+          borderRadius: BorderRadius.circular(16),
           onTap: onTap,
           child: Padding(
-            padding: const EdgeInsets.all(18),
+            padding: const EdgeInsets.all(16),
             child: Row(
               children: [
-                // Icon / Emoji Box
+                // Clean Icon Box
                 Container(
-                  width: 58,
-                  height: 58,
+                  width: 46,
+                  height: 46,
                   decoration: BoxDecoration(
-                    gradient: gradient,
-                    borderRadius: BorderRadius.circular(16),
+                    color: AppColors.surfaceLight,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: AppColors.border),
                   ),
                   child: Center(
-                    child: Text(
-                      emoji,
-                      style: const TextStyle(fontSize: 28),
+                    child: Icon(
+                      icon,
+                      color: tagColor,
+                      size: 22,
                     ),
                   ),
                 ),
-                const SizedBox(width: 16),
-                // Texts
+                const SizedBox(width: 14),
+                // Text Information
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -77,29 +68,29 @@ class GameModeCard extends StatelessWidget {
                       Row(
                         children: [
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                             decoration: BoxDecoration(
-                              color: tagColor.withOpacity(0.18),
-                              borderRadius: BorderRadius.circular(8),
+                              color: tagColor.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(4),
                             ),
                             child: Text(
                               tag,
                               style: TextStyle(
                                 color: tagColor,
-                                fontSize: 10,
-                                fontWeight: FontWeight.w800,
-                                letterSpacing: 0.5,
+                                fontSize: 9,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 0.6,
                               ),
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 6),
+                      const SizedBox(height: 5),
                       Text(
                         title,
                         style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w800,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
                           color: Colors.white,
                         ),
                       ),
@@ -109,16 +100,16 @@ class GameModeCard extends StatelessWidget {
                         style: const TextStyle(
                           fontSize: 12,
                           color: AppColors.textSecondary,
+                          height: 1.3,
                         ),
                       ),
                     ],
                   ),
                 ),
-                // Arrow
                 Icon(
                   isComingSoon ? Icons.lock_outline : Icons.chevron_right,
                   color: isComingSoon ? AppColors.textMuted : AppColors.textSecondary,
-                  size: 24,
+                  size: 20,
                 ),
               ],
             ),

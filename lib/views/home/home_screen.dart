@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
 import '../../providers/auth_provider.dart';
-import '../widgets/stadium_background.dart';
 import '../widgets/app_app_bar.dart';
+import '../widgets/app_natural_footer.dart';
 import '../games/common_player/common_player_screen.dart';
+import '../games/five_clubs/five_clubs_screen.dart';
+import '../games/football_grid/football_grid_screen.dart';
 import '../games/party_mode/party_setup_screen.dart';
 import '../games/online_lobby/lobby_hub_screen.dart';
 import '../leaderboard/leaderboard_screen.dart';
@@ -19,54 +21,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  int _currentIndex = 0;
-
-  @override
-  Widget build(BuildContext context) {
-    final List<Widget> pages = [
-      const _GamesHomeTab(),
-      const LeaderboardScreen(),
-      const ProfileScreen(),
-    ];
-
-    return Scaffold(
-      body: pages[_currentIndex],
-      bottomNavigationBar: Container(
-        decoration: const BoxDecoration(
-          color: AppColors.backgroundSecondary,
-          border: Border(top: BorderSide(color: AppColors.cardBorder, width: 1)),
-        ),
-        child: BottomNavigationBar(
-          currentIndex: _currentIndex,
-          onTap: (idx) => setState(() => _currentIndex = idx),
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          selectedItemColor: AppColors.pitchGreen,
-          unselectedItemColor: AppColors.textMuted,
-          selectedLabelStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
-          unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w500, fontSize: 12),
-          items: const [
-            BottomNavigationBarItem(
-              icon: Icon(Icons.sports_soccer),
-              label: 'Oyunlar',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.leaderboard_rounded),
-              label: 'Sıralama',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.person),
-              label: 'Profil',
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _GamesHomeTab extends StatelessWidget {
-  const _GamesHomeTab();
+  int _activeTab = 0; // 0: Oyunlar, 1: Sıralama, 2: Profil
 
   @override
   Widget build(BuildContext context) {
@@ -74,76 +29,83 @@ class _GamesHomeTab extends StatelessWidget {
     final user = auth.currentUser;
 
     return Scaffold(
-      appBar: const AppTopBar(title: 'Futbol Party ⚽'),
-      body: StadiumBackground(
+      backgroundColor: AppColors.background,
+      appBar: const AppTopBar(title: 'Futbol Trivia'),
+      body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // WELCOME STREAK BANNER
+              // User Status Header Card
               Container(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  gradient: AppColors.cardGradient,
-                  borderRadius: BorderRadius.circular(22),
-                  border: Border.all(color: AppColors.cardBorder),
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: AppColors.border),
                 ),
                 child: Row(
                   children: [
                     Container(
-                      width: 50,
-                      height: 50,
+                      width: 44,
+                      height: 44,
                       decoration: BoxDecoration(
-                        color: AppColors.pitchGreen.withOpacity(0.15),
-                        shape: BoxShape.circle,
-                        border: Border.all(color: AppColors.pitchGreen.withOpacity(0.4)),
+                        color: AppColors.deepPurple,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: AppColors.gold, width: 1.2),
                       ),
                       child: Center(
-                        child: Text(user?.avatar ?? '⚽', style: const TextStyle(fontSize: 26)),
+                        child: Text(
+                          user?.avatar.isNotEmpty == true ? user!.avatar : 'KP',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w800,
+                            color: AppColors.gold,
+                          ),
+                        ),
                       ),
                     ),
-                    const SizedBox(width: 14),
+                    const SizedBox(width: 12),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Hoş geldin, ${user?.username ?? "Kaptan"}!',
+                            user?.username ?? 'Kaptan',
                             style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w800,
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700,
                               color: Colors.white,
                             ),
                           ),
                           const SizedBox(height: 2),
                           Text(
-                            '${user?.favoriteTeam ?? "Futbol"} • ${user?.rankTitle ?? "Genç Yetenek"}',
+                            '${user?.favoriteTeam ?? "Galatasaray"} • ${user?.rankTitle ?? "Genc Yetenek"}',
                             style: const TextStyle(
-                              fontSize: 12,
-                              color: AppColors.textSecondary,
+                              fontSize: 11,
+                              color: AppColors.textMuted,
                             ),
                           ),
                         ],
                       ),
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
-                        color: AppColors.orange.withOpacity(0.18),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: AppColors.orange.withOpacity(0.4)),
+                        color: AppColors.surfaceLight,
+                        borderRadius: BorderRadius.circular(8),
                       ),
                       child: Row(
                         children: [
-                          const Text('🔥', style: TextStyle(fontSize: 14)),
+                          const Icon(Icons.star_outline, size: 14, color: AppColors.gold),
                           const SizedBox(width: 4),
                           Text(
-                            '${user?.currentStreak ?? 0}',
+                            '${user?.points ?? 0} XP',
                             style: const TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w800,
-                              color: AppColors.orange,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.gold,
                             ),
                           ),
                         ],
@@ -153,207 +115,122 @@ class _GamesHomeTab extends StatelessWidget {
                 ),
               ),
 
-              const SizedBox(height: 20),
+              const SizedBox(height: 18),
 
-              // FEATURED PARTY HERO BANNER
-              GestureDetector(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const PartySetupScreen()),
-                  );
-                },
-                child: Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    gradient: AppColors.fireGradient,
-                    borderRadius: BorderRadius.circular(24),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.deepOrange.withOpacity(0.35),
-                        blurRadius: 20,
-                        offset: const Offset(0, 6),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                              decoration: BoxDecoration(
-                                color: Colors.black.withOpacity(0.25),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: const Text(
-                                '🔥 ARKADAŞLARLA YAN YANA',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w800,
-                                  letterSpacing: 0.8,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            const Text(
-                              '3-2-1 Bomba!',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 22,
-                                fontWeight: FontWeight.w900,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            const Text(
-                              'Süre bitmeden ortak oyuncuyu söyle, bombadan kurtul!',
-                              style: TextStyle(
-                                color: Colors.white70,
-                                fontSize: 12,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Container(
-                        width: 58,
-                        height: 58,
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Center(
-                          child: Text('💣', style: TextStyle(fontSize: 32)),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+              // Modular Content based on _activeTab
+              if (_activeTab == 0) ...[
+                _buildGamesSection(context),
+              ] else if (_activeTab == 1) ...[
+                const LeaderboardScreen(isEmbedded: true),
+              ] else ...[
+                const ProfileScreen(isEmbedded: true),
+              ],
 
-              const SizedBox(height: 24),
-
-              // ACTIVE GAME MODES
-              const Text(
-                'Oyun Modları',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-              const SizedBox(height: 12),
-
-              // MODE 1: Ortak Futbolcu (Who Played For Both)
-              GameModeCard(
-                title: 'Ortak Futbolcu Bul',
-                subtitle: 'İki dev kulüpte de forma giymiş efsaneleri tahmin et!',
-                emoji: '⚽',
-                tag: 'KLASİK DÜELLO',
-                tagColor: AppColors.pitchGreen,
-                gradient: AppColors.pitchGradient,
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const CommonPlayerScreen()),
-                  );
+              // Natural Flow Footer (Not fixed, sits at end of scroll flow)
+              AppNaturalFooter(
+                activeIndex: _activeTab,
+                onTabSelected: (index) {
+                  setState(() => _activeTab = index);
                 },
               ),
-
-              // MODE 2: Online Lobi
-              GameModeCard(
-                title: 'Online Oda & Arkadaş Daveti',
-                subtitle: 'Oda kodu oluştur, uzaktaki arkadaşlarınla canlı oyna!',
-                emoji: '🌐',
-                tag: 'ÇOK OYUNCULU',
-                tagColor: AppColors.electricBlue,
-                gradient: AppColors.blueGradient,
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const LobbyHubScreen()),
-                  );
-                },
-              ),
-
-              const SizedBox(height: 20),
-
-              // FUTURE MODES (EXTENSIBLE HUB FOR UPCOMING IDEAS)
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'Yakında Gelecek Modlar',
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: AppColors.purple.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Text(
-                      'YENİ FİKİRLER',
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w800,
-                        color: AppColors.purple,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-
-              GameModeCard(
-                title: 'Kariyer Yolu Tahmini',
-                subtitle: 'Sırasıyla oynadığı kulüpleri gör, futbolcuyu bil!',
-                emoji: '🗺️',
-                tag: 'YAKINDA',
-                tagColor: AppColors.purple,
-                gradient: const LinearGradient(colors: [Color(0xFF7C4DFF), Color(0xFF536DFE)]),
-                isComingSoon: true,
-                onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Bu mod yakında aktif olacak! Fikirlerinizi ekleyebilirsiniz.'),
-                      duration: Duration(seconds: 2),
-                    ),
-                  );
-                },
-              ),
-
-              GameModeCard(
-                title: 'Transfer Değeri (Kim Daha Pahalı?)',
-                subtitle: 'İki transferden hangisi daha pahalıydı? Yüksek/Düşük!',
-                emoji: '💰',
-                tag: 'YAKINDA',
-                tagColor: AppColors.gold,
-                gradient: AppColors.goldGradient,
-                isComingSoon: true,
-                onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Transfer Değeri modu yakında gelecek!'),
-                      duration: Duration(seconds: 2),
-                    ),
-                  );
-                },
-              ),
-
-              const SizedBox(height: 24),
             ],
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildGamesSection(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // Section Header
+        const Text(
+          'OYUN MODLARI',
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 1.0,
+            color: AppColors.gold,
+          ),
+        ),
+        const SizedBox(height: 10),
+
+        // Mode 1: Ortak Oyuncu Düellosu (3-2-1)
+        GameModeCard(
+          title: 'Ortak Oyuncu Düellosu (3-2-1)',
+          subtitle: 'Iki dev kulüp armasini gör, her iki takimda oynamis efsaneyi bul.',
+          icon: Icons.compare_arrows_rounded,
+          tag: 'KLASİK DÜELLO',
+          tagColor: AppColors.gold,
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const CommonPlayerScreen()),
+            );
+          },
+        ),
+
+        // Mode 2: 5 Takım 1 Oyuncu (Solo & Scout AI)
+        GameModeCard(
+          title: '5 Takim 1 Oyuncu',
+          subtitle: 'Ekrana gelen 5 kulübün en cogunda forma giymis futbolcuyu tespit et.',
+          icon: Icons.shield_outlined,
+          tag: 'REKOR ANALİZİ',
+          tagColor: AppColors.silver,
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const FiveClubsScreen()),
+            );
+          },
+        ),
+
+        // Mode 3: Futbol Grid (3x3 Tic-Tac-Toe)
+        GameModeCard(
+          title: 'Futbol Grid 3x3',
+          subtitle: 'Kulüpler ve basari kriterlerinin kesisim noktalarina uygun oyunculari yerlestir.',
+          icon: Icons.grid_3x3_outlined,
+          tag: 'STRATEJİ MATRİSİ',
+          tagColor: AppColors.gold,
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const FootballGridScreen()),
+            );
+          },
+        ),
+
+        // Mode 4: 3-2-1 Bomba (Masada / Yan Yana Arkadaş Grubu)
+        GameModeCard(
+          title: '3-2-1 Düello Turlari (Yan Yana)',
+          subtitle: 'Masada arkadaslarinla elden ele oynayin. Süre bitmeden ortak oyuncuyu söyle!',
+          icon: Icons.alarm_outlined,
+          tag: 'PARTİ MODU',
+          tagColor: AppColors.lavender,
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const PartySetupScreen()),
+            );
+          },
+        ),
+
+        // Mode 5: Online Lobi & Oda Daveti
+        GameModeCard(
+          title: 'Online Oda & Arkadas Daveti',
+          subtitle: '6 haneli oda kodu olustur, uzaktaki arkadaslarinla ayni anda yaris.',
+          icon: Icons.cell_tower_outlined,
+          tag: 'ÇOK OYUNCULU',
+          tagColor: AppColors.silver,
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const LobbyHubScreen()),
+            );
+          },
+        ),
+      ],
     );
   }
 }

@@ -49,7 +49,7 @@ class _SearchGuessBarState extends State<SearchGuessBar> {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        // Search Input
+        // Search Input Row
         Row(
           children: [
             Expanded(
@@ -58,13 +58,13 @@ class _SearchGuessBarState extends State<SearchGuessBar> {
                 onChanged: _onChanged,
                 onSubmitted: _submit,
                 textInputAction: TextInputAction.send,
-                style: const TextStyle(color: Colors.white, fontSize: 15),
+                style: const TextStyle(color: Colors.white, fontSize: 14),
                 decoration: InputDecoration(
-                  hintText: 'Futbolcu ismi yazın (örn: Sneijder)...',
-                  prefixIcon: const Icon(Icons.search, color: AppColors.pitchGreen),
+                  hintText: 'Futbolcu ismi yazin (Örn: Sneijder, Ronaldo)...',
+                  prefixIcon: const Icon(Icons.search, color: AppColors.gold, size: 18),
                   suffixIcon: _controller.text.isNotEmpty
                       ? IconButton(
-                          icon: const Icon(Icons.clear, color: AppColors.textMuted, size: 18),
+                          icon: const Icon(Icons.clear, color: AppColors.textMuted, size: 16),
                           onPressed: () {
                             _controller.clear();
                             setState(() => _suggestions = []);
@@ -76,14 +76,15 @@ class _SearchGuessBarState extends State<SearchGuessBar> {
             ),
             const SizedBox(width: 8),
             Container(
-              height: 52,
-              width: 52,
+              height: 48,
+              width: 48,
               decoration: BoxDecoration(
-                gradient: AppColors.pitchGradient,
-                borderRadius: BorderRadius.circular(16),
+                color: AppColors.deepPurple,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: AppColors.border),
               ),
               child: IconButton(
-                icon: const Icon(Icons.arrow_upward_rounded, color: Colors.black87),
+                icon: const Icon(Icons.arrow_upward_rounded, color: Colors.white, size: 20),
                 onPressed: () => _submit(_controller.text),
               ),
             ),
@@ -97,43 +98,42 @@ class _SearchGuessBarState extends State<SearchGuessBar> {
             constraints: const BoxConstraints(maxHeight: 180),
             decoration: BoxDecoration(
               color: AppColors.surface,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppColors.cardBorder),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.4),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
-                ),
-              ],
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: AppColors.border),
             ),
             child: ListView.separated(
               shrinkWrap: true,
               padding: const EdgeInsets.symmetric(vertical: 4),
               itemCount: _suggestions.length,
-              separatorBuilder: (_, __) => const Divider(color: AppColors.cardBorder, height: 1),
+              separatorBuilder: (_, _) => const Divider(color: AppColors.border, height: 1),
               itemBuilder: (context, index) {
                 final player = _suggestions[index];
                 return ListTile(
                   dense: true,
-                  leading: const CircleAvatar(
-                    radius: 14,
-                    backgroundColor: AppColors.surfaceLight,
-                    child: Text('⚽', style: TextStyle(fontSize: 12)),
+                  leading: Container(
+                    width: 26,
+                    height: 26,
+                    decoration: BoxDecoration(
+                      color: AppColors.surfaceLight,
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: const Center(
+                      child: Icon(Icons.person_outline, size: 14, color: AppColors.gold),
+                    ),
                   ),
                   title: Text(
                     player.name,
                     style: const TextStyle(
                       color: AppColors.textPrimary,
                       fontWeight: FontWeight.w600,
-                      fontSize: 14,
+                      fontSize: 13,
                     ),
                   ),
                   subtitle: Text(
                     '${player.country} • ${player.position}',
                     style: const TextStyle(color: AppColors.textSecondary, fontSize: 11),
                   ),
-                  trailing: const Icon(Icons.north_west, color: AppColors.textMuted, size: 16),
+                  trailing: const Icon(Icons.north_west, color: AppColors.textMuted, size: 14),
                   onTap: () {
                     _submit(player.name);
                   },
