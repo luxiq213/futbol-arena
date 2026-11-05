@@ -35,7 +35,7 @@ class _HomeScreenState extends State<HomeScreen> {
       backgroundColor: AppColors.background,
       appBar: const AppTopBar(title: 'Futbol Trivia'),
       body: StadiumBackground(
-        showGrass: true,
+        showSkyEffects: true,
         child: Stack(
           children: [
             // Scrollable Content Layer

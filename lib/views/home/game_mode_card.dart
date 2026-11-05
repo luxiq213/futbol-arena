@@ -26,12 +26,13 @@ class GameModeCard extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 7),
       decoration: BoxDecoration(
-        color: AppColors.surface.withValues(alpha: 0.85),
+        // Translucent dark glass allowing the night sky and stadium lights to breathe through
+        color: const Color(0xFF0C1628).withValues(alpha: 0.72),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: isComingSoon
               ? AppColors.border
-              : AppColors.borderGreen.withValues(alpha: 0.25),
+              : Colors.white.withValues(alpha: 0.09),
           width: 1.0,
         ),
       ),
@@ -44,22 +45,36 @@ class GameModeCard extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
             child: Row(
               children: [
-                // Compact Icon Box
+                // Compact Turf Icon Box (Miniature football pitch tile)
                 Container(
                   width: 36,
                   height: 36,
                   decoration: BoxDecoration(
-                    color: AppColors.surfaceLight,
                     borderRadius: BorderRadius.circular(9),
                     border: Border.all(
-                      color: AppColors.border,
+                      color: Colors.white.withValues(alpha: 0.16),
                       width: 0.8,
                     ),
+                    gradient: const LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        Color(0xFF138848), // Cut turf green
+                        Color(0xFF0B582D), // Deep pitch green
+                      ],
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF083D1F).withValues(alpha: 0.35),
+                        blurRadius: 6,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
                   ),
                   child: Center(
                     child: Icon(
                       icon,
-                      color: tagColor,
+                      color: Colors.white,
                       size: 18,
                     ),
                   ),
@@ -91,7 +106,7 @@ class GameModeCard extends StatelessWidget {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
                             decoration: BoxDecoration(
-                              color: tagColor.withValues(alpha: 0.12),
+                              color: tagColor.withValues(alpha: 0.14),
                               borderRadius: BorderRadius.circular(4),
                               border: Border.all(
                                 color: tagColor.withValues(alpha: 0.35),
