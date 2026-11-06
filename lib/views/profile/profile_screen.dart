@@ -4,6 +4,7 @@ import '../../core/constants/app_colors.dart';
 import '../../providers/auth_provider.dart';
 import '../widgets/app_notification.dart';
 import '../widgets/custom_button.dart';
+import '../widgets/player_avatar_widget.dart';
 import '../auth/login_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -16,8 +17,6 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  final List<String> _avatarCodes = ['KP', 'SC', 'ST', 'PM', 'DF', 'GK'];
-
   final List<String> _teams = [
     'Galatasaray',
     'Fenerbahçe',
@@ -46,7 +45,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     super.initState();
     final user = context.read<AuthProvider>().currentUser;
     _nameController = TextEditingController(text: user?.username ?? 'Kaptan');
-    _selectedAvatar = (user != null && _avatarCodes.contains(user.avatar)) ? user.avatar : 'KP';
+    _selectedAvatar = PlayerAvatarRegistry.resolve(user?.avatar ?? 'goat_10').id;
     _selectedTeam = user?.favoriteTeam ?? 'Galatasaray';
   }
 
@@ -57,15 +56,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   void _saveProfile() {
+    final preset = PlayerAvatarRegistry.resolve(_selectedAvatar);
     context.read<AuthProvider>().updateProfile(
-      username: _nameController.text.trim(),
+      username: _nameController.text.trim().isNotEmpty ? _nameController.text.trim() : 'Kaptan',
       avatar: _selectedAvatar,
       favoriteTeam: _selectedTeam,
     );
     AppNotification.show(
       context,
-      title: 'Profil Güncellendi',
-      message: '${_nameController.text.trim()} ($_selectedTeam) profil ayarların başarıyla kaydedildi.',
+      title: 'Profil ve Futbolcu Avatarı Güncellendi',
+      subtitle: '${_nameController.text.trim()} • ${preset.name} ($_selectedTeam) kaydedildi.',
       type: AppNotificationType.success,
       icon: Icons.verified_user_outlined,
     );
@@ -80,6 +80,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       return const Center(child: CircularProgressIndicator());
     }
 
+    final selectedPreset = PlayerAvatarRegistry.resolve(_selectedAvatar);
     final winRate = user.matchesPlayed > 0
         ? ((user.matchesWon / user.matchesPlayed) * 100).toStringAsFixed(0)
         : '0';
@@ -87,70 +88,82 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final content = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // Profile Summary Card
+        // Profile Summary Card with Illustrated Footballer Portrait
         Container(
-          padding: const EdgeInsets.all(18),
+          padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: AppColors.surface,
+            color: AppColors.surface.withValues(alpha: 0.92),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppColors.border),
+            border: Border.all(color: AppColors.borderGreen.withValues(alpha: 0.5)),
           ),
-          child: Column(
+          child: Row(
             children: [
-              Container(
-                width: 64,
-                height: 64,
-                decoration: BoxDecoration(
-                  color: AppColors.darkGreen,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: AppColors.pitchGreen, width: 1.5),
-                ),
-                child: Center(
-                  child: Text(
-                    _selectedAvatar,
-                    style: const TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.gold,
+              PlayerAvatarWidget(
+                avatarKey: _selectedAvatar,
+                size: 72,
+                borderColor: AppColors.gold,
+                borderWidth: 1.8,
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            user.username,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w800,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: AppColors.gold.withValues(alpha: 0.16),
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(color: AppColors.gold.withValues(alpha: 0.5), width: 0.8),
+                          ),
+                          child: Text(
+                            selectedPreset.name,
+                            style: const TextStyle(
+                              fontSize: 9.5,
+                              fontWeight: FontWeight.w800,
+                              color: AppColors.gold,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '${selectedPreset.roleLabel} • ${user.rankTitle}',
+                      style: const TextStyle(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.greenLight,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      'Tuttuğu Kulüp: ${user.favoriteTeam}',
+                      style: const TextStyle(fontSize: 11.5, color: AppColors.textSecondary),
+                    ),
+                  ],
                 ),
-              ),
-              const SizedBox(height: 10),
-              Text(
-                user.username,
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w800,
-                  color: Colors.white,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-                decoration: BoxDecoration(
-                  color: AppColors.surfaceLight,
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Text(
-                  user.rankTitle,
-                  style: const TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.gold,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                'Tuttuğu Takım: ${user.favoriteTeam}',
-                style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
               ),
             ],
           ),
         ),
 
-        const SizedBox(height: 16),
+        const SizedBox(height: 12),
 
         // 4 Stats Grid
         Row(
@@ -160,7 +173,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             const SizedBox(width: 8),
             Expanded(
-              child: _buildStatCard('Galibiyet Oranı', '%$winRate', Icons.trending_up, AppColors.silver),
+              child: _buildStatCard('Galibiyet Oranı', '%$winRate', Icons.trending_up, AppColors.greenLight),
             ),
           ],
         ),
@@ -177,14 +190,113 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ],
         ),
 
-        const SizedBox(height: 20),
+        const SizedBox(height: 18),
+
+        // Preset Footballer Avatar Picker Section
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text(
+              'HAZIR FUTBOLCU AVATARI SEÇ',
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 0.7,
+                color: AppColors.greenLight,
+              ),
+            ),
+            Text(
+              'Seçili: ${selectedPreset.name}',
+              style: const TextStyle(
+                fontSize: 10.5,
+                fontWeight: FontWeight.w700,
+                color: AppColors.gold,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+
+        GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: PlayerAvatarRegistry.presets.length,
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 4,
+            crossAxisSpacing: 8,
+            mainAxisSpacing: 8,
+            childAspectRatio: 0.78,
+          ),
+          itemBuilder: (context, index) {
+            final preset = PlayerAvatarRegistry.presets[index];
+            final isSelected = _selectedAvatar == preset.id;
+
+            return GestureDetector(
+              onTap: () => setState(() => _selectedAvatar = preset.id),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 180),
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? AppColors.darkGreen.withValues(alpha: 0.75)
+                      : AppColors.surface.withValues(alpha: 0.85),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: isSelected ? AppColors.gold : AppColors.border,
+                    width: isSelected ? 1.5 : 0.9,
+                  ),
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    PlayerAvatarWidget(
+                      avatarKey: preset.id,
+                      size: 46,
+                      borderColor: isSelected ? AppColors.gold : AppColors.borderGreen,
+                      borderWidth: isSelected ? 1.5 : 1.0,
+                    ),
+                    const SizedBox(height: 5),
+                    Text(
+                      preset.name,
+                      textAlign: TextAlign.center,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w800,
+                        color: isSelected ? AppColors.gold : Colors.white,
+                      ),
+                    ),
+                    Text(
+                      preset.roleLabel,
+                      textAlign: TextAlign.center,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 8,
+                        color: AppColors.textMuted,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        ),
+
+        const SizedBox(height: 16),
 
         // Edit Profile Form
         const Text(
-          'Profil Ayarları',
-          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Colors.white),
+          'KULLANICI ADI & FAVORİ KULÜP',
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 0.7,
+            color: AppColors.greenLight,
+          ),
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 8),
 
         TextField(
           controller: _nameController,
@@ -194,55 +306,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
             prefixIcon: Icon(Icons.person_outline, color: AppColors.gold, size: 18),
           ),
         ),
-        const SizedBox(height: 14),
-
-        // Avatar selector
-        const Text(
-          'Profil Rolü / Kısaltması',
-          style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
-        ),
-        const SizedBox(height: 6),
-        Row(
-          children: List.generate(_avatarCodes.length, (idx) {
-            final code = _avatarCodes[idx];
-            final isSelected = _selectedAvatar == code;
-            return Expanded(
-              child: GestureDetector(
-                onTap: () => setState(() => _selectedAvatar = code),
-                child: Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 2),
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  decoration: BoxDecoration(
-                    color: isSelected ? AppColors.darkGreen : AppColors.surface,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: isSelected ? AppColors.pitchGreen : AppColors.border,
-                    ),
-                  ),
-                  child: Center(
-                    child: Text(
-                      code,
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        color: isSelected ? AppColors.gold : AppColors.textMuted,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            );
-          }),
-        ),
-
-        const SizedBox(height: 14),
+        const SizedBox(height: 12),
 
         // Favorite Team
-        const Text(
-          'Tuttuğun Takım',
-          style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
-        ),
-        const SizedBox(height: 6),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 14),
           decoration: BoxDecoration(
@@ -269,11 +335,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         ),
 
-        const SizedBox(height: 18),
+        const SizedBox(height: 16),
 
         CustomButton(
           text: 'Değişiklikleri Kaydet',
-          icon: Icons.check,
+          icon: Icons.check_circle_outline,
           backgroundColor: AppColors.pitchGreen,
           textColor: Colors.white,
           onPressed: _saveProfile,
@@ -317,7 +383,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Widget _buildStatCard(String label, String value, IconData icon, Color color) {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(11),
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(12),
@@ -331,16 +397,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
             children: [
               Text(
                 label,
-                style: const TextStyle(fontSize: 11, color: AppColors.textMuted),
+                style: const TextStyle(fontSize: 10.5, color: AppColors.textMuted),
               ),
               Icon(icon, color: color, size: 15),
             ],
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 4),
           Text(
             value,
             style: TextStyle(
-              fontSize: 16,
+              fontSize: 15,
               fontWeight: FontWeight.w800,
               color: color,
             ),

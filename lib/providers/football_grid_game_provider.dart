@@ -15,6 +15,7 @@ class FootballGridGameProvider extends ChangeNotifier {
   final GameDifficulty difficulty;
   final OpponentProfile? opponent;
 
+  GridThemeType _selectedTheme = GridThemeType.mixed;
   late GridChallenge _challenge;
   late List<List<GridCellState>> _cells;
   int _guessesRemaining = 9;
@@ -25,6 +26,7 @@ class FootballGridGameProvider extends ChangeNotifier {
   bool _isOpponentThinking = false;
   String? _feedback;
 
+  GridThemeType get selectedTheme => _selectedTheme;
   GridChallenge get challenge => _challenge;
   List<List<GridCellState>> get cells => _cells;
   int get guessesRemaining => _guessesRemaining;
@@ -76,8 +78,14 @@ class FootballGridGameProvider extends ChangeNotifier {
     startNewGrid();
   }
 
+  void setGridTheme(GridThemeType theme) {
+    if (_selectedTheme == theme) return;
+    _selectedTheme = theme;
+    startNewGrid();
+  }
+
   void startNewGrid() {
-    _challenge = _db.getRandom3x3GridChallenge();
+    _challenge = _db.getRandom3x3GridChallenge(theme: _selectedTheme);
     _cells = List.generate(
       3,
       (r) => List.generate(
@@ -158,7 +166,7 @@ class FootballGridGameProvider extends ChangeNotifier {
       _activeCol = null;
       solved = true;
     } else {
-      _feedback = '${player.name} bu iki kriteri aynı anda sağlamıyor.';
+      _feedback = '${player.name} (${rowCriterion.label} × ${colCriterion.label}) kriterlerini aynı anda sağlamıyor.';
       GameFeedback.error();
     }
 
@@ -172,7 +180,6 @@ class FootballGridGameProvider extends ChangeNotifier {
   }
 
   void _triggerOpponentCellTurn() {
-    // Collect unsolved cells
     final unsolved = <GridCellState>[];
     for (var r in _cells) {
       for (var c in r) {
@@ -218,7 +225,7 @@ class FootballGridGameProvider extends ChangeNotifier {
         targetCell.isSolved = true;
         targetCell.solvedByOpponent = true;
         _opponentScore += oppReward;
-        _feedback = '$oppName (${rCrit.club?.name ?? rCrit.label} × ${cCrit.club?.name ?? cCrit.label}) hücresini ${chosen.name} ile çözdü!';
+        _feedback = '$oppName (${rCrit.label} × ${cCrit.label}) hücresini ${chosen.name} ile çözdü!';
       } else {
         _feedback = '$oppName hamlesinde doğru kesişimi bulamadı. Sıra sende!';
       }

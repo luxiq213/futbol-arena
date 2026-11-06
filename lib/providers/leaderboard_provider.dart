@@ -7,21 +7,30 @@ class LeaderboardProvider extends ChangeNotifier {
   final LeaderboardRepository _repo = LeaderboardRepository();
 
   bool _isFriendsTab = false;
-  List<LeaderboardEntry> _globalList = [];
-  List<LeaderboardEntry> _friendsList = [];
+  LeaderboardModeCategory _selectedCategory = LeaderboardModeCategory.overall;
+  List<LeaderboardEntry> _currentEntries = [];
 
   bool get isFriendsTab => _isFriendsTab;
-  List<LeaderboardEntry> get currentList => _isFriendsTab ? _friendsList : _globalList;
+  LeaderboardModeCategory get selectedCategory => _selectedCategory;
+  List<LeaderboardEntry> get currentList => _currentEntries;
 
   void setFriendsTab(bool value, UserModel? currentUser) {
     _isFriendsTab = value;
     loadRankings(currentUser);
-    notifyListeners();
+  }
+
+  void setModeCategory(LeaderboardModeCategory category, UserModel? currentUser) {
+    if (_selectedCategory == category) return;
+    _selectedCategory = category;
+    loadRankings(currentUser);
   }
 
   void loadRankings(UserModel? currentUser) {
-    _globalList = _repo.getGlobalRankings(currentUser);
-    _friendsList = _repo.getFriendsRankings(currentUser);
+    _currentEntries = _repo.getRankings(
+      currentUser: currentUser,
+      category: _selectedCategory,
+      friendsOnly: _isFriendsTab,
+    );
     notifyListeners();
   }
 }

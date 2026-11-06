@@ -6,9 +6,9 @@ import '../../data/models/user_model.dart';
 import '../../providers/auth_provider.dart';
 import '../widgets/app_floating_glass_footer.dart';
 import '../widgets/game_mode_selector_sheet.dart';
+import '../widgets/player_avatar_widget.dart';
 import '../widgets/stadium_background.dart';
 import '../games/career/career_setup_screen.dart';
-import '../games/party_mode/party_setup_screen.dart';
 import '../games/online_lobby/lobby_hub_screen.dart';
 import '../leaderboard/leaderboard_screen.dart';
 import '../profile/profile_screen.dart';
@@ -153,27 +153,14 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       child: Row(
         children: [
-          // Left: Avatar / Badge + App Title & User Subtitle
+          // Left: Illustrated Footballer Avatar + App Title & User Subtitle
           GestureDetector(
             onTap: () => _onFooterTabTapped(2),
-            child: Container(
-              width: 34,
-              height: 34,
-              decoration: BoxDecoration(
-                color: AppColors.darkGreen,
-                borderRadius: BorderRadius.circular(9),
-                border: Border.all(color: AppColors.pitchGreen, width: 1.1),
-              ),
-              child: Center(
-                child: Text(
-                  user?.avatar.isNotEmpty == true ? user!.avatar : 'KP',
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.greenLight,
-                  ),
-                ),
-              ),
+            child: PlayerAvatarWidget(
+              avatarKey: user?.avatar ?? 'goat_10',
+              size: 36,
+              borderColor: AppColors.pitchGreen,
+              borderWidth: 1.2,
             ),
           ),
           const SizedBox(width: 10),
@@ -343,10 +330,10 @@ class _HomeScreenState extends State<HomeScreen> {
               children: [
                 Expanded(
                   child: BentoGameModeCard(
-                    title: 'Ortak Oyuncu Düellosu (3-2-1)',
-                    subtitle: 'Kendini sına, online/AI rakiple eşleş veya arkadaşını davet et.',
+                    title: 'Ortak Oyuncu',
+                    subtitle: 'İki kulüpte de forma giymiş ortak yıldızları tek başına veya düelloda bul.',
                     icon: Icons.compare_arrows_rounded,
-                    tag: 'SOLO / DÜELLO',
+                    tag: 'KESİŞİM TRİVİA',
                     tagColor: AppColors.pitchGreen,
                     onTap: () {
                       showGameModeSelectorSheet(
@@ -362,7 +349,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     title: '5 Takım 1 Oyuncu',
                     subtitle: '5 kulübün en çoğunda oynamış yıldızı tek başına veya düelloda bul.',
                     icon: Icons.shield_outlined,
-                    tag: 'SOLO / DÜELLO',
+                    tag: 'KARİYER İZİ',
                     tagColor: AppColors.greenLight,
                     onTap: () {
                       showGameModeSelectorSheet(
@@ -380,13 +367,13 @@ class _HomeScreenState extends State<HomeScreen> {
 
         // 3. Bölüm: Taktik Tahtası (Futbol Grid 3x3)
         if (showTactics) ...[
-          _buildSectionHeader('TAKTİK TAHTASI', 'Kendini Sına • 1v1 Düello'),
+          _buildSectionHeader('TAKTİK & KUPA MATRİSİ', 'Kulüp • Kupa • Milli Takım'),
           const SizedBox(height: 5),
           GameModeCard(
             title: 'Futbol Grid 3x3',
-            subtitle: 'Kulüp kesişim matrisini tek başına çöz veya online/arkadaş düellosunda yarış.',
+            subtitle: 'Kulüpler, Şampiyonlar Ligi, Dünya Kupası ve Milli Takım kesişimlerini çöz.',
             icon: Icons.grid_3x3_outlined,
-            tag: 'STRATEJİ MATRİSİ',
+            tag: 'GENİŞ YELPAZE',
             tagColor: AppColors.gold,
             trailingPreview: _buildMiniTacticalGridPreview(),
             onTap: () {
@@ -396,50 +383,25 @@ class _HomeScreenState extends State<HomeScreen> {
               );
             },
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 11),
         ],
 
-        // 4. Bölüm: Arkadaş & Çok Oyunculu Arena (2'li Yan Yana Bento Grid)
+        // 4. Bölüm: Arkadaş & Çok Oyunculu Lobi
         if (showParty) ...[
-          _buildSectionHeader('ARKADAŞ & ÇOK OYUNCULU ARENA', 'Yan Yana & Online'),
+          _buildSectionHeader('ARKADAŞ & ÇOK OYUNCULU ARENA', 'Davet Kodu • Online Lobi'),
           const SizedBox(height: 5),
-          IntrinsicHeight(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Expanded(
-                  child: BentoGameModeCard(
-                    title: '3-2-1 Düello Turları (Yan Yana)',
-                    subtitle: 'Masada arkadaşlarınla süre bitmeden ortak oyuncuyu söyle.',
-                    icon: Icons.alarm_outlined,
-                    tag: 'PARTİ MODU',
-                    tagColor: AppColors.silver,
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => const PartySetupScreen()),
-                      );
-                    },
-                  ),
-                ),
-                const SizedBox(width: 9),
-                Expanded(
-                  child: BentoGameModeCard(
-                    title: 'Online Oda & Arkadaş Daveti',
-                    subtitle: '6 haneli oda kodu kur, uzaktaki arkadaşlarınla yarış.',
-                    icon: Icons.cell_tower_outlined,
-                    tag: 'ÇOK OYUNCULU',
-                    tagColor: AppColors.pitchGreen,
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => const LobbyHubScreen()),
-                      );
-                    },
-                  ),
-                ),
-              ],
-            ),
+          GameModeCard(
+            title: 'Online Oda & Arkadaş Daveti',
+            subtitle: '6 haneli davet kodu kurarak arkadaşınla yarış veya masada yan yana parti turnuvası başlat.',
+            icon: Icons.cell_tower_outlined,
+            tag: 'ÇOK OYUNCULU',
+            tagColor: AppColors.pitchGreen,
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const LobbyHubScreen()),
+              );
+            },
           ),
         ],
       ],

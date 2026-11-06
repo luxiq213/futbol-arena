@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
 import '../../providers/auth_provider.dart';
 import '../widgets/app_notification.dart';
+import '../widgets/player_avatar_widget.dart';
 import '../widgets/stadium_background.dart';
 import '../widgets/custom_button.dart';
 import 'login_screen.dart';
@@ -18,10 +19,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _usernameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  String _selectedAvatar = 'KP';
+  String _selectedAvatar = 'goat_10';
   String _selectedTeam = 'Galatasaray';
 
-  final List<String> _avatars = ['KP', 'SC', 'ST', 'OR', 'DF', 'KL', 'TR', 'YD'];
   final List<String> _teams = [
     'Galatasaray',
     'Fenerbahçe',
@@ -193,43 +193,42 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
               const SizedBox(height: 18),
 
-              // MONOGRAM AVATAR PICKER
+              // PRESET FOOTBALLER AVATAR PICKER
               const Text(
-                'Profil Monogramı',
+                'Hazır Futbolcu Avatarı Seç',
                 style: TextStyle(fontSize: 13, color: AppColors.textSecondary, fontWeight: FontWeight.w600),
               ),
               const SizedBox(height: 8),
               SizedBox(
-                height: 48,
+                height: 68,
                 child: ListView.separated(
                   scrollDirection: Axis.horizontal,
-                  itemCount: _avatars.length,
+                  itemCount: PlayerAvatarRegistry.presets.length,
                   separatorBuilder: (context, index) => const SizedBox(width: 8),
                   itemBuilder: (context, index) {
-                    final av = _avatars[index];
-                    final isSelected = _selectedAvatar == av;
+                    final preset = PlayerAvatarRegistry.presets[index];
+                    final isSelected = _selectedAvatar == preset.id;
                     return GestureDetector(
-                      onTap: () => setState(() => _selectedAvatar = av),
-                      child: Container(
-                        width: 48,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: isSelected ? AppColors.darkGreen : AppColors.surface,
-                          border: Border.all(
-                            color: isSelected ? AppColors.pitchGreen : AppColors.border,
-                            width: isSelected ? 2 : 1,
+                      onTap: () => setState(() => _selectedAvatar = preset.id),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          PlayerAvatarWidget(
+                            avatarKey: preset.id,
+                            size: 46,
+                            borderColor: isSelected ? AppColors.gold : AppColors.border,
+                            borderWidth: isSelected ? 1.8 : 1.0,
                           ),
-                        ),
-                        child: Center(
-                          child: Text(
-                            av,
+                          const SizedBox(height: 3),
+                          Text(
+                            preset.name,
                             style: TextStyle(
-                              fontSize: 14,
+                              fontSize: 9.5,
                               fontWeight: FontWeight.w700,
-                              color: isSelected ? AppColors.gold : AppColors.silver,
+                              color: isSelected ? AppColors.gold : AppColors.textMuted,
                             ),
                           ),
-                        ),
+                        ],
                       ),
                     );
                   },

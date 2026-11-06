@@ -12,7 +12,7 @@ void main() {
     expect(find.byType(HomeScreen), findsOneWidget);
     
     // Verify game modes exist in widget tree
-    expect(find.textContaining('Ortak Oyuncu Düellosu'), findsOneWidget);
+    expect(find.textContaining('Ortak Oyuncu'), findsOneWidget);
     expect(find.textContaining('5 Takım 1 Oyuncu'), findsOneWidget);
     expect(find.textContaining('Futbol Grid 3x3'), findsOneWidget);
 

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
 import '../../data/models/play_mode_model.dart';
+import 'player_avatar_widget.dart';
 
 class DuelScoreboardBanner extends StatelessWidget {
   final String userName;
@@ -53,27 +54,10 @@ class DuelScoreboardBanner extends StatelessWidget {
           Expanded(
             child: Row(
               children: [
-                Container(
-                  width: 34,
-                  height: 34,
-                  decoration: BoxDecoration(
-                    color: AppColors.darkGreen,
-                    borderRadius: BorderRadius.circular(9),
-                    border: Border.all(
-                      color: isLeading ? AppColors.gold : AppColors.pitchGreen,
-                      width: 1.2,
-                    ),
-                  ),
-                  child: Center(
-                    child: Text(
-                      userAvatar.isNotEmpty ? userAvatar : 'KP',
-                      style: const TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w800,
-                        color: AppColors.greenLight,
-                      ),
-                    ),
-                  ),
+                PlayerAvatarWidget(
+                  avatarKey: userAvatar.isNotEmpty ? userAvatar : 'goat_10',
+                  size: 36,
+                  borderColor: isLeading ? AppColors.gold : AppColors.pitchGreen,
                 ),
                 const SizedBox(width: 8),
                 Expanded(
@@ -208,27 +192,10 @@ class DuelScoreboardBanner extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 8),
-                Container(
-                  width: 34,
-                  height: 34,
-                  decoration: BoxDecoration(
-                    color: AppColors.surfaceLight,
-                    borderRadius: BorderRadius.circular(9),
-                    border: Border.all(
-                      color: isTrailing ? AppColors.gold : AppColors.border,
-                      width: 1.2,
-                    ),
-                  ),
-                  child: Center(
-                    child: Text(
-                      opponent.avatar,
-                      style: const TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w800,
-                        color: AppColors.gold,
-                      ),
-                    ),
-                  ),
+                PlayerAvatarWidget(
+                  avatarKey: opponent.avatar,
+                  size: 36,
+                  borderColor: isTrailing ? AppColors.gold : AppColors.border,
                 ),
               ],
             ),

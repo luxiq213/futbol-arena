@@ -9,6 +9,7 @@ import '../../widgets/custom_button.dart';
 import '../../widgets/stadium_background.dart';
 import 'active_room_screen.dart';
 import 'matchmaking_screen.dart';
+import '../party_mode/party_setup_screen.dart';
 
 class LobbyHubScreen extends StatefulWidget {
   final GameTargetType initialGameTarget;
@@ -310,6 +311,53 @@ class _LobbyHubScreenState extends State<LobbyHubScreen> {
                       icon: Icons.login_rounded,
                       isLoading: roomProvider.isCreatingRoom,
                       onPressed: _onJoinRoom,
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 14),
+
+              // 5. Local Table-Top Party Option
+              Container(
+                padding: const EdgeInsets.all(15),
+                decoration: BoxDecoration(
+                  color: AppColors.surface.withValues(alpha: 0.90),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: AppColors.border),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Row(
+                      children: [
+                        Icon(Icons.groups_2_outlined, color: AppColors.silver, size: 19),
+                        SizedBox(width: 8),
+                        Text(
+                          'Aynı Cihazda Yan Yana • Parti Turnuvası',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w800,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    const Text(
+                      'Arkadaşlarınla aynı masadaysan tek telefondan sırayla süreye karşı eleme usulü yarış.',
+                      style: TextStyle(fontSize: 11.5, color: AppColors.textMuted),
+                    ),
+                    const SizedBox(height: 10),
+                    CustomButton(
+                      text: 'Yan Yana Parti Modunu Aç',
+                      isOutlined: true,
+                      icon: Icons.timer_outlined,
+                      onPressed: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(builder: (_) => const PartySetupScreen()),
+                        );
+                      },
                     ),
                   ],
                 ),

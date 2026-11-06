@@ -337,11 +337,11 @@ class _GameModeSelectorSheetState extends State<GameModeSelectorSheet> {
 
           if (widget.targetGame == GameTargetType.commonPlayer) ...[
             const SizedBox(height: 9),
-            // 4. Yan Yana Parti Modu (3-2-1)
+            // 4. Yan Yana Parti Modu
             _buildModeOptionCard(
-              icon: Icons.alarm_outlined,
-              title: 'Yan Yana Parti Düellosu (3-2-1)',
-              subtitle: 'Aynı telefonda arkadaşlarınla masada süreye karşı yarış.',
+              icon: Icons.groups_2_outlined,
+              title: 'Aynı Cihazda Yan Yana (Parti Turnuvası)',
+              subtitle: 'Tek telefonda arkadaşlarınla masada süreye karşı eleme usulü yarış.',
               badge: 'YAN YANA',
               badgeColor: AppColors.silver,
               onTap: () => _launchLocalParty(context),

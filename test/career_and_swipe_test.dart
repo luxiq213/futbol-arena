@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:futbol_party/data/models/career_model.dart';
+import 'package:futbol_party/data/models/grid_challenge_model.dart';
+import 'package:futbol_party/data/models/leaderboard_entry.dart';
 import 'package:futbol_party/data/models/play_mode_model.dart';
+import 'package:futbol_party/data/repositories/football_database.dart';
+import 'package:futbol_party/data/repositories/leaderboard_repository.dart';
 import 'package:futbol_party/main.dart';
 import 'package:futbol_party/providers/career_game_provider.dart';
 import 'package:futbol_party/views/profile/profile_screen.dart';
+import 'package:futbol_party/views/widgets/player_avatar_widget.dart';
 
 void main() {
   group('CareerGameProvider Logic Tests', () {
@@ -58,6 +63,35 @@ void main() {
       expect(GameDifficulty.hard.gridGuessesAllowed, 6);
       expect(GameDifficulty.hard.pointsMultiplier, greaterThan(GameDifficulty.easy.pointsMultiplier));
     });
+
+    test('All 3x3 Grid challenges (Trophies, Nationalities, Clubs) have valid intersections', () {
+      final db = FootballDatabase();
+      final challenges = db.getGridChallenges(theme: GridThemeType.mixed);
+      expect(challenges.length, greaterThanOrEqualTo(8));
+
+      for (final ch in challenges) {
+        for (int r = 0; r < 3; r++) {
+          for (int c = 0; c < 3; c++) {
+            final validPlayers = db.getValidPlayersForCell(ch.rowCriteria[r], ch.colCriteria[c]);
+            expect(
+              validPlayers,
+              isNotEmpty,
+              reason: 'Grid "${ch.title}" cell (${ch.rowCriteria[r].label} x ${ch.colCriteria[c].label}) has 0 valid players!',
+            );
+          }
+        }
+      }
+    });
+
+    test('LeaderboardRepository supports mode-specific rankings and preset avatars resolve', () {
+      final repo = LeaderboardRepository();
+      for (final cat in LeaderboardModeCategory.values) {
+        final list = repo.getRankings(currentUser: null, category: cat, friendsOnly: false);
+        expect(list, isNotEmpty);
+        final preset = PlayerAvatarRegistry.resolve(list.first.avatar);
+        expect(preset.name, isNotEmpty);
+      }
+    });
   });
 
   group('Swipe Navigation & Category Filtering Tests', () {
@@ -103,13 +137,13 @@ void main() {
       expect(find.text('Futbolcu Kariyeri Yap'), findsOneWidget);
 
       // Common player duel is filtered out in career view
-      expect(find.text('Ortak Oyuncu Düellosu (3-2-1)'), findsNothing);
+      expect(find.text('Ortak Oyuncu'), findsNothing);
 
       // Tap "Tümü" to restore
       await tester.tap(find.text('Tümü'));
       await tester.pump(const Duration(milliseconds: 300));
 
-      expect(find.text('Ortak Oyuncu Düellosu (3-2-1)'), findsOneWidget);
+      expect(find.text('Ortak Oyuncu'), findsOneWidget);
     });
   });
 }

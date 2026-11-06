@@ -2453,166 +2453,604 @@ class FootballDatabase {
     return targetClubs.where((c) => player.playedFor(c.id)).length;
   }
 
-  /// 3x3 Grid Challenges
-  List<GridChallenge> getGridChallenges() {
-    return [
-      // Challenge 1
+  // --- TROPHY & ACHIEVEMENT SETS FOR 3x3 GRID ---
+  static const Set<String> _uclWinners = {
+    'cristiano_ronaldo',
+    'lionel_messi',
+    'ronaldinho',
+    'kaka',
+    'zinedine_zidane',
+    'david_beckham',
+    'luis_figo',
+    'samuel_etoo',
+    'thierry_henry',
+    'angel_di_maria',
+    'karim_benzema',
+    'luka_modric',
+    'toni_kroos',
+    'gareth_bale',
+    'sergio_ramos',
+    'marcelo',
+    'casemiro',
+    'pepe',
+    'xabi_alonso',
+    'arjen_robben',
+    'franck_ribery',
+    'thomas_muller',
+    'manuel_neuer',
+    'david_alaba',
+    'thiago_alcantara',
+    'robert_lewandowski',
+    'erling_haaland',
+    'kevin_de_bruyne',
+    'ilkay_gundogan',
+    'rodri',
+    'bernardo_silva',
+    'riyad_mahrez',
+    'julian_alvarez',
+    'mohamed_salah',
+    'sadio_mane',
+    'virgil_van_dijk',
+    'steven_gerrard',
+    'fernando_torres',
+    'didier_drogba',
+    'frank_lampard',
+    'john_terry',
+    'petr_cech',
+    'ashley_cole',
+    'david_luiz',
+    'ngolo_kante',
+    'kai_havertz',
+    'jorginho',
+    'mateo_kovacic',
+    'antonio_rudiger',
+    'hakim_ziyech',
+    'olivier_giroud',
+    'wesley_sneijder',
+    'clarence_seedorf',
+    'andrea_pirlo',
+    'paolo_maldini',
+    'alessandro_nesta',
+    'filippo_inzaghi',
+    'andriy_shevchenko',
+    'deco',
+    'ricardo_carvalho',
+    'wayne_rooney',
+    'rio_ferdinand',
+    'paul_scholes',
+    'ryan_giggs',
+    'carlos_tevez',
+    'gerard_pique',
+    'xavi_hernandez',
+    'andres_iniesta',
+    'sergio_busquets',
+    'dani_alves',
+    'neymar',
+    'luis_suarez',
+    'ivan_rakitic',
+    'javier_mascherano',
+    'david_villa',
+    'yaya_toure',
+    'achraf_hakimi',
+    'marco_asensio',
+    'thibaut_courtois',
+    'eden_hazard',
+    'alvaro_morata',
+    'juan_mata',
+    'philippe_coutinho',
+    'ivan_perisic',
+    'kingsley_coman',
+    'alex_oxlade_chamberlain',
+    'roberto_carlos',
+    'raul_gonzalez',
+    'iker_casillas',
+    'nicolas_anelka',
+  };
+
+  static const Set<String> _worldCupWinners = {
+    'lionel_messi',
+    'angel_di_maria',
+    'julian_alvarez',
+    'paulo_dybala',
+    'ronaldo_nazario',
+    'ronaldinho',
+    'rivaldo',
+    'roberto_carlos',
+    'cafu',
+    'kaka',
+    'zinedine_zidane',
+    'thierry_henry',
+    'patrick_vieira',
+    'kylian_mbappe',
+    'antoine_griezmann',
+    'paul_pogba',
+    'ngolo_kante',
+    'olivier_giroud',
+    'raphael_varane',
+    'ousmane_dembele',
+    'manuel_neuer',
+    'thomas_muller',
+    'toni_kroos',
+    'mesut_ozil',
+    'lukas_podolski',
+    'bastian_schweinsteiger',
+    'philipp_lahm',
+    'miroslav_klose',
+    'mats_hummels',
+    'mario_gotze',
+    'jerome_boateng',
+    'iker_casillas',
+    'sergio_ramos',
+    'carles_puyol',
+    'gerard_pique',
+    'xavi_hernandez',
+    'andres_iniesta',
+    'sergio_busquets',
+    'xabi_alonso',
+    'david_villa',
+    'fernando_torres',
+    'cesc_fabregas',
+    'juan_mata',
+    'david_silva',
+    'gianluigi_buffon',
+    'fabio_cannavaro',
+    'alessandro_nesta',
+    'andrea_pirlo',
+    'francesco_totti',
+    'alessandro_del_piero',
+    'filippo_inzaghi',
+  };
+
+  static const Set<String> _ballonDorWinners = {
+    'cristiano_ronaldo',
+    'lionel_messi',
+    'ronaldo_nazario',
+    'ronaldinho',
+    'rivaldo',
+    'kaka',
+    'zinedine_zidane',
+    'luis_figo',
+    'luka_modric',
+    'karim_benzema',
+    'rodri',
+    'michael_owen',
+    'andriy_shevchenko',
+    'pavel_nedved',
+    'fabio_cannavaro',
+    'roberto_baggio',
+  };
+
+  static const Set<String> _goldenBootWinners = {
+    'cristiano_ronaldo',
+    'lionel_messi',
+    'erling_haaland',
+    'robert_lewandowski',
+    'luis_suarez',
+    'thierry_henry',
+    'ronaldo_nazario',
+    'zlatan_ibrahimovic',
+    'harry_kane',
+    'kylian_mbappe',
+    'mohamed_salah',
+    'didier_drogba',
+    'robin_van_persie',
+    'sergio_aguero',
+    'karim_benzema',
+    'ruud_van_nistelrooy',
+    'andriy_shevchenko',
+    'filippo_inzaghi',
+    'francesco_totti',
+    'alessandro_del_piero',
+    'samuel_etoo',
+    'david_villa',
+    'radamel_falcao',
+    'edinson_cavani',
+    'gonzalo_higuain',
+    'mauro_icardi',
+    'ciro_immobile',
+    'victor_osimhen',
+    'aubameyang',
+    'wayne_rooney',
+    'michael_owen',
+    'fernando_torres',
+    'mario_gomez',
+    'burak_yilmaz',
+    'alex_de_souza',
+    'hakan_sukur',
+    'edin_dzeko',
+    'romelu_lukaku',
+    'carlos_tevez',
+    'james_rodriguez',
+    'dries_mertens',
+  };
+
+  GridCriterion _clubCrit(String clubId) {
+    final club = _clubs[clubId]!;
+    return GridCriterion(
+      id: clubId,
+      label: club.name,
+      sublabel: club.league,
+      type: GridCriterionType.club,
+      isClub: true,
+      club: club,
+    );
+  }
+
+  static const GridCriterion _critUcl = GridCriterion(
+    id: 'trophy_ucl',
+    label: 'Şampiyonlar Ligi',
+    sublabel: 'Kupa Şampiyonu',
+    type: GridCriterionType.trophy,
+    badgeCode: 'UCL',
+  );
+
+  static const GridCriterion _critWorldCup = GridCriterion(
+    id: 'trophy_wc',
+    label: 'Dünya Kupası',
+    sublabel: 'Milli Takım Zaferi',
+    type: GridCriterionType.trophy,
+    badgeCode: 'WC',
+  );
+
+  static const GridCriterion _critBallonDor = GridCriterion(
+    id: 'trophy_ballon_dor',
+    label: 'Ballon d\'Or',
+    sublabel: 'Altın Top Kazananı',
+    type: GridCriterionType.trophy,
+    badgeCode: 'BDO',
+  );
+
+  static const GridCriterion _critSuperLig = GridCriterion(
+    id: 'trophy_super_lig',
+    label: 'Süper Lig Şampiyonu',
+    sublabel: 'Türkiye Zaferi',
+    type: GridCriterionType.trophy,
+    badgeCode: 'SL',
+  );
+
+  static const GridCriterion _critPremierLeague = GridCriterion(
+    id: 'trophy_epl',
+    label: 'Premier League',
+    sublabel: 'İngiltere Şampiyonu',
+    type: GridCriterionType.trophy,
+    badgeCode: 'EPL',
+  );
+
+  static const GridCriterion _critLaLiga = GridCriterion(
+    id: 'trophy_laliga',
+    label: 'La Liga Şampiyonu',
+    sublabel: 'İspanya Zaferi',
+    type: GridCriterionType.trophy,
+    badgeCode: 'LAL',
+  );
+
+  static const GridCriterion _critSerieA = GridCriterion(
+    id: 'trophy_seriea',
+    label: 'Serie A Şampiyonu',
+    sublabel: 'İtalya Zaferi',
+    type: GridCriterionType.trophy,
+    badgeCode: 'SER',
+  );
+
+  static const GridCriterion _critGoldenBoot = GridCriterion(
+    id: 'trophy_golden_boot',
+    label: 'Gol Kralı',
+    sublabel: 'Altın Ayakkabı',
+    type: GridCriterionType.trophy,
+    badgeCode: 'GB',
+  );
+
+  static const GridCriterion _critBrazil = GridCriterion(
+    id: 'nat_brezilya',
+    label: 'Brezilya Milli',
+    sublabel: 'Sambacılar',
+    type: GridCriterionType.nationality,
+    badgeCode: 'BRA',
+  );
+
+  static const GridCriterion _critFrance = GridCriterion(
+    id: 'nat_fransa',
+    label: 'Fransa Milli',
+    sublabel: 'Horozlar',
+    type: GridCriterionType.nationality,
+    badgeCode: 'FRA',
+  );
+
+  static const GridCriterion _critArgentina = GridCriterion(
+    id: 'nat_arjantin',
+    label: 'Arjantin Milli',
+    sublabel: 'Tangocular',
+    type: GridCriterionType.nationality,
+    badgeCode: 'ARG',
+  );
+
+  static const GridCriterion _critPortugal = GridCriterion(
+    id: 'nat_portekiz',
+    label: 'Portekiz Milli',
+    sublabel: 'Avrupa',
+    type: GridCriterionType.nationality,
+    badgeCode: 'POR',
+  );
+
+  static const GridCriterion _critGermany = GridCriterion(
+    id: 'nat_almanya',
+    label: 'Almanya Milli',
+    sublabel: 'Panzerler',
+    type: GridCriterionType.nationality,
+    badgeCode: 'GER',
+  );
+
+  static const GridCriterion _critEngland = GridCriterion(
+    id: 'nat_ingiltere',
+    label: 'İngiltere Milli',
+    sublabel: 'Üç Aslan',
+    type: GridCriterionType.nationality,
+    badgeCode: 'ENG',
+  );
+
+  static const GridCriterion _critSpain = GridCriterion(
+    id: 'nat_ispanya',
+    label: 'İspanya Milli',
+    sublabel: 'Boğalar',
+    type: GridCriterionType.nationality,
+    badgeCode: 'ESP',
+  );
+
+  static const GridCriterion _critTurkey = GridCriterion(
+    id: 'nat_turkiye',
+    label: 'Türkiye Milli',
+    sublabel: 'Ay-Yıldızlılar',
+    type: GridCriterionType.nationality,
+    badgeCode: 'TUR',
+  );
+
+  bool _doesPlayerMatchCriterion(PlayerModel player, GridCriterion crit) {
+    if (crit.isClub || _clubs.containsKey(crit.id)) {
+      return player.playedFor(crit.id);
+    }
+
+    switch (crit.id) {
+      case 'trophy_ucl':
+        return _uclWinners.contains(player.id) ||
+            player.trophies.contains('trophy_ucl') ||
+            player.hint.contains('Şampiyonlar Ligi') ||
+            player.hint.contains('Devler Ligi');
+      case 'trophy_wc':
+        return _worldCupWinners.contains(player.id) ||
+            player.trophies.contains('trophy_wc') ||
+            player.hint.contains('Dünya Kupası şampiyonu');
+      case 'trophy_ballon_dor':
+        return _ballonDorWinners.contains(player.id) ||
+            player.trophies.contains('trophy_ballon_dor') ||
+            player.hint.contains('Ballon d\'Or');
+      case 'trophy_golden_boot':
+        return _goldenBootWinners.contains(player.id) ||
+            player.position.contains('Santrafor') ||
+            player.position.contains('Forvet');
+      case 'trophy_super_lig':
+        return player.playedFor('galatasaray') ||
+            player.playedFor('fenerbahce') ||
+            player.playedFor('besiktas') ||
+            player.playedFor('trabzonspor');
+      case 'trophy_epl':
+        return player.playedFor('man_united') ||
+            player.playedFor('man_city') ||
+            player.playedFor('chelsea') ||
+            player.playedFor('arsenal') ||
+            player.playedFor('liverpool');
+      case 'trophy_laliga':
+        return player.playedFor('real_madrid') ||
+            player.playedFor('barcelona') ||
+            player.playedFor('atletico_madrid');
+      case 'trophy_seriea':
+        return player.playedFor('juventus') ||
+            player.playedFor('inter') ||
+            player.playedFor('milan') ||
+            player.playedFor('napoli') ||
+            player.playedFor('roma');
+      case 'nat_brezilya':
+        return player.country == 'Brezilya';
+      case 'nat_fransa':
+        return player.country == 'Fransa';
+      case 'nat_arjantin':
+        return player.country == 'Arjantin';
+      case 'nat_portekiz':
+        return player.country == 'Portekiz';
+      case 'nat_almanya':
+        return player.country == 'Almanya';
+      case 'nat_ingiltere':
+        return player.country == 'İngiltere';
+      case 'nat_ispanya':
+        return player.country == 'İspanya';
+      case 'nat_italya':
+        return player.country == 'İtalya';
+      case 'nat_turkiye':
+        return player.country == 'Türkiye';
+      case 'nat_hollanda':
+        return player.country == 'Hollanda';
+      default:
+        return player.matchesGridCriterion(crit.id);
+    }
+  }
+
+  /// 3x3 Grid Challenges (Clubs, Trophies, and Nationalities)
+  List<GridChallenge> getGridChallenges({GridThemeType? theme}) {
+    final allChallenges = <GridChallenge>[
+      // 1. Kupalar & Dev Kulüpler (Trophies + Giants)
       GridChallenge(
+        title: 'Devler Ligi & Altın Top Matrisi',
+        theme: GridThemeType.trophiesAndClubs,
         rowCriteria: [
-          GridCriterion(
-            id: 'real_madrid',
-            label: 'Real Madrid',
-            sublabel: 'La Liga',
-            isClub: true,
-            club: _clubs['real_madrid'],
-          ),
-          GridCriterion(
-            id: 'barcelona',
-            label: 'Barcelona',
-            sublabel: 'La Liga',
-            isClub: true,
-            club: _clubs['barcelona'],
-          ),
-          GridCriterion(
-            id: 'galatasaray',
-            label: 'Galatasaray',
-            sublabel: 'Süper Lig',
-            isClub: true,
-            club: _clubs['galatasaray'],
-          ),
+          _clubCrit('real_madrid'),
+          _clubCrit('barcelona'),
+          _clubCrit('milan'),
         ],
         colCriteria: [
-          GridCriterion(
-            id: 'arsenal',
-            label: 'Arsenal',
-            sublabel: 'Premier League',
-            isClub: true,
-            club: _clubs['arsenal'],
-          ),
-          GridCriterion(
-            id: 'inter',
-            label: 'Inter Milan',
-            sublabel: 'Serie A',
-            isClub: true,
-            club: _clubs['inter'],
-          ),
-          GridCriterion(
-            id: 'chelsea',
-            label: 'Chelsea',
-            sublabel: 'Premier League',
-            isClub: true,
-            club: _clubs['chelsea'],
-          ),
+          _critUcl,
+          _critBallonDor,
+          _critWorldCup,
         ],
       ),
-      // Challenge 2
+
+      // 2. Kupalar, Milli Takımlar & Kulüpler Karışık
       GridChallenge(
+        title: 'Şampiyonlar & Milli Takım Matrisi',
+        theme: GridThemeType.mixed,
         rowCriteria: [
-          GridCriterion(
-            id: 'man_united',
-            label: 'Manchester United',
-            sublabel: 'Premier League',
-            isClub: true,
-            club: _clubs['man_united'],
-          ),
-          GridCriterion(
-            id: 'bayern',
-            label: 'Bayern Münih',
-            sublabel: 'Bundesliga',
-            isClub: true,
-            club: _clubs['bayern'],
-          ),
-          GridCriterion(
-            id: 'fenerbahce',
-            label: 'Fenerbahçe',
-            sublabel: 'Süper Lig',
-            isClub: true,
-            club: _clubs['fenerbahce'],
-          ),
+          _critUcl,
+          _critGoldenBoot,
+          _critPremierLeague,
         ],
         colCriteria: [
-          GridCriterion(
-            id: 'real_madrid',
-            label: 'Real Madrid',
-            sublabel: 'La Liga',
-            isClub: true,
-            club: _clubs['real_madrid'],
-          ),
-          GridCriterion(
-            id: 'juventus',
-            label: 'Juventus',
-            sublabel: 'Serie A',
-            isClub: true,
-            club: _clubs['juventus'],
-          ),
-          GridCriterion(
-            id: 'arsenal',
-            label: 'Arsenal',
-            sublabel: 'Premier League',
-            isClub: true,
-            club: _clubs['arsenal'],
-          ),
+          _clubCrit('real_madrid'),
+          _clubCrit('chelsea'),
+          _critBrazil,
         ],
       ),
-      // Challenge 3
+
+      // 3. Süper Lig, Kupalar & Avrupa Devleri
       GridChallenge(
+        title: 'Süper Lig & Avrupa Kupaları',
+        theme: GridThemeType.superLigSpecial,
         rowCriteria: [
-          GridCriterion(
-            id: 'besiktas',
-            label: 'Beşiktaş',
-            sublabel: 'Süper Lig',
-            isClub: true,
-            club: _clubs['besiktas'],
-          ),
-          GridCriterion(
-            id: 'chelsea',
-            label: 'Chelsea',
-            sublabel: 'Premier League',
-            isClub: true,
-            club: _clubs['chelsea'],
-          ),
-          GridCriterion(
-            id: 'milan',
-            label: 'AC Milan',
-            sublabel: 'Serie A',
-            isClub: true,
-            club: _clubs['milan'],
-          ),
+          _clubCrit('galatasaray'),
+          _clubCrit('fenerbahce'),
+          _clubCrit('besiktas'),
         ],
         colCriteria: [
-          GridCriterion(
-            id: 'real_madrid',
-            label: 'Real Madrid',
-            sublabel: 'La Liga',
-            isClub: true,
-            club: _clubs['real_madrid'],
-          ),
-          GridCriterion(
-            id: 'barcelona',
-            label: 'Barcelona',
-            sublabel: 'La Liga',
-            isClub: true,
-            club: _clubs['barcelona'],
-          ),
-          GridCriterion(
-            id: 'arsenal',
-            label: 'Arsenal',
-            sublabel: 'Premier League',
-            isClub: true,
-            club: _clubs['arsenal'],
-          ),
+          _critUcl,
+          _critGoldenBoot,
+          _critPremierLeague,
+        ],
+      ),
+
+      // 4. Milli Takımlar & Büyük Kupalar
+      GridChallenge(
+        title: 'Milli Yıldızlar & Kupa Zaferleri',
+        theme: GridThemeType.nationsAndTrophies,
+        rowCriteria: [
+          _critBrazil,
+          _critFrance,
+          _critArgentina,
+        ],
+        colCriteria: [
+          _critUcl,
+          _critLaLiga,
+          _critSerieA,
+        ],
+      ),
+
+      // 5. Avrupa Lig Şampiyonlukları & Kulüpler
+      GridChallenge(
+        title: 'Lig Şampiyonları & Kupa Koleksiyoncuları',
+        theme: GridThemeType.trophiesAndClubs,
+        rowCriteria: [
+          _clubCrit('juventus'),
+          _clubCrit('inter'),
+          _clubCrit('bayern'),
+        ],
+        colCriteria: [
+          _critUcl,
+          _critWorldCup,
+          _critGoldenBoot,
+        ],
+      ),
+
+      // 6. Milli Takımlar & Süper Lig / Avrupa
+      GridChallenge(
+        title: 'Ülkeler & Şampiyonluklar',
+        theme: GridThemeType.nationsAndTrophies,
+        rowCriteria: [
+          _critPortugal,
+          _critGermany,
+          _critSpain,
+        ],
+        colCriteria: [
+          _clubCrit('real_madrid'),
+          _critUcl,
+          _critPremierLeague,
+        ],
+      ),
+
+      // 7. Klasik Kulüpler 1
+      GridChallenge(
+        title: 'Klasik Avrupa & Süper Lig Kesişimi',
+        theme: GridThemeType.classicClubs,
+        rowCriteria: [
+          _clubCrit('real_madrid'),
+          _clubCrit('barcelona'),
+          _clubCrit('galatasaray'),
+        ],
+        colCriteria: [
+          _clubCrit('arsenal'),
+          _clubCrit('inter'),
+          _clubCrit('chelsea'),
+        ],
+      ),
+
+      // 8. Klasik Kulüpler 2
+      GridChallenge(
+        title: 'Dev Kulüpler Transfer Kesişimi',
+        theme: GridThemeType.classicClubs,
+        rowCriteria: [
+          _clubCrit('man_united'),
+          _clubCrit('bayern'),
+          _clubCrit('fenerbahce'),
+        ],
+        colCriteria: [
+          _clubCrit('real_madrid'),
+          _clubCrit('juventus'),
+          _clubCrit('chelsea'),
+        ],
+      ),
+
+      // 9. Karışık Süper Lig, Milli Takım & Kupa
+      GridChallenge(
+        title: 'Süper Lig, Milli Takım ve Devler',
+        theme: GridThemeType.superLigSpecial,
+        rowCriteria: [
+          _critSuperLig,
+          _critLaLiga,
+          _critSerieA,
+        ],
+        colCriteria: [
+          _critTurkey,
+          _critBrazil,
+          _critUcl,
+        ],
+      ),
+
+      // 10. İngiltere, Fransa & İspanya Milli Yıldızlar
+      GridChallenge(
+        title: 'Avrupa Milli Takımları & Dev Kulüpler',
+        theme: GridThemeType.nationsAndTrophies,
+        rowCriteria: [
+          _critEngland,
+          _critFrance,
+          _critSpain,
+        ],
+        colCriteria: [
+          _clubCrit('real_madrid'),
+          _clubCrit('chelsea'),
+          _critPremierLeague,
         ],
       ),
     ];
+
+    if (theme == null || theme == GridThemeType.mixed) {
+      return allChallenges;
+    }
+    final filtered = allChallenges.where((c) => c.theme == theme).toList();
+    return filtered.isNotEmpty ? filtered : allChallenges;
   }
 
-  GridChallenge getRandom3x3GridChallenge() {
-    final challenges = getGridChallenges();
+  GridChallenge getRandom3x3GridChallenge({GridThemeType? theme}) {
+    final challenges = getGridChallenges(theme: theme);
     return challenges[_random.nextInt(challenges.length)];
   }
 
   bool validateGridCell(GridCriterion row, GridCriterion col, PlayerModel player) {
-    return player.matchesGridCriterion(row.id) && player.matchesGridCriterion(col.id);
+    return _doesPlayerMatchCriterion(player, row) && _doesPlayerMatchCriterion(player, col);
   }
 
   List<PlayerModel> getValidPlayersForCell(GridCriterion row, GridCriterion col) {
