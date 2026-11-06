@@ -20,7 +20,7 @@ void showGameModeSelectorSheet(
   );
 }
 
-class GameModeSelectorSheet extends StatelessWidget {
+class GameModeSelectorSheet extends StatefulWidget {
   final GameTargetType targetGame;
 
   const GameModeSelectorSheet({
@@ -28,18 +28,34 @@ class GameModeSelectorSheet extends StatelessWidget {
     required this.targetGame,
   });
 
+  @override
+  State<GameModeSelectorSheet> createState() => _GameModeSelectorSheetState();
+}
+
+class _GameModeSelectorSheetState extends State<GameModeSelectorSheet> {
+  GameDifficulty _selectedDifficulty = GameDifficulty.medium;
+
   void _launchSolo(BuildContext context) {
     Navigator.of(context).pop();
     Widget destination;
-    switch (targetGame) {
+    switch (widget.targetGame) {
       case GameTargetType.commonPlayer:
-        destination = const CommonPlayerScreen(playMode: PlayModeType.solo);
+        destination = CommonPlayerScreen(
+          playMode: PlayModeType.solo,
+          difficulty: _selectedDifficulty,
+        );
         break;
       case GameTargetType.fiveClubs:
-        destination = const FiveClubsScreen(playMode: PlayModeType.solo);
+        destination = FiveClubsScreen(
+          playMode: PlayModeType.solo,
+          difficulty: _selectedDifficulty,
+        );
         break;
       case GameTargetType.footballGrid:
-        destination = const FootballGridScreen(playMode: PlayModeType.solo);
+        destination = FootballGridScreen(
+          playMode: PlayModeType.solo,
+          difficulty: _selectedDifficulty,
+        );
         break;
     }
     Navigator.of(context).push(
@@ -51,7 +67,10 @@ class GameModeSelectorSheet extends StatelessWidget {
     Navigator.of(context).pop();
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => MatchmakingScreen(targetGame: targetGame),
+        builder: (_) => MatchmakingScreen(
+          targetGame: widget.targetGame,
+          difficulty: _selectedDifficulty,
+        ),
       ),
     );
   }
@@ -60,7 +79,7 @@ class GameModeSelectorSheet extends StatelessWidget {
     Navigator.of(context).pop();
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => LobbyHubScreen(initialGameTarget: targetGame),
+        builder: (_) => LobbyHubScreen(initialGameTarget: widget.targetGame),
       ),
     );
   }
@@ -109,7 +128,7 @@ class GameModeSelectorSheet extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 12),
 
           // Header
           Row(
@@ -132,7 +151,7 @@ class GameModeSelectorSheet extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      targetGame.title,
+                      widget.targetGame.title,
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w800,
@@ -141,7 +160,7 @@ class GameModeSelectorSheet extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      targetGame.shortDescription,
+                      widget.targetGame.shortDescription,
                       style: const TextStyle(
                         fontSize: 11.5,
                         color: AppColors.textSecondary,
@@ -154,8 +173,125 @@ class GameModeSelectorSheet extends StatelessWidget {
           ),
 
           const SizedBox(height: 14),
+
+          // 1. Difficulty Selector Section (Kolay / Orta / Zor)
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                '1. ZORLUK SEVİYESİNİ SEÇ',
+                style: TextStyle(
+                  fontSize: 10.5,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 0.8,
+                  color: AppColors.greenLight,
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                decoration: BoxDecoration(
+                  color: AppColors.gold.withValues(alpha: 0.16),
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(color: AppColors.gold.withValues(alpha: 0.5), width: 0.8),
+                ),
+                child: Text(
+                  _selectedDifficulty.badgeText,
+                  style: const TextStyle(
+                    fontSize: 9,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.gold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: AppColors.surface.withValues(alpha: 0.90),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: Column(
+              children: [
+                Row(
+                  children: GameDifficulty.values.map((diff) {
+                    final isSelected = _selectedDifficulty == diff;
+                    Color diffColor;
+                    switch (diff) {
+                      case GameDifficulty.easy:
+                        diffColor = AppColors.greenLight;
+                        break;
+                      case GameDifficulty.medium:
+                        diffColor = AppColors.gold;
+                        break;
+                      case GameDifficulty.hard:
+                        diffColor = const Color(0xFFF97316);
+                        break;
+                    }
+
+                    return Expanded(
+                      child: GestureDetector(
+                        onTap: () => setState(() => _selectedDifficulty = diff),
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 180),
+                          margin: const EdgeInsets.symmetric(horizontal: 3),
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          decoration: BoxDecoration(
+                            color: isSelected
+                                ? diffColor.withValues(alpha: 0.22)
+                                : Colors.transparent,
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
+                              color: isSelected ? diffColor : Colors.transparent,
+                              width: 1.2,
+                            ),
+                          ),
+                          child: Column(
+                            children: [
+                              Text(
+                                diff.label,
+                                style: TextStyle(
+                                  fontSize: 12.5,
+                                  fontWeight: FontWeight.w800,
+                                  color: isSelected ? Colors.white : AppColors.textMuted,
+                                ),
+                              ),
+                              Text(
+                                '${diff.pointsMultiplier}x Puan',
+                                style: TextStyle(
+                                  fontSize: 9.5,
+                                  fontWeight: FontWeight.w700,
+                                  color: isSelected ? diffColor : AppColors.textMuted,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+                const SizedBox(height: 6),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  child: Text(
+                    _selectedDifficulty.description,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 10.5,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 14),
           const Text(
-            'OYUN MODUNU SEÇ',
+            '2. OYNANIŞ MODUNU SEÇ',
             style: TextStyle(
               fontSize: 10.5,
               fontWeight: FontWeight.w800,
@@ -175,7 +311,7 @@ class GameModeSelectorSheet extends StatelessWidget {
             onTap: () => _launchSolo(context),
           ),
 
-          const SizedBox(height: 10),
+          const SizedBox(height: 9),
 
           // 2. Online Eşleşme (Falls back to AI if no online player)
           _buildModeOptionCard(
@@ -187,7 +323,7 @@ class GameModeSelectorSheet extends StatelessWidget {
             onTap: () => _launchOnlineMatchmaking(context),
           ),
 
-          const SizedBox(height: 10),
+          const SizedBox(height: 9),
 
           // 3. Arkadaşınla Davetli Düello (Invite Room)
           _buildModeOptionCard(
@@ -199,8 +335,8 @@ class GameModeSelectorSheet extends StatelessWidget {
             onTap: () => _launchFriendInvite(context),
           ),
 
-          if (targetGame == GameTargetType.commonPlayer) ...[
-            const SizedBox(height: 10),
+          if (widget.targetGame == GameTargetType.commonPlayer) ...[
+            const SizedBox(height: 9),
             // 4. Yan Yana Parti Modu (3-2-1)
             _buildModeOptionCard(
               icon: Icons.alarm_outlined,
@@ -230,7 +366,7 @@ class GameModeSelectorSheet extends StatelessWidget {
         borderRadius: BorderRadius.circular(14),
         onTap: onTap,
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 11),
+          padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 10),
           decoration: BoxDecoration(
             color: AppColors.surface.withValues(alpha: 0.90),
             borderRadius: BorderRadius.circular(14),
@@ -242,18 +378,18 @@ class GameModeSelectorSheet extends StatelessWidget {
           child: Row(
             children: [
               Container(
-                width: 40,
-                height: 40,
+                width: 38,
+                height: 38,
                 decoration: BoxDecoration(
                   color: AppColors.darkGreen.withValues(alpha: 0.8),
                   borderRadius: BorderRadius.circular(10),
                   border: Border.all(color: badgeColor.withValues(alpha: 0.6), width: 1.0),
                 ),
                 child: Center(
-                  child: Icon(icon, color: badgeColor, size: 20),
+                  child: Icon(icon, color: badgeColor, size: 19),
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 11),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -264,7 +400,7 @@ class GameModeSelectorSheet extends StatelessWidget {
                           child: Text(
                             title,
                             style: const TextStyle(
-                              fontSize: 13.5,
+                              fontSize: 13,
                               fontWeight: FontWeight.w800,
                               color: Colors.white,
                             ),
@@ -288,11 +424,11 @@ class GameModeSelectorSheet extends StatelessWidget {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 3),
+                    const SizedBox(height: 2),
                     Text(
                       subtitle,
                       style: const TextStyle(
-                        fontSize: 11,
+                        fontSize: 10.5,
                         color: AppColors.textSecondary,
                         height: 1.25,
                       ),

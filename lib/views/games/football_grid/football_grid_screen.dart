@@ -12,11 +12,13 @@ import '../common_player/widgets/search_guess_bar.dart';
 
 class FootballGridScreen extends StatelessWidget {
   final PlayModeType playMode;
+  final GameDifficulty difficulty;
   final OpponentProfile? opponent;
 
   const FootballGridScreen({
     super.key,
     this.playMode = PlayModeType.solo,
+    this.difficulty = GameDifficulty.medium,
     this.opponent,
   });
 
@@ -28,6 +30,7 @@ class FootballGridScreen extends StatelessWidget {
     return ChangeNotifierProvider(
       create: (_) => FootballGridGameProvider(
         playMode: playMode,
+        difficulty: difficulty,
         opponent: opponent,
       ),
       child: Consumer<FootballGridGameProvider>(

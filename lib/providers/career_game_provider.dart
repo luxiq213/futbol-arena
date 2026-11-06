@@ -16,7 +16,7 @@ class CareerGameProvider extends ChangeNotifier {
   String _region = 'Türkiye';
 
   int _currentStageIndex = 0;
-  final int _maxStages = 6;
+  final int _maxStages = 10;
 
   ClubModel? _currentClub;
   List<ClubModel> _currentOffers = [];
@@ -25,6 +25,13 @@ class CareerGameProvider extends ChangeNotifier {
   final List<String> _highlightsHistory = [];
   CareerSummary? _finalSummary;
 
+  // Interactive Penalty & Form State
+  bool _hasPendingPenalty = true;
+  PenaltyShotResult? _lastPenaltyResult;
+  int _penaltiesScored = 0;
+  int _penaltiesTaken = 0;
+  int _formMomentum = 70; // 0 - 100
+
   // Getters
   bool get isCareerActive => _isCareerActive;
   bool get isCareerFinished => _isCareerFinished;
@@ -32,6 +39,7 @@ class CareerGameProvider extends ChangeNotifier {
   PlayerPosition get position => _position;
   String get region => _region;
   int get currentStageIndex => _currentStageIndex;
+  int get maxStages => _maxStages;
   int get currentAge => _stageAges[_currentStageIndex.clamp(0, _stageAges.length - 1)];
   String get currentStageTitle => _stageTitles[_currentStageIndex.clamp(0, _stageTitles.length - 1)];
   ClubModel? get currentClub => _currentClub;
@@ -41,21 +49,52 @@ class CareerGameProvider extends ChangeNotifier {
   List<String> get highlightsHistory => _highlightsHistory;
   CareerSummary? get finalSummary => _finalSummary;
 
-  static const List<int> _stageAges = [18, 22, 26, 30, 33, 36];
+  bool get hasPendingPenalty => _hasPendingPenalty;
+  PenaltyShotResult? get lastPenaltyResult => _lastPenaltyResult;
+  int get penaltiesScored => _penaltiesScored;
+  int get penaltiesTaken => _penaltiesTaken;
+  int get formMomentum => _formMomentum;
+
+  int get marketValueMillions {
+    final age = currentAge;
+    double baseVal = 14.0;
+    if (age <= 18) {
+      baseVal = 12.0;
+    } else if (age <= 21) {
+      baseVal = 28.0;
+    } else if (age <= 24) {
+      baseVal = 52.0;
+    } else if (age <= 28) {
+      baseVal = 78.0;
+    } else if (age <= 31) {
+      baseVal = 55.0;
+    } else {
+      baseVal = 22.0;
+    }
+    final formFactor = 0.6 + (_formMomentum / 100.0) * 0.85;
+    final trophyBonus = _seasonHistory.fold<int>(0, (s, p) => s + p.trophiesWon.length) * 4.5;
+    return (baseVal * formFactor + trophyBonus).round().clamp(5, 180);
+  }
+
+  static const List<int> _stageAges = [17, 19, 21, 23, 25, 27, 29, 31, 33, 35];
   static const List<String> _stageTitles = [
-    'Altyapı & İlk Çıkış',
-    'Gelişim & Büyük Sıçrama',
+    'Altyapı & İlk Profesyonel Maç',
+    'Genç Yetenek & Çıkış Sezonu',
+    'İlk 11\'in Değişilmezi',
+    'Avrupa Vitrininde Parlayış',
+    'Altın Çağ Başlangıcı',
     'Zirve / Prime Dönemi',
-    'Yıldız Liderlik',
-    'Usta Kaptanlık',
+    'Dünya Yıldızı & Liderlik',
+    'Tecrübeli Kaptan',
+    'Usta Maestro Dönemi',
     'Jübile & Son Dans',
   ];
 
   /// Start a brand new player career
   void startCareer({
     required String playerName,
-    required PlayerPosition position,
     required String region,
+    required PlayerPosition position,
   }) {
     _playerName = playerName.trim().isNotEmpty ? playerName.trim() : 'Kaptan';
     _position = position;
@@ -67,6 +106,11 @@ class CareerGameProvider extends ChangeNotifier {
     _seasonHistory.clear();
     _highlightsHistory.clear();
     _finalSummary = null;
+    _penaltiesScored = 0;
+    _penaltiesTaken = 0;
+    _formMomentum = 72;
+    _hasPendingPenalty = true;
+    _lastPenaltyResult = null;
 
     // Pick authentic starting club based on region
     final startingClub = _getInitialClubForRegion(region);
@@ -74,12 +118,114 @@ class CareerGameProvider extends ChangeNotifier {
     _careerClubsHistory.add(startingClub);
 
     // Generate initial performance and first transfer offers
-    final initialSeason = _simulateSeason(startingClub, 18);
+    final initialSeason = _simulateSeason(startingClub, _stageAges.first);
     _seasonHistory.add(initialSeason);
-    _highlightsHistory.add('Profesyonel sözleşmeyi imzaladın ve ilk sezonunda dikkatleri üzerine çektin!');
+    _highlightsHistory.add('17 yaşında profesyonel sözleşmeyi imzaladın ve ilk sezonunda taraftarın sevgilisi oldun!');
 
     _generateNextOffers();
     notifyListeners();
+  }
+
+  /// Interactive Penalty Shootout for the current career period
+  PenaltyShotResult takeSeasonPenalty(PenaltyCorner chosenCorner) {
+    if (!_hasPendingPenalty || _seasonHistory.isEmpty) {
+      return _lastPenaltyResult ??
+          PenaltyShotResult(
+            playerCorner: chosenCorner,
+            keeperCorner: PenaltyCorner.center,
+            isGoal: true,
+            commentary: 'Penaltı tamamlandı.',
+          );
+    }
+
+    _hasPendingPenalty = false;
+    _penaltiesTaken++;
+
+    final corners = PenaltyCorner.values;
+    // Goalkeeper dives: 68% chance player outsmarts keeper, 32% chance keeper guesses the corner
+    final bool isSuccess = _random.nextDouble() < 0.68;
+    PenaltyCorner keeperCorner;
+    if (isSuccess) {
+      final otherCorners = corners.where((c) => c != chosenCorner).toList();
+      keeperCorner = otherCorners[_random.nextInt(otherCorners.length)];
+    } else {
+      keeperCorner = chosenCorner;
+    }
+
+    final lastIdx = _seasonHistory.length - 1;
+    final currentPerf = _seasonHistory[lastIdx];
+    final isGk = _position == PlayerPosition.goalkeeper;
+
+    String commentary;
+    if (isSuccess) {
+      _penaltiesScored++;
+      _formMomentum = (_formMomentum + 16).clamp(20, 99);
+
+      final extraGoals = isGk ? 0 : (_position == PlayerPosition.defender ? 2 : 6);
+      final extraAssists = isGk ? 1 : 3;
+      final updatedTrophies = List<String>.from(currentPerf.trophiesWon);
+      if (updatedTrophies.isEmpty && _random.nextDouble() < 0.65) {
+        updatedTrophies.add('Ulusal Kupa Şampiyonu');
+      }
+
+      _seasonHistory[lastIdx] = currentPerf.copyWith(
+        goals: currentPerf.goals + extraGoals,
+        assists: currentPerf.assists + extraAssists,
+        trophiesWon: updatedTrophies,
+      );
+
+      // Upgrade one transfer offer to an elite club if not already present
+      final eliteIds = ['real_madrid', 'man_city', 'bayern', 'barcelona', 'liverpool', 'psg', 'galatasaray', 'fenerbahce'];
+      final eliteClubs = _database
+          .getAllClubs()
+          .where((c) => eliteIds.contains(c.id) && c.id != _currentClub?.id)
+          .toList();
+      if (eliteClubs.isNotEmpty && _currentOffers.isNotEmpty) {
+        eliteClubs.shuffle(_random);
+        if (!_currentOffers.any((o) => o.id == eliteClubs.first.id)) {
+          _currentOffers[0] = eliteClubs.first;
+        }
+      }
+
+      commentary = isGk
+          ? 'İNANILMAZ KURTARIŞ! ${chosenCorner.label} köşesine uzanarak 90. dakikada penaltıyı çıkardın, takımın kupaya uzandı!'
+          : 'GOOOL! Topu ${chosenCorner.label} köşesine gönderdin, kaleci ters köşede kaldı! Formun ve piyasa değerin zirveye çıktı!';
+    } else {
+      _formMomentum = (_formMomentum - 18).clamp(20, 99);
+
+      final reducedGoals = isGk ? currentPerf.goals : (currentPerf.goals - 4).clamp(0, 99);
+      final reducedAssists = (currentPerf.assists - 2).clamp(0, 99);
+      final updatedTrophies = List<String>.from(currentPerf.trophiesWon);
+      if (updatedTrophies.isNotEmpty) {
+        updatedTrophies.removeLast();
+      }
+
+      _seasonHistory[lastIdx] = currentPerf.copyWith(
+        goals: reducedGoals,
+        assists: reducedAssists,
+        trophiesWon: updatedTrophies,
+      );
+
+      commentary = isGk
+          ? 'TERS KÖŞE! ${chosenCorner.label} köşesine atladın ama top diğer köşeden ağlara gitti. Kritik maçta moral kaybı yaşadın.'
+          : 'KALECİ KURTARDI! ${chosenCorner.label} köşesine vurduğun penaltıyı kaleci çıkardı! Kaçan kritik penaltı sonrası formun düştü.';
+    }
+
+    if (_highlightsHistory.isNotEmpty) {
+      _highlightsHistory[_highlightsHistory.length - 1] = commentary;
+    } else {
+      _highlightsHistory.add(commentary);
+    }
+
+    _lastPenaltyResult = PenaltyShotResult(
+      playerCorner: chosenCorner,
+      keeperCorner: keeperCorner,
+      isGoal: isSuccess,
+      commentary: commentary,
+    );
+
+    notifyListeners();
+    return _lastPenaltyResult!;
   }
 
   /// User chooses to transfer to Club A, Club B, or stay
@@ -98,6 +244,9 @@ class CareerGameProvider extends ChangeNotifier {
     if (_currentStageIndex >= _maxStages) {
       _finishCareer();
     } else {
+      _hasPendingPenalty = true;
+      _lastPenaltyResult = null;
+
       final seasonAge = currentAge;
       final seasonPerf = _simulateSeason(_currentClub!, seasonAge);
       _seasonHistory.add(seasonPerf);
@@ -128,11 +277,12 @@ class CareerGameProvider extends ChangeNotifier {
 
     // Calculate FIFA-style Career Rating and Legacy Title
     int rating = 82;
-    rating += (allTrophies.length * 1.5).round();
+    rating += (allTrophies.length * 1.2).round();
+    rating += (_penaltiesScored * 1);
     if (_position == PlayerPosition.striker || _position == PlayerPosition.winger) {
-      rating += (totalGoals / 40).round();
+      rating += (totalGoals / 45).round();
     } else {
-      rating += (totalAssists / 20).round();
+      rating += (totalAssists / 24).round();
     }
     rating = rating.clamp(84, 98);
 
@@ -154,6 +304,8 @@ class CareerGameProvider extends ChangeNotifier {
       totalMatches: totalMatches,
       totalGoals: totalGoals,
       totalAssists: totalAssists,
+      penaltiesScored: _penaltiesScored,
+      penaltiesTaken: _penaltiesTaken,
       allTrophies: allTrophies,
       clubsPlayed: List.from(_careerClubsHistory),
       careerRating: rating,
@@ -162,48 +314,51 @@ class CareerGameProvider extends ChangeNotifier {
   }
 
   SeasonPerformance _simulateSeason(ClubModel club, int age) {
-    int matches = 34 + _random.nextInt(18); // 34 - 52 maç
+    int matches = 28 + _random.nextInt(16); // 28 - 43 maç per 2-year stage window
     int goals = 0;
     int assists = 0;
     final List<String> trophies = [];
 
-    // Realistic age curve multiplier
+    // Realistic age curve + form momentum multiplier
     final isPrime = age >= 25 && age <= 29;
-    final double multiplier;
+    double multiplier;
     if (age <= 18) {
-      multiplier = 0.72;
-    } else if (age <= 22) {
-      multiplier = 1.00;
+      multiplier = 0.65;
+    } else if (age <= 21) {
+      multiplier = 0.88;
     } else if (isPrime) {
-      multiplier = 1.35;
-    } else if (age <= 30) {
-      multiplier = 1.15;
+      multiplier = 1.25;
+    } else if (age <= 31) {
+      multiplier = 1.05;
     } else if (age <= 33) {
-      multiplier = 0.92;
+      multiplier = 0.85;
     } else {
-      multiplier = 0.78;
+      multiplier = 0.72;
     }
+
+    // Factor in player's current form momentum (from penalties & past success)
+    multiplier *= (0.75 + (_formMomentum / 100.0) * 0.45);
 
     switch (_position) {
       case PlayerPosition.striker:
-        goals = ((18 + _random.nextInt(22)) * multiplier).round();
-        assists = ((4 + _random.nextInt(9)) * multiplier).round();
+        goals = ((14 + _random.nextInt(16)) * multiplier).round();
+        assists = ((3 + _random.nextInt(7)) * multiplier).round();
         break;
       case PlayerPosition.winger:
-        goals = ((12 + _random.nextInt(18)) * multiplier).round();
-        assists = ((10 + _random.nextInt(16)) * multiplier).round();
+        goals = ((9 + _random.nextInt(14)) * multiplier).round();
+        assists = ((8 + _random.nextInt(12)) * multiplier).round();
         break;
       case PlayerPosition.attackingMid:
-        goals = ((10 + _random.nextInt(15)) * multiplier).round();
-        assists = ((14 + _random.nextInt(18)) * multiplier).round();
+        goals = ((8 + _random.nextInt(12)) * multiplier).round();
+        assists = ((10 + _random.nextInt(14)) * multiplier).round();
         break;
       case PlayerPosition.centralMid:
-        goals = ((5 + _random.nextInt(9)) * multiplier).round();
-        assists = ((8 + _random.nextInt(14)) * multiplier).round();
+        goals = ((4 + _random.nextInt(7)) * multiplier).round();
+        assists = ((6 + _random.nextInt(11)) * multiplier).round();
         break;
       case PlayerPosition.defender:
-        goals = (1 + _random.nextInt(5));
-        assists = (2 + _random.nextInt(6));
+        goals = (1 + _random.nextInt(4));
+        assists = (1 + _random.nextInt(5));
         break;
       case PlayerPosition.goalkeeper:
         goals = _random.nextInt(100) == 0 ? 1 : 0;
@@ -211,7 +366,7 @@ class CareerGameProvider extends ChangeNotifier {
         break;
     }
 
-    // Trophy Simulation according to Club Tier
+    // Trophy Simulation according to Club Tier & Form
     final isTopTier = [
       'real_madrid', 'man_city', 'bayern', 'barcelona', 'psg', 'inter', 'liverpool', 'arsenal'
     ].contains(club.id);
@@ -220,25 +375,29 @@ class CareerGameProvider extends ChangeNotifier {
       'galatasaray', 'fenerbahce', 'besiktas', 'trabzonspor'
     ].contains(club.id);
 
+    final formBonusChance = (_formMomentum - 60) * 0.004;
+
     // League Title
-    if ((isTopTier && _random.nextDouble() < 0.65) || (isTurkishGiant && _random.nextDouble() < 0.55) || _random.nextDouble() < 0.35) {
+    if ((isTopTier && _random.nextDouble() < (0.55 + formBonusChance)) ||
+        (isTurkishGiant && _random.nextDouble() < (0.48 + formBonusChance)) ||
+        _random.nextDouble() < 0.28) {
       trophies.add(club.league.isNotEmpty ? '${club.league} Şampiyonu' : 'Lig Şampiyonu');
     }
 
     // Domestic Cup
-    if (_random.nextDouble() < 0.40) {
+    if (_random.nextDouble() < (0.32 + formBonusChance)) {
       trophies.add('Ulusal Kupa Şampiyonu');
     }
 
     // UEFA Champions League / European Glory
-    if (isTopTier && _random.nextDouble() < 0.38) {
+    if (isTopTier && _random.nextDouble() < (0.30 + formBonusChance)) {
       trophies.add('Şampiyonlar Ligi');
     } else if (isTurkishGiant && _random.nextDouble() < 0.12) {
       trophies.add('Avrupa Ligi');
     }
 
     // Individual Glory in Prime
-    if (isPrime && (goals >= 35 || assists >= 25) && trophies.isNotEmpty) {
+    if (isPrime && (goals >= 26 || assists >= 20) && trophies.isNotEmpty) {
       if (_random.nextDouble() < 0.35) {
         trophies.add('Altın Ayakkabı / Ballon d\'Or');
       }
@@ -313,7 +472,6 @@ class CareerGameProvider extends ChangeNotifier {
       if (deClubs.isNotEmpty) return deClubs[_random.nextInt(deClubs.length)];
     }
 
-    // Default authentic academy clubs (Ajax, Sporting, Porto, etc.)
     final academy = _database.getClub('ajax') ?? _database.getClub('sporting') ?? allClubs.first;
     return academy;
   }

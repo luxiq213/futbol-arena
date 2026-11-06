@@ -6,6 +6,80 @@ enum PlayModeType {
   friendInvite,
 }
 
+enum GameDifficulty {
+  easy,
+  medium,
+  hard,
+}
+
+extension GameDifficultyExtension on GameDifficulty {
+  String get label {
+    switch (this) {
+      case GameDifficulty.easy:
+        return 'Kolay';
+      case GameDifficulty.medium:
+        return 'Orta';
+      case GameDifficulty.hard:
+        return 'Zor';
+    }
+  }
+
+  String get badgeText {
+    switch (this) {
+      case GameDifficulty.easy:
+        return 'AMATÖR • 1.0x XP';
+      case GameDifficulty.medium:
+        return 'PROFESYONEL • 1.2x XP';
+      case GameDifficulty.hard:
+        return 'EFSANE • 1.5x XP';
+    }
+  }
+
+  String get description {
+    switch (this) {
+      case GameDifficulty.easy:
+        return 'Popüler kulüp eşleşmeleri (4+ ortak oyuncu), Grid\'de 12 hak.';
+      case GameDifficulty.medium:
+        return 'Dengeli kulüp eşleşmeleri (2-4 ortak oyuncu), Grid\'de 9 hak.';
+      case GameDifficulty.hard:
+        return 'Nadir kesişimler (1-2 ortak oyuncu), Grid\'de 6 hak ve 1.5x puan!';
+    }
+  }
+
+  double get pointsMultiplier {
+    switch (this) {
+      case GameDifficulty.easy:
+        return 1.0;
+      case GameDifficulty.medium:
+        return 1.2;
+      case GameDifficulty.hard:
+        return 1.5;
+    }
+  }
+
+  int get gridGuessesAllowed {
+    switch (this) {
+      case GameDifficulty.easy:
+        return 12;
+      case GameDifficulty.medium:
+        return 9;
+      case GameDifficulty.hard:
+        return 6;
+    }
+  }
+
+  double get aiAccuracyChance {
+    switch (this) {
+      case GameDifficulty.easy:
+        return 0.45;
+      case GameDifficulty.medium:
+        return 0.68;
+      case GameDifficulty.hard:
+        return 0.88;
+    }
+  }
+}
+
 enum GameTargetType {
   commonPlayer,
   fiveClubs,
@@ -55,15 +129,19 @@ class OpponentProfile {
 
   String get modeBadgeLabel => isAiFallback ? 'Yapay Zeka Rakip' : 'Arkadaş Düellosu';
 
-  static OpponentProfile randomAiRival() {
+  static OpponentProfile randomAiRival({GameDifficulty difficulty = GameDifficulty.medium}) {
     final random = Random();
-    const rivals = [
+    final rankByDiff = difficulty == GameDifficulty.hard
+        ? 'Efsane Analist'
+        : (difficulty == GameDifficulty.medium ? 'Profesyonel' : 'Genç Yetenek');
+
+    final rivals = [
       OpponentProfile(
         id: 'ai_1',
         name: 'TaktikDehası_10',
         avatar: 'TD',
         favoriteTeam: 'Galatasaray',
-        rankTitle: 'Taktik Dehası',
+        rankTitle: rankByDiff,
         isAiFallback: true,
       ),
       OpponentProfile(
@@ -71,7 +149,7 @@ class OpponentProfile {
         name: 'KadıköyBoğası',
         avatar: 'KB',
         favoriteTeam: 'Fenerbahçe',
-        rankTitle: 'Usta Analist',
+        rankTitle: rankByDiff,
         isAiFallback: true,
       ),
       OpponentProfile(
@@ -79,7 +157,7 @@ class OpponentProfile {
         name: 'KartalPençesi_1903',
         avatar: 'KP',
         favoriteTeam: 'Beşiktaş',
-        rankTitle: 'Büyük Kaptan',
+        rankTitle: rankByDiff,
         isAiFallback: true,
       ),
       OpponentProfile(
@@ -87,7 +165,7 @@ class OpponentProfile {
         name: 'KaradenizFırtınası',
         avatar: 'KF',
         favoriteTeam: 'Trabzonspor',
-        rankTitle: 'Kadro Gurusu',
+        rankTitle: rankByDiff,
         isAiFallback: true,
       ),
       OpponentProfile(
@@ -95,7 +173,7 @@ class OpponentProfile {
         name: 'ElClasico_Uzmanı',
         avatar: 'EC',
         favoriteTeam: 'Real Madrid',
-        rankTitle: 'Avrupa Efsanesi',
+        rankTitle: rankByDiff,
         isAiFallback: true,
       ),
       OpponentProfile(
@@ -103,7 +181,7 @@ class OpponentProfile {
         name: 'TikiTaka_Maestro',
         avatar: 'TM',
         favoriteTeam: 'Barcelona',
-        rankTitle: 'Orta Saha Maestrosu',
+        rankTitle: rankByDiff,
         isAiFallback: true,
       ),
     ];

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
 import '../../providers/auth_provider.dart';
+import '../widgets/app_notification.dart';
 import '../widgets/custom_button.dart';
 import '../auth/login_screen.dart';
 
@@ -61,11 +62,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
       avatar: _selectedAvatar,
       favoriteTeam: _selectedTeam,
     );
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Profil güncellendi.'),
-        backgroundColor: AppColors.pitchGreen,
-      ),
+    AppNotification.show(
+      context,
+      title: 'Profil Güncellendi',
+      message: '${_nameController.text.trim()} ($_selectedTeam) profil ayarların başarıyla kaydedildi.',
+      type: AppNotificationType.success,
+      icon: Icons.verified_user_outlined,
     );
   }
 

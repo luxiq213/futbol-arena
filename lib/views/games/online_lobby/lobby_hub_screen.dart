@@ -4,6 +4,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../data/models/play_mode_model.dart';
 import '../../../../providers/auth_provider.dart';
 import '../../../../providers/online_room_provider.dart';
+import '../../widgets/app_notification.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/stadium_background.dart';
 import 'active_room_screen.dart';
@@ -68,11 +69,12 @@ class _LobbyHubScreenState extends State<LobbyHubScreen> {
         MaterialPageRoute(builder: (_) => const ActiveRoomScreen()),
       );
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(roomProvider.errorMessage ?? 'Odaya katılırken hata oluştu.'),
-          backgroundColor: AppColors.error,
-        ),
+      AppNotification.show(
+        context,
+        title: 'Odaya Katılınamadı',
+        message: roomProvider.errorMessage ?? 'Odaya katılırken hata oluştu, lütfen davet kodunu kontrol et.',
+        type: AppNotificationType.error,
+        icon: Icons.error_outline_rounded,
       );
     }
   }

@@ -12,10 +12,12 @@ import '../football_grid/football_grid_screen.dart';
 
 class MatchmakingScreen extends StatefulWidget {
   final GameTargetType targetGame;
+  final GameDifficulty difficulty;
 
   const MatchmakingScreen({
     super.key,
     required this.targetGame,
+    this.difficulty = GameDifficulty.medium,
   });
 
   @override
@@ -56,7 +58,7 @@ class _MatchmakingScreenState extends State<MatchmakingScreen> {
   void _lockInAiOpponentAndStart() {
     _phaseTimer1?.cancel();
     _phaseTimer2?.cancel();
-    final rival = OpponentProfile.randomAiRival();
+    final rival = OpponentProfile.randomAiRival(difficulty: widget.difficulty);
     setState(() {
       _matchedOpponent = rival;
       _phase = _MatchPhase.matched;
@@ -74,18 +76,21 @@ class _MatchmakingScreenState extends State<MatchmakingScreen> {
       case GameTargetType.commonPlayer:
         destination = CommonPlayerScreen(
           playMode: PlayModeType.onlineMatchmaking,
+          difficulty: widget.difficulty,
           opponent: opponent,
         );
         break;
       case GameTargetType.fiveClubs:
         destination = FiveClubsScreen(
           playMode: PlayModeType.onlineMatchmaking,
+          difficulty: widget.difficulty,
           opponent: opponent,
         );
         break;
       case GameTargetType.footballGrid:
         destination = FootballGridScreen(
           playMode: PlayModeType.onlineMatchmaking,
+          difficulty: widget.difficulty,
           opponent: opponent,
         );
         break;

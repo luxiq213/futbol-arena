@@ -13,11 +13,13 @@ import 'widgets/answer_reveal_sheet.dart';
 
 class CommonPlayerScreen extends StatelessWidget {
   final PlayModeType playMode;
+  final GameDifficulty difficulty;
   final OpponentProfile? opponent;
 
   const CommonPlayerScreen({
     super.key,
     this.playMode = PlayModeType.solo,
+    this.difficulty = GameDifficulty.medium,
     this.opponent,
   });
 
@@ -29,6 +31,7 @@ class CommonPlayerScreen extends StatelessWidget {
     return ChangeNotifierProvider(
       create: (_) => CommonPlayerGameProvider(
         playMode: playMode,
+        difficulty: difficulty,
         opponent: opponent,
       ),
       child: Consumer<CommonPlayerGameProvider>(

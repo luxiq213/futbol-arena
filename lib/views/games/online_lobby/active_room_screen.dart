@@ -5,6 +5,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../data/models/play_mode_model.dart';
 import '../../../../providers/auth_provider.dart';
 import '../../../../providers/online_room_provider.dart';
+import '../../widgets/app_notification.dart';
 import '../../widgets/stadium_background.dart';
 import '../../widgets/custom_button.dart';
 import '../common_player/common_player_screen.dart';
@@ -157,12 +158,12 @@ class ActiveRoomScreen extends StatelessWidget {
                           tooltip: 'Kodu Kopyala',
                           onPressed: () {
                             Clipboard.setData(ClipboardData(text: room.code));
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Oda kodu kopyalandı! Arkadaşına gönder.'),
-                                backgroundColor: AppColors.pitchGreen,
-                                duration: Duration(seconds: 2),
-                              ),
+                            AppNotification.show(
+                              context,
+                              title: 'Davet Kodu Kopyalandı (${room.code})',
+                              message: 'Oda kodunu arkadaşına göndererek düelloya davet et.',
+                              type: AppNotificationType.highlight,
+                              icon: Icons.copy_rounded,
                             );
                           },
                         ),

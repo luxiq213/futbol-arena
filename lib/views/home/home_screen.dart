@@ -672,7 +672,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   spacing: 6,
                   runSpacing: 6,
                   children: [
-                    _buildHeroBadge(Icons.hourglass_top_outlined, '6 Dönem Simülasyon'),
+                    _buildHeroBadge(Icons.hourglass_top_outlined, '10 Dönem Simülasyon'),
+                    _buildHeroBadge(Icons.sports_soccer_rounded, 'Penaltı Kader Anları'),
                     _buildHeroBadge(Icons.swap_horiz_rounded, 'Transfer Masası'),
                     _buildHeroBadge(Icons.workspace_premium_outlined, 'Paylaşılabilir Jübile Kartı'),
                   ],

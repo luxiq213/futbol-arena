@@ -14,11 +14,13 @@ import '../common_player/widgets/search_guess_bar.dart';
 
 class FiveClubsScreen extends StatelessWidget {
   final PlayModeType playMode;
+  final GameDifficulty difficulty;
   final OpponentProfile? opponent;
 
   const FiveClubsScreen({
     super.key,
     this.playMode = PlayModeType.solo,
+    this.difficulty = GameDifficulty.medium,
     this.opponent,
   });
 
@@ -30,6 +32,7 @@ class FiveClubsScreen extends StatelessWidget {
     return ChangeNotifierProvider(
       create: (_) => FiveClubsGameProvider(
         playMode: playMode,
+        difficulty: difficulty,
         opponent: opponent,
       ),
       child: Consumer<FiveClubsGameProvider>(

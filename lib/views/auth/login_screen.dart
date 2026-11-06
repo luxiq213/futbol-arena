@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
 import '../../providers/auth_provider.dart';
+import '../widgets/app_notification.dart';
 import '../widgets/stadium_background.dart';
 import '../widgets/custom_button.dart';
 import 'register_screen.dart';
@@ -30,11 +31,12 @@ class _LoginScreenState extends State<LoginScreen> {
     final pass = _passwordController.text.trim();
 
     if (email.isEmpty || pass.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Lütfen e-posta ve şifrenizi girin.'),
-          backgroundColor: AppColors.error,
-        ),
+      AppNotification.show(
+        context,
+        title: 'Eksik Bilgi',
+        message: 'Lütfen e-posta adresinizi ve şifrenizi eksiksiz girin.',
+        type: AppNotificationType.error,
+        icon: Icons.warning_amber_rounded,
       );
       return;
     }

@@ -15,6 +15,7 @@ class FiveClubsGameProvider extends ChangeNotifier {
   final Random _random = Random();
 
   final PlayModeType playMode;
+  final GameDifficulty difficulty;
   final OpponentProfile? opponent;
 
   late FiveClubsChallenge _currentChallenge;
@@ -52,6 +53,7 @@ class FiveClubsGameProvider extends ChangeNotifier {
 
   FiveClubsGameProvider({
     this.playMode = PlayModeType.solo,
+    this.difficulty = GameDifficulty.medium,
     this.opponent,
   }) {
     startNewRound();
@@ -92,7 +94,7 @@ class FiveClubsGameProvider extends ChangeNotifier {
     if (!isDuelMode) {
       // SOLO MODE (Kendini Sına): Immediate evaluation without any AI opponent
       _roundsPlayed++;
-      final earned = _userScore * 100;
+      final earned = (_userScore * 100 * difficulty.pointsMultiplier).round();
       _totalUserPoints += earned;
 
       if (_userScore >= _currentChallenge.maxMatchCount) {
@@ -129,16 +131,18 @@ class FiveClubsGameProvider extends ChangeNotifier {
       scoredPlayers.sort((a, b) => b.value.compareTo(a.value));
 
       if (scoredPlayers.isNotEmpty) {
-        // Pick among the top 4 valid candidates so the duel feels competitive and realistic
-        final pickIndex = _random.nextInt(scoredPlayers.length.clamp(1, 4));
+        final maxIdx = difficulty == GameDifficulty.hard
+            ? 2
+            : (difficulty == GameDifficulty.medium ? 4 : 6);
+        final pickIndex = _random.nextInt(scoredPlayers.length.clamp(1, maxIdx));
         _opponentPlayer = scoredPlayers[pickIndex].key;
         _opponentScore = scoredPlayers[pickIndex].value;
         _opponentMatchedClubs = clubs.where((c) => _opponentPlayer!.playedFor(c.id)).toList();
       }
 
       _roundsPlayed++;
-      final userEarned = _userScore * 100;
-      final oppEarned = _opponentScore * 100;
+      final userEarned = (_userScore * 100 * difficulty.pointsMultiplier).round();
+      final oppEarned = (_opponentScore * 100 * difficulty.pointsMultiplier).round();
       _totalUserPoints += userEarned;
       _totalOpponentPoints += oppEarned;
 

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../models/club_model.dart';
 import '../models/player_model.dart';
 import '../models/grid_challenge_model.dart';
+import '../models/play_mode_model.dart';
 import '../../core/utils/text_normalizer.dart';
 
 class FootballDatabase {
@@ -2324,13 +2325,29 @@ class FootballDatabase {
     return validPairs;
   }
 
-  /// Get a random club pair that has at least 1 common player
-  MapEntry<ClubModel, ClubModel> getRandomClubPair() {
+  /// Get a random club pair filtered by difficulty level
+  MapEntry<ClubModel, ClubModel> getRandomClubPair({
+    GameDifficulty difficulty = GameDifficulty.medium,
+  }) {
     final pairs = getValidClubPairs();
     if (pairs.isEmpty) {
       return MapEntry(_clubs['real_madrid']!, _clubs['arsenal']!);
     }
-    return pairs[_random.nextInt(pairs.length)];
+
+    final filtered = pairs.where((pair) {
+      final count = getMutualPlayers(pair.key.id, pair.value.id).length;
+      switch (difficulty) {
+        case GameDifficulty.easy:
+          return count >= 4;
+        case GameDifficulty.medium:
+          return count >= 2 && count <= 4;
+        case GameDifficulty.hard:
+          return count >= 1 && count <= 2;
+      }
+    }).toList();
+
+    final targetList = filtered.isNotEmpty ? filtered : pairs;
+    return targetList[_random.nextInt(targetList.length)];
   }
 
   /// Search players by query (autocomplete suggestions)

@@ -13,10 +13,35 @@ enum PlayerPosition {
   const PlayerPosition(this.label, this.shortCode);
 }
 
+enum PenaltyCorner {
+  topLeft('Sol 90'),
+  topRight('Sağ 90'),
+  bottomLeft('Sol Köşe'),
+  center('Panenka (Orta)'),
+  bottomRight('Sağ Köşe');
+
+  final String label;
+  const PenaltyCorner(this.label);
+}
+
+class PenaltyShotResult {
+  final PenaltyCorner playerCorner;
+  final PenaltyCorner keeperCorner;
+  final bool isGoal;
+  final String commentary;
+
+  const PenaltyShotResult({
+    required this.playerCorner,
+    required this.keeperCorner,
+    required this.isGoal,
+    required this.commentary,
+  });
+}
+
 class CareerStage {
   final int stageNumber;
   final int age;
-  final String stageTitle; // Örn: 'Genç Yetenek (18 Yaş)', 'Zirve Dönemi (26 Yaş)'
+  final String stageTitle;
   final ClubModel currentClub;
   final List<ClubModel> transferOffers;
   final SeasonPerformance performance;
@@ -45,6 +70,20 @@ class SeasonPerformance {
     required this.assists,
     required this.trophiesWon,
   });
+
+  SeasonPerformance copyWith({
+    int? matches,
+    int? goals,
+    int? assists,
+    List<String>? trophiesWon,
+  }) {
+    return SeasonPerformance(
+      matches: matches ?? this.matches,
+      goals: goals ?? this.goals,
+      assists: assists ?? this.assists,
+      trophiesWon: trophiesWon ?? this.trophiesWon,
+    );
+  }
 }
 
 class CareerSummary {
@@ -54,10 +93,12 @@ class CareerSummary {
   final int totalMatches;
   final int totalGoals;
   final int totalAssists;
+  final int penaltiesScored;
+  final int penaltiesTaken;
   final List<String> allTrophies;
   final List<ClubModel> clubsPlayed;
   final int careerRating; // 80 - 99
-  final String legacyTitle; // Örn: 'DÜNYA FUTBOL EFSANESİ'
+  final String legacyTitle;
 
   const CareerSummary({
     required this.playerName,
@@ -66,6 +107,8 @@ class CareerSummary {
     required this.totalMatches,
     required this.totalGoals,
     required this.totalAssists,
+    this.penaltiesScored = 0,
+    this.penaltiesTaken = 0,
     required this.allTrophies,
     required this.clubsPlayed,
     required this.careerRating,

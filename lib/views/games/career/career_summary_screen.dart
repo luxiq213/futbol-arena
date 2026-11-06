@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../data/models/career_model.dart';
 import '../../../../providers/career_game_provider.dart';
+import '../../widgets/app_notification.dart';
 import '../../widgets/club_crest_widget.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/stadium_background.dart';
@@ -22,6 +23,7 @@ class CareerSummaryScreen extends StatelessWidget {
     buffer.writeln('Toplam Maç: ${summary.totalMatches}');
     buffer.writeln('Toplam Gol: ${summary.totalGoals}');
     buffer.writeln('Toplam Asist: ${summary.totalAssists}');
+    buffer.writeln('Kritik Penaltı: ${summary.penaltiesScored}/${summary.penaltiesTaken}');
     buffer.writeln('Toplam Kupa: ${summary.allTrophies.length}');
 
     if (summary.allTrophies.isNotEmpty) {
@@ -43,15 +45,12 @@ class CareerSummaryScreen extends StatelessWidget {
 
     Clipboard.setData(ClipboardData(text: buffer.toString()));
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text(
-          'Kariyer özeti panoya kopyalandı! Sosyal medyada paylaşabilirsin.',
-          style: TextStyle(color: Colors.white, fontSize: 13),
-        ),
-        backgroundColor: AppColors.pitchGreen,
-        duration: Duration(seconds: 3),
-      ),
+    AppNotification.show(
+      context,
+      title: 'Kariyer Özeti Kopyalandı',
+      message: 'Jübile kartı ve istatistiklerin panoya kopyalandı, sosyal medyada paylaşabilirsin!',
+      type: AppNotificationType.highlight,
+      icon: Icons.share_rounded,
     );
   }
 
@@ -334,6 +333,8 @@ class CareerSummaryScreen extends StatelessWidget {
                       _buildStatColumn('GOL', '${summary.totalGoals}'),
                       _buildDivider(),
                       _buildStatColumn('ASİST', '${summary.totalAssists}'),
+                      _buildDivider(),
+                      _buildStatColumn('PENALTI', '${summary.penaltiesScored}/${summary.penaltiesTaken}'),
                       _buildDivider(),
                       _buildStatColumn('KUPA', '${summary.allTrophies.length}'),
                     ],

@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../data/models/career_model.dart';
 import '../../../../data/models/club_model.dart';
 import '../../../../providers/auth_provider.dart';
 import '../../../../providers/career_game_provider.dart';
+import '../../widgets/app_notification.dart';
 import '../../widgets/club_crest_widget.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/stadium_background.dart';
@@ -19,31 +21,59 @@ class CareerSeasonScreen extends StatefulWidget {
 class _CareerSeasonScreenState extends State<CareerSeasonScreen> {
   bool _isProcessing = false;
 
+  void _onShootPenalty(PenaltyCorner corner) {
+    final provider = context.read<CareerGameProvider>();
+    if (!provider.hasPendingPenalty) return;
+
+    final result = provider.takeSeasonPenalty(corner);
+
+    if (result.isGoal) {
+      AppNotification.show(
+        context,
+        title: provider.position == PlayerPosition.goalkeeper
+            ? 'EFSANE KURTARIŞ! (${corner.label})'
+            : 'GOOOL! 90. Dakikada Ağları Sarstın! (${corner.label})',
+        subtitle: 'Formun ve piyasa değerin yükseldi, dev kulüpler harekete geçti!',
+        type: AppNotificationType.gold,
+        icon: Icons.sports_soccer,
+      );
+    } else {
+      AppNotification.show(
+        context,
+        title: provider.position == PlayerPosition.goalkeeper
+            ? 'Penaltıyı Kurtaramadın (${corner.label})'
+            : 'KALECİ ÇIKARDI! Penaltı Kaçtı (${corner.label})',
+        subtitle: 'Kritik maçta kaçan fırsat sonrası moral ve form kaybı yaşadın.',
+        type: AppNotificationType.error,
+        icon: Icons.sports_handball_outlined,
+      );
+    }
+  }
+
   void _onSelectClub(ClubModel? chosenClub) async {
     if (_isProcessing) return;
     setState(() => _isProcessing = true);
 
     final provider = context.read<CareerGameProvider>();
     final auth = context.read<AuthProvider>();
-    final messenger = ScaffoldMessenger.of(context);
     final nav = Navigator.of(context);
     final isStay = chosenClub == null || chosenClub.id == provider.currentClub?.id;
     final clubName = isStay ? (provider.currentClub?.name ?? 'Kulübünde') : chosenClub.name;
 
-    // Show a quick visual confirmation banner
-    messenger.clearSnackBars();
-    messenger.showSnackBar(
-      SnackBar(
-        content: Text(
-          isStay ? '$clubName ile sözleşme uzattın!' : '$clubName ile anlaşma sağlandı!',
-          style: const TextStyle(fontWeight: FontWeight.w700, color: Colors.white),
-        ),
-        backgroundColor: AppColors.pitchGreen,
-        duration: const Duration(milliseconds: 1200),
-      ),
+    AppNotification.show(
+      context,
+      title: isStay
+          ? '$clubName İle Sözleşme Uzatıldı'
+          : '$clubName İle Resmi Sözleşme İmzalandı!',
+      subtitle: isStay
+          ? 'Taraftarın sadakatinle gurur duyuyor, yeni sezon başlıyor.'
+          : 'Yeni formayla sahaya çıkıyorsun, başarılar Kaptan!',
+      type: isStay ? AppNotificationType.success : AppNotificationType.gold,
+      icon: isStay ? Icons.verified_outlined : Icons.swap_horiz_rounded,
+      duration: const Duration(milliseconds: 1600),
     );
 
-    await Future.delayed(const Duration(milliseconds: 350));
+    await Future.delayed(const Duration(milliseconds: 420));
 
     if (!mounted) return;
 
@@ -161,22 +191,27 @@ class _CareerSeasonScreenState extends State<CareerSeasonScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Career Progress Header Bar
+              // 1. Career Progress Header Bar (10 Stages, Market Value, Form)
               _buildProgressHeader(provider),
 
-              const SizedBox(height: 12),
+              const SizedBox(height: 10),
 
-              // Current Club Card & Ticker
+              // 2. Current Club Card & Ticker
               _buildCurrentClubBanner(currentClub, totalGoals, totalAssists, totalTrophies),
 
-              const SizedBox(height: 12),
+              const SizedBox(height: 10),
 
-              // Last Season Performance & Highlight
+              // 3. Interactive Penalty Shootout Pitch Card (Kritik Maç Anı)
+              _buildInteractivePenaltyCard(provider),
+
+              const SizedBox(height: 10),
+
+              // 4. Last Season Performance & Highlight
               if (lastSeason != null) _buildSeasonReviewCard(lastSeason, lastHighlight),
 
-              const SizedBox(height: 16),
+              const SizedBox(height: 14),
 
-              // Transfer Window Section Header
+              // 5. Transfer Window Section Header
               Row(
                 children: [
                   Container(
@@ -201,11 +236,11 @@ class _CareerSeasonScreenState extends State<CareerSeasonScreen> {
               ),
               const SizedBox(height: 4),
               const Text(
-                'Bir sonraki dönem için kulüp teklifini değerlendir veya takımında kal:',
+                'Bir sonraki 2 yıllık dönem için kulüp teklifini değerlendir veya takımında kal:',
                 style: TextStyle(fontSize: 11.5, color: AppColors.textSecondary),
               ),
 
-              const SizedBox(height: 12),
+              const SizedBox(height: 10),
 
               // Offer 1 Card
               if (offers.isNotEmpty)
@@ -216,7 +251,7 @@ class _CareerSeasonScreenState extends State<CareerSeasonScreen> {
                   isStayOption: false,
                 ),
 
-              const SizedBox(height: 10),
+              const SizedBox(height: 9),
 
               // Offer 2 Card
               if (offers.length > 1)
@@ -227,7 +262,7 @@ class _CareerSeasonScreenState extends State<CareerSeasonScreen> {
                   isStayOption: false,
                 ),
 
-              const SizedBox(height: 10),
+              const SizedBox(height: 9),
 
               // Stay Option Card
               _buildOfferCard(
@@ -246,14 +281,14 @@ class _CareerSeasonScreenState extends State<CareerSeasonScreen> {
   }
 
   Widget _buildProgressHeader(CareerGameProvider provider) {
-    final stageProgress = (provider.currentStageIndex + 1) / 6.0;
+    final stageProgress = (provider.currentStageIndex + 1) / provider.maxStages;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
-        color: AppColors.surface.withValues(alpha: 0.88),
+        color: AppColors.surface.withValues(alpha: 0.90),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.borderGreen.withValues(alpha: 0.35)),
+        border: Border.all(color: AppColors.borderGreen.withValues(alpha: 0.40)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -261,38 +296,44 @@ class _CareerSeasonScreenState extends State<CareerSeasonScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: AppColors.pitchGreen.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(6),
-                      border: Border.all(color: AppColors.pitchGreen, width: 0.8),
-                    ),
-                    child: Text(
-                      '${provider.currentAge} YAŞ',
-                      style: const TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w800,
-                        color: AppColors.greenLight,
+              Expanded(
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: AppColors.pitchGreen.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(color: AppColors.pitchGreen, width: 0.8),
+                      ),
+                      child: Text(
+                        '${provider.currentAge} YAŞ',
+                        style: const TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.greenLight,
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    provider.currentStageTitle,
-                    style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white,
+                    const SizedBox(width: 8),
+                    Flexible(
+                      child: Text(
+                        provider.currentStageTitle,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                        ),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
               Text(
-                'Dönem ${provider.currentStageIndex + 1}/6',
-                style: const TextStyle(fontSize: 11, color: AppColors.textMuted),
+                'Sezon ${provider.currentStageIndex + 1}/${provider.maxStages}',
+                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.gold),
               ),
             ],
           ),
@@ -306,7 +347,297 @@ class _CareerSeasonScreenState extends State<CareerSeasonScreen> {
               valueColor: const AlwaysStoppedAnimation<Color>(AppColors.pitchGreen),
             ),
           ),
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.trending_up_rounded, size: 14, color: AppColors.gold),
+                  const SizedBox(width: 4),
+                  Text(
+                    'Piyasa Değeri: €${provider.marketValueMillions}M',
+                    style: const TextStyle(
+                      fontSize: 10.5,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.gold,
+                    ),
+                  ),
+                ],
+              ),
+              Row(
+                children: [
+                  Icon(
+                    Icons.bolt_rounded,
+                    size: 14,
+                    color: provider.formMomentum >= 65 ? AppColors.greenLight : AppColors.warning,
+                  ),
+                  const SizedBox(width: 3),
+                  Text(
+                    'Form & Moral: %${provider.formMomentum}',
+                    style: TextStyle(
+                      fontSize: 10.5,
+                      fontWeight: FontWeight.w700,
+                      color: provider.formMomentum >= 65 ? AppColors.greenLight : AppColors.warning,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildInteractivePenaltyCard(CareerGameProvider provider) {
+    final hasPending = provider.hasPendingPenalty;
+    final lastRes = provider.lastPenaltyResult;
+    final isGk = provider.position == PlayerPosition.goalkeeper;
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            const Color(0xFF0E3323).withValues(alpha: 0.95),
+            const Color(0xFF071A12).withValues(alpha: 0.95),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: hasPending
+              ? AppColors.gold.withValues(alpha: 0.75)
+              : (lastRes?.isGoal == true ? AppColors.pitchGreen : AppColors.error.withValues(alpha: 0.7)),
+          width: 1.2,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.sports_soccer,
+                size: 16,
+                color: hasPending ? AppColors.gold : AppColors.greenLight,
+              ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  hasPending
+                      ? (isGk ? 'KRİTİK AN • 90. DAKİKA PENALTI KURTARIŞI' : 'KRİTİK AN • 90. DAKİKA PENALTI ATIŞI')
+                      : (lastRes?.isGoal == true ? 'KRİTİK PENALTI: BAŞARILI!' : 'KRİTİK PENALTI: KAÇIRILDI'),
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 0.6,
+                    color: hasPending
+                        ? AppColors.gold
+                        : (lastRes?.isGoal == true ? AppColors.greenLight : AppColors.error),
+                  ),
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.35),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  'Penaltı: ${provider.penaltiesScored}/${provider.penaltiesTaken}',
+                  style: const TextStyle(
+                    fontSize: 9.5,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          if (hasPending) ...[
+            Text(
+              isGk
+                  ? 'Rakip forvet topun başında! Hangi köşeye atlayacağını seç (Kurtarırsan formun ve kupa şansın fırlar):'
+                  : 'Kalede devleşen kaleciye karşı köşeni seç! (Atarsan sezonun parlar ve dev teklifler gelir, kaçırırsan formun düşer):',
+              style: const TextStyle(
+                fontSize: 11,
+                color: AppColors.textSecondary,
+                height: 1.3,
+              ),
+            ),
+            const SizedBox(height: 10),
+            // Visual Goalpost Frame with 5 Interactive Target Corners
+            Container(
+              padding: const EdgeInsets.fromLTRB(10, 10, 10, 6),
+              decoration: BoxDecoration(
+                color: const Color(0xFF061E14),
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
+                border: const Border(
+                  top: BorderSide(color: Colors.white, width: 3.0),
+                  left: BorderSide(color: Colors.white, width: 3.0),
+                  right: BorderSide(color: Colors.white, width: 3.0),
+                ),
+              ),
+              child: Column(
+                children: [
+                  // Upper 90 Corners Row + Goalkeeper Head/Torso
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      _buildCornerTargetButton(
+                        corner: PenaltyCorner.topLeft,
+                        icon: Icons.north_west_rounded,
+                        isUpper90: true,
+                      ),
+                      Column(
+                        children: [
+                          Container(
+                            width: 28,
+                            height: 28,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: AppColors.gold.withValues(alpha: 0.2),
+                              border: Border.all(color: AppColors.gold, width: 1.2),
+                            ),
+                            child: const Center(
+                              child: Icon(Icons.sports_handball, size: 16, color: AppColors.gold),
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          const Text(
+                            'KALECİ',
+                            style: TextStyle(fontSize: 8, fontWeight: FontWeight.w800, color: AppColors.textMuted),
+                          ),
+                        ],
+                      ),
+                      _buildCornerTargetButton(
+                        corner: PenaltyCorner.topRight,
+                        icon: Icons.north_east_rounded,
+                        isUpper90: true,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  // Bottom Corners + Panenka Center Row
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      _buildCornerTargetButton(
+                        corner: PenaltyCorner.bottomLeft,
+                        icon: Icons.west_rounded,
+                        isUpper90: false,
+                      ),
+                      _buildCornerTargetButton(
+                        corner: PenaltyCorner.center,
+                        icon: Icons.arrow_upward_rounded,
+                        isUpper90: false,
+                      ),
+                      _buildCornerTargetButton(
+                        corner: PenaltyCorner.bottomRight,
+                        icon: Icons.east_rounded,
+                        isUpper90: false,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ] else if (lastRes != null) ...[
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: Colors.black.withValues(alpha: 0.35),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: lastRes.isGoal
+                      ? AppColors.pitchGreen.withValues(alpha: 0.6)
+                      : AppColors.error.withValues(alpha: 0.6),
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Senin Seçimin: ${lastRes.playerCorner.label}',
+                        style: const TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                        ),
+                      ),
+                      Text(
+                        'Kaleci Köşesi: ${lastRes.keeperCorner.label}',
+                        style: const TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textMuted,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    lastRes.commentary,
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: lastRes.isGoal ? AppColors.greenLight : Colors.redAccent,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCornerTargetButton({
+    required PenaltyCorner corner,
+    required IconData icon,
+    required bool isUpper90,
+  }) {
+    return GestureDetector(
+      onTap: () => _onShootPenalty(corner),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+        decoration: BoxDecoration(
+          color: isUpper90
+              ? AppColors.gold.withValues(alpha: 0.16)
+              : AppColors.pitchGreen.withValues(alpha: 0.22),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: isUpper90 ? AppColors.gold : AppColors.pitchGreen,
+            width: 1.1,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              size: 13,
+              color: isUpper90 ? AppColors.gold : AppColors.greenLight,
+            ),
+            const SizedBox(width: 4),
+            Text(
+              corner.label,
+              style: const TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w800,
+                color: Colors.white,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -409,7 +740,7 @@ class _CareerSeasonScreenState extends State<CareerSeasonScreen> {
               const Icon(Icons.insights_outlined, size: 15, color: AppColors.pitchGreen),
               const SizedBox(width: 6),
               const Text(
-                'GEÇTİĞİMİZ SEZON RAPORU',
+                'DÖNEM PERFORMANS RAPORU',
                 style: TextStyle(
                   fontSize: 10.5,
                   fontWeight: FontWeight.w800,

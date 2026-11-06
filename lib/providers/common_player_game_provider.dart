@@ -12,6 +12,7 @@ class CommonPlayerGameProvider extends ChangeNotifier {
   final Random _random = Random();
 
   final PlayModeType playMode;
+  final GameDifficulty difficulty;
   final OpponentProfile? opponent;
 
   ClubModel? _clubA;
@@ -48,13 +49,14 @@ class CommonPlayerGameProvider extends ChangeNotifier {
 
   CommonPlayerGameProvider({
     this.playMode = PlayModeType.solo,
+    this.difficulty = GameDifficulty.medium,
     this.opponent,
   }) {
     startNewRound();
   }
 
   void startNewRound() {
-    final pair = _db.getRandomClubPair();
+    final pair = _db.getRandomClubPair(difficulty: difficulty);
     _clubA = pair.key;
     _clubB = pair.value;
     _mutualPlayers = _db.getMutualPlayers(_clubA!.id, _clubB!.id);
@@ -97,6 +99,7 @@ class CommonPlayerGameProvider extends ChangeNotifier {
     }
 
     bool userSucceeded = false;
+    final baseReward = (100 * difficulty.pointsMultiplier).round();
 
     if (matched != null) {
       if (_foundPlayerIds.contains(matched.id)) {
@@ -108,15 +111,16 @@ class CommonPlayerGameProvider extends ChangeNotifier {
       }
 
       _foundPlayerIds.add(matched.id);
-      _score += 100;
-      _lastFeedback = 'Tebrikler! ${matched.name} doğru cevap! (+100 Puan)';
+      _score += baseReward;
+      _lastFeedback = 'Tebrikler! ${matched.name} doğru cevap! (+$baseReward Puan)';
       _isSuccessFeedback = true;
       userSucceeded = true;
       GameFeedback.success();
 
       if (isAllFound && !isDuelMode) {
-        _score += 150;
-        _lastFeedback = 'MÜKEMMEL! İki takımın tüm ortak oyuncularını bildin! (+150 Bonus Puan)';
+        final bonus = (150 * difficulty.pointsMultiplier).round();
+        _score += bonus;
+        _lastFeedback = 'MÜKEMMEL! İki takımın tüm ortak oyuncularını bildin! (+$bonus Bonus Puan)';
       }
     } else {
       _lastFeedback = '"$query" bu iki kulüpte birden oynamadı!';
@@ -150,13 +154,13 @@ class CommonPlayerGameProvider extends ChangeNotifier {
       }
 
       final oppName = opponent?.name ?? 'Rakip';
-      // 70% chance opponent finds one of the remaining common players
-      if (_random.nextDouble() < 0.70) {
+      final oppReward = (100 * difficulty.pointsMultiplier).round();
+      if (_random.nextDouble() < difficulty.aiAccuracyChance) {
         final pick = currentRemaining[_random.nextInt(currentRemaining.length)];
         _foundPlayerIds.add(pick.id);
         _foundByOpponentIds.add(pick.id);
-        _opponentScore += 100;
-        _lastFeedback = '$oppName ortak oyuncu buldu: ${pick.name} (+100 Puan)';
+        _opponentScore += oppReward;
+        _lastFeedback = '$oppName ortak oyuncu buldu: ${pick.name} (+$oppReward Puan)';
       } else {
         _lastFeedback = '$oppName bu turda ortak oyuncu bulamadı! Sıra sende.';
       }

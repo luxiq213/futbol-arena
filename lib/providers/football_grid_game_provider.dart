@@ -12,6 +12,7 @@ class FootballGridGameProvider extends ChangeNotifier {
   final Random _random = Random();
 
   final PlayModeType playMode;
+  final GameDifficulty difficulty;
   final OpponentProfile? opponent;
 
   late GridChallenge _challenge;
@@ -69,6 +70,7 @@ class FootballGridGameProvider extends ChangeNotifier {
 
   FootballGridGameProvider({
     this.playMode = PlayModeType.solo,
+    this.difficulty = GameDifficulty.medium,
     this.opponent,
   }) {
     startNewGrid();
@@ -83,7 +85,7 @@ class FootballGridGameProvider extends ChangeNotifier {
         (c) => GridCellState(rowIndex: r, colIndex: c),
       ),
     );
-    _guessesRemaining = 9;
+    _guessesRemaining = difficulty.gridGuessesAllowed;
     _score = 0;
     _opponentScore = 0;
     _activeRow = null;
@@ -144,12 +146,13 @@ class FootballGridGameProvider extends ChangeNotifier {
     _guessesRemaining--;
 
     bool solved = false;
+    final cellReward = (150 * difficulty.pointsMultiplier).round();
     if (isValid) {
       _cells[row][col].player = player;
       _cells[row][col].isSolved = true;
       _cells[row][col].solvedByOpponent = false;
-      _score += 150;
-      _feedback = 'Mükemmel! ${player.name} kriterleri sağladı. (+150 Puan)';
+      _score += cellReward;
+      _feedback = 'Mükemmel! ${player.name} kriterleri sağladı. (+$cellReward Puan)';
       GameFeedback.success();
       _activeRow = null;
       _activeCol = null;
@@ -208,12 +211,13 @@ class FootballGridGameProvider extends ChangeNotifier {
           .where((p) => !usedIds.contains(p.id))
           .toList();
 
-      if (validPlayers.isNotEmpty && _random.nextDouble() < 0.72) {
+      if (validPlayers.isNotEmpty && _random.nextDouble() < difficulty.aiAccuracyChance) {
         final chosen = validPlayers[_random.nextInt(validPlayers.length)];
+        final oppReward = (150 * difficulty.pointsMultiplier).round();
         targetCell.player = chosen;
         targetCell.isSolved = true;
         targetCell.solvedByOpponent = true;
-        _opponentScore += 150;
+        _opponentScore += oppReward;
         _feedback = '$oppName (${rCrit.club?.name ?? rCrit.label} × ${cCrit.club?.name ?? cCrit.label}) hücresini ${chosen.name} ile çözdü!';
       } else {
         _feedback = '$oppName hamlesinde doğru kesişimi bulamadı. Sıra sende!';

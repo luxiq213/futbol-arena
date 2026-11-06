@@ -120,7 +120,7 @@ class _CareerSetupScreenState extends State<CareerSetupScreen> {
                           ),
                           SizedBox(height: 2),
                           Text(
-                            'Altyapıdan zirveye, transfer tekliflerini değerlendir, kupaları topla!',
+                            'Altyapıdan zirveye 10 dönemde ilerle, penaltı anlarında kaderini belirle, kupaları topla!',
                             style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
                           ),
                         ],
@@ -277,7 +277,7 @@ class _CareerSetupScreenState extends State<CareerSetupScreen> {
 
               // Start Career Action Button
               CustomButton(
-                text: 'Kariyeri Başlat (18 Yaş)',
+                text: 'Kariyeri Başlat (17 Yaş)',
                 icon: Icons.sports_soccer,
                 height: 52,
                 onPressed: _onStart,

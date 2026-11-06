@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
 import '../../providers/auth_provider.dart';
+import '../widgets/app_notification.dart';
 import '../widgets/stadium_background.dart';
 import '../widgets/custom_button.dart';
 import 'login_screen.dart';
@@ -50,11 +51,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
     final password = _passwordController.text.trim();
 
     if (username.isEmpty || email.isEmpty || password.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Lütfen tüm alanları doldurun.'),
-          backgroundColor: AppColors.error,
-        ),
+      AppNotification.show(
+        context,
+        title: 'Eksik Bilgi',
+        message: 'Lütfen kullanıcı adı, e-posta ve şifre alanlarını eksiksiz doldurun.',
+        type: AppNotificationType.error,
+        icon: Icons.warning_amber_rounded,
       );
       return;
     }
