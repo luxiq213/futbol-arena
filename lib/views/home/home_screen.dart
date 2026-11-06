@@ -258,47 +258,89 @@ class _HomeScreenState extends State<HomeScreen> {
       {'id': 'career', 'label': 'Kariyer'},
       {'id': 'duel', 'label': 'Düello'},
       {'id': 'tactics', 'label': 'Taktik'},
-      {'id': 'party', 'label': 'Parti & Online'},
     ];
 
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        children: categories.map((cat) {
-          final isSelected = _selectedCategory == cat['id'];
-          return Padding(
-            padding: const EdgeInsets.only(right: 6),
-            child: InkWell(
+    return Row(
+      children: [
+        Expanded(
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: categories.map((cat) {
+                final isSelected = _selectedCategory == cat['id'];
+                return Padding(
+                  padding: const EdgeInsets.only(right: 6),
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(20),
+                    onTap: () {
+                      setState(() => _selectedCategory = cat['id']!);
+                    },
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 5.5),
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? AppColors.pitchGreen.withValues(alpha: 0.25)
+                            : AppColors.surface.withValues(alpha: 0.78),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: isSelected ? AppColors.pitchGreen : AppColors.border,
+                          width: isSelected ? 1.2 : 0.8,
+                        ),
+                      ),
+                      child: Text(
+                        cat['label']!,
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                          color: isSelected ? Colors.white : AppColors.textSecondary,
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+        ),
+        const SizedBox(width: 6),
+        // Compact "Koda Katıl" shortcut pill so users with a 6-digit code don't need a full card
+        InkWell(
+          borderRadius: BorderRadius.circular(20),
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const LobbyHubScreen()),
+            );
+          },
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5.5),
+            decoration: BoxDecoration(
+              color: AppColors.gold.withValues(alpha: 0.14),
               borderRadius: BorderRadius.circular(20),
-              onTap: () {
-                setState(() => _selectedCategory = cat['id']!);
-              },
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 5.5),
-                decoration: BoxDecoration(
-                  color: isSelected
-                      ? AppColors.pitchGreen.withValues(alpha: 0.25)
-                      : AppColors.surface.withValues(alpha: 0.78),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: isSelected ? AppColors.pitchGreen : AppColors.border,
-                    width: isSelected ? 1.2 : 0.8,
-                  ),
-                ),
-                child: Text(
-                  cat['label']!,
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-                    color: isSelected ? Colors.white : AppColors.textSecondary,
-                  ),
-                ),
+              border: Border.all(
+                color: AppColors.gold.withValues(alpha: 0.50),
+                width: 0.9,
               ),
             ),
-          );
-        }).toList(),
-      ),
+            child: const Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.vpn_key_outlined, size: 12, color: AppColors.gold),
+                SizedBox(width: 4),
+                Text(
+                  'Koda Katıl',
+                  style: TextStyle(
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.gold,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -307,7 +349,6 @@ class _HomeScreenState extends State<HomeScreen> {
     final showCareer = showAll || _selectedCategory == 'career';
     final showDuel = showAll || _selectedCategory == 'duel';
     final showTactics = showAll || _selectedCategory == 'tactics';
-    final showParty = showAll || _selectedCategory == 'party';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -384,25 +425,6 @@ class _HomeScreenState extends State<HomeScreen> {
             },
           ),
           const SizedBox(height: 11),
-        ],
-
-        // 4. Bölüm: Arkadaş & Çok Oyunculu Lobi
-        if (showParty) ...[
-          _buildSectionHeader('ARKADAŞ & ÇOK OYUNCULU ARENA', 'Davet Kodu • Online Lobi'),
-          const SizedBox(height: 5),
-          GameModeCard(
-            title: 'Online Oda & Arkadaş Daveti',
-            subtitle: '6 haneli davet kodu kurarak arkadaşınla yarış veya masada yan yana parti turnuvası başlat.',
-            icon: Icons.cell_tower_outlined,
-            tag: 'ÇOK OYUNCULU',
-            tagColor: AppColors.pitchGreen,
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const LobbyHubScreen()),
-              );
-            },
-          ),
         ],
       ],
     );
