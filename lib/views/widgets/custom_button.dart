@@ -53,18 +53,24 @@ class _CustomButtonState extends State<CustomButton> {
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
             children: [
               if (widget.icon != null) ...[
                 Icon(widget.icon, color: AppColors.gold, size: 17),
-                const SizedBox(width: 8),
+                const SizedBox(width: 6),
               ],
-              Text(
-                widget.text,
-                style: const TextStyle(
-                  color: AppColors.gold,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 0.3,
+              Flexible(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    widget.text,
+                    style: const TextStyle(
+                      color: AppColors.gold,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 0.3,
+                    ),
+                  ),
                 ),
               ),
             ],
@@ -136,36 +142,45 @@ class _CustomButtonState extends State<CustomButton> {
                               valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                             ),
                           )
-                        : Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              if (widget.icon != null) ...[
-                                Icon(
-                                  widget.icon,
-                                  color: widget.textColor,
-                                  size: 17,
+                        : Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 10),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                if (widget.icon != null) ...[
+                                  Icon(
+                                    widget.icon,
+                                    color: widget.textColor,
+                                    size: 17,
+                                  ),
+                                  const SizedBox(width: 6),
+                                ],
+                                Flexible(
+                                  child: FittedBox(
+                                    fit: BoxFit.scaleDown,
+                                    child: Text(
+                                      widget.text,
+                                      style: TextStyle(
+                                        color: widget.textColor,
+                                        fontSize: 13.5,
+                                        fontWeight: FontWeight.w700,
+                                        letterSpacing: 0.3,
+                                        shadows: useTurf
+                                            ? [
+                                                Shadow(
+                                                  color: Colors.black.withValues(alpha: 0.45),
+                                                  blurRadius: 3,
+                                                  offset: const Offset(0, 1),
+                                                ),
+                                              ]
+                                            : null,
+                                      ),
+                                    ),
+                                  ),
                                 ),
-                                const SizedBox(width: 8),
                               ],
-                              Text(
-                                widget.text,
-                                style: TextStyle(
-                                  color: widget.textColor,
-                                  fontSize: 13.5,
-                                  fontWeight: FontWeight.w700,
-                                  letterSpacing: 0.3,
-                                  shadows: useTurf
-                                      ? [
-                                          Shadow(
-                                            color: Colors.black.withValues(alpha: 0.45),
-                                            blurRadius: 3,
-                                            offset: const Offset(0, 1),
-                                          ),
-                                        ]
-                                      : null,
-                                ),
-                              ),
-                            ],
+                            ),
                           ),
                   ),
                 ),

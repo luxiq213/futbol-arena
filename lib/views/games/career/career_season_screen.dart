@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../data/models/club_model.dart';
+import '../../../../providers/auth_provider.dart';
 import '../../../../providers/career_game_provider.dart';
 import '../../widgets/club_crest_widget.dart';
 import '../../widgets/custom_button.dart';
@@ -23,24 +24,26 @@ class _CareerSeasonScreenState extends State<CareerSeasonScreen> {
     setState(() => _isProcessing = true);
 
     final provider = context.read<CareerGameProvider>();
+    final auth = context.read<AuthProvider>();
     final messenger = ScaffoldMessenger.of(context);
     final nav = Navigator.of(context);
     final isStay = chosenClub == null || chosenClub.id == provider.currentClub?.id;
-    final clubName = isStay ? (provider.currentClub?.name ?? 'Kulubunde') : chosenClub.name;
+    final clubName = isStay ? (provider.currentClub?.name ?? 'Kulübünde') : chosenClub.name;
 
     // Show a quick visual confirmation banner
+    messenger.clearSnackBars();
     messenger.showSnackBar(
       SnackBar(
         content: Text(
-          isStay ? '$clubName ile sozlesme uzattin!' : '$clubName ile anlasma saglandi!',
+          isStay ? '$clubName ile sözleşme uzattın!' : '$clubName ile anlaşma sağlandı!',
           style: const TextStyle(fontWeight: FontWeight.w700, color: Colors.white),
         ),
         backgroundColor: AppColors.pitchGreen,
-        duration: const Duration(milliseconds: 1400),
+        duration: const Duration(milliseconds: 1200),
       ),
     );
 
-    await Future.delayed(const Duration(milliseconds: 400));
+    await Future.delayed(const Duration(milliseconds: 350));
 
     if (!mounted) return;
 
@@ -49,6 +52,13 @@ class _CareerSeasonScreenState extends State<CareerSeasonScreen> {
     setState(() => _isProcessing = false);
 
     if (provider.isCareerFinished) {
+      final summary = provider.finalSummary;
+      if (summary != null) {
+        auth.addPoints(
+          summary.careerRating,
+          won: summary.allTrophies.isNotEmpty,
+        );
+      }
       nav.pushReplacement(
         MaterialPageRoute(builder: (_) => const CareerSummaryScreen()),
       );
@@ -61,11 +71,11 @@ class _CareerSeasonScreenState extends State<CareerSeasonScreen> {
       builder: (ctx) => AlertDialog(
         backgroundColor: AppColors.surface,
         title: const Text(
-          'Jubile Yapmak Istiyor musun?',
+          'Jübile Yapmak İstiyor musun?',
           style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w700),
         ),
         content: const Text(
-          'Kariyerini su anki yasinda sonlandirip efsane kartini ve istatistiklerini goruntulemek istiyor musun?',
+          'Kariyerini şu anki yaşında sonlandırıp efsane kartını ve istatistiklerini görüntülemek istiyor musun?',
           style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
         ),
         actions: [
@@ -80,16 +90,23 @@ class _CareerSeasonScreenState extends State<CareerSeasonScreen> {
             onPressed: () {
               Navigator.pop(ctx);
               final provider = context.read<CareerGameProvider>();
-              // Fast forward to finish
+              final auth = context.read<AuthProvider>();
               while (!provider.isCareerFinished) {
                 provider.selectTransferDecision(provider.currentClub);
+              }
+              final summary = provider.finalSummary;
+              if (summary != null) {
+                auth.addPoints(
+                  summary.careerRating,
+                  won: summary.allTrophies.isNotEmpty,
+                );
               }
               Navigator.pushReplacement(
                 context,
                 MaterialPageRoute(builder: (_) => const CareerSummaryScreen()),
               );
             },
-            child: const Text('Jubile Yap', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            child: const Text('Jübile Yap', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -129,7 +146,7 @@ class _CareerSeasonScreenState extends State<CareerSeasonScreen> {
             onPressed: () => _confirmEarlyRetire(context),
             icon: const Icon(Icons.flag_outlined, size: 16, color: AppColors.gold),
             label: const Text(
-              'Jubile',
+              'Jübile',
               style: TextStyle(color: AppColors.gold, fontSize: 12, fontWeight: FontWeight.w700),
             ),
           ),
@@ -170,7 +187,7 @@ class _CareerSeasonScreenState extends State<CareerSeasonScreen> {
                   ),
                   const SizedBox(width: 8),
                   const Text(
-                    'TRANSFER MASASI • TEKLIFLER',
+                    'TRANSFER MASASI • TEKLİFLER',
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w800,
@@ -182,8 +199,8 @@ class _CareerSeasonScreenState extends State<CareerSeasonScreen> {
               ),
               const SizedBox(height: 4),
               const Text(
-                'Bir sonraki donem icin kulup teklifini degerlendir veya takiminda kal:',
-                style: TextStyle(fontSize: 11.5, color: AppColors.textMuted),
+                'Bir sonraki dönem için kulüp teklifini değerlendir veya takımında kal:',
+                style: TextStyle(fontSize: 11.5, color: AppColors.textSecondary),
               ),
 
               const SizedBox(height: 12),
@@ -191,7 +208,7 @@ class _CareerSeasonScreenState extends State<CareerSeasonScreen> {
               // Offer 1 Card
               if (offers.isNotEmpty)
                 _buildOfferCard(
-                  context: context,
+                  provider: provider,
                   club: offers[0],
                   label: '1. Transfer Teklifi',
                   isStayOption: false,
@@ -202,7 +219,7 @@ class _CareerSeasonScreenState extends State<CareerSeasonScreen> {
               // Offer 2 Card
               if (offers.length > 1)
                 _buildOfferCard(
-                  context: context,
+                  provider: provider,
                   club: offers[1],
                   label: '2. Transfer Teklifi',
                   isStayOption: false,
@@ -212,9 +229,9 @@ class _CareerSeasonScreenState extends State<CareerSeasonScreen> {
 
               // Stay Option Card
               _buildOfferCard(
-                context: context,
+                provider: provider,
                 club: currentClub,
-                label: 'Sadakat & Sozlesme Uzatma',
+                label: 'Sadakat & Sözleşme Uzatma',
                 isStayOption: true,
               ),
 
@@ -232,9 +249,9 @@ class _CareerSeasonScreenState extends State<CareerSeasonScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
-        color: AppColors.surface.withValues(alpha: 0.85),
+        color: AppColors.surface.withValues(alpha: 0.88),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.borderGreen.withValues(alpha: 0.3)),
+        border: Border.all(color: AppColors.borderGreen.withValues(alpha: 0.35)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -252,7 +269,7 @@ class _CareerSeasonScreenState extends State<CareerSeasonScreen> {
                       border: Border.all(color: AppColors.pitchGreen, width: 0.8),
                     ),
                     child: Text(
-                      '${provider.currentAge} YAS',
+                      '${provider.currentAge} YAŞ',
                       style: const TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w800,
@@ -272,7 +289,7 @@ class _CareerSeasonScreenState extends State<CareerSeasonScreen> {
                 ],
               ),
               Text(
-                'Donem ${provider.currentStageIndex + 1}/6',
+                'Dönem ${provider.currentStageIndex + 1}/6',
                 style: const TextStyle(fontSize: 11, color: AppColors.textMuted),
               ),
             ],
@@ -298,12 +315,12 @@ class _CareerSeasonScreenState extends State<CareerSeasonScreen> {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            AppColors.surface.withValues(alpha: 0.9),
-            AppColors.darkGreen.withValues(alpha: 0.5),
+            AppColors.surface.withValues(alpha: 0.92),
+            AppColors.darkGreen.withValues(alpha: 0.55),
           ],
         ),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.borderGreen.withValues(alpha: 0.4)),
+        border: Border.all(color: AppColors.borderGreen.withValues(alpha: 0.45)),
       ),
       child: Row(
         children: [
@@ -314,7 +331,7 @@ class _CareerSeasonScreenState extends State<CareerSeasonScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
-                  'MEVCUT KULUBUN',
+                  'MEVCUT KULÜBÜN',
                   style: TextStyle(
                     fontSize: 9.5,
                     fontWeight: FontWeight.w800,
@@ -334,7 +351,7 @@ class _CareerSeasonScreenState extends State<CareerSeasonScreen> {
                   '${club.country} • ${club.league}',
                   style: const TextStyle(
                     fontSize: 11,
-                    color: AppColors.textMuted,
+                    color: AppColors.textSecondary,
                   ),
                 ),
               ],
@@ -352,7 +369,7 @@ class _CareerSeasonScreenState extends State<CareerSeasonScreen> {
                 ),
               ),
               Text(
-                '$totalAssists ASIST',
+                '$totalAssists ASİST',
                 style: const TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w700,
@@ -378,9 +395,9 @@ class _CareerSeasonScreenState extends State<CareerSeasonScreen> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppColors.surface.withValues(alpha: 0.8),
+        color: AppColors.surface.withValues(alpha: 0.85),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.borderGreen.withValues(alpha: 0.3)),
+        border: Border.all(color: AppColors.borderGreen.withValues(alpha: 0.35)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -390,7 +407,7 @@ class _CareerSeasonScreenState extends State<CareerSeasonScreen> {
               const Icon(Icons.insights_outlined, size: 15, color: AppColors.pitchGreen),
               const SizedBox(width: 6),
               const Text(
-                'GECTIGIMIZ SEZON RAPORU',
+                'GEÇTİĞİMİZ SEZON RAPORU',
                 style: TextStyle(
                   fontSize: 10.5,
                   fontWeight: FontWeight.w800,
@@ -400,7 +417,7 @@ class _CareerSeasonScreenState extends State<CareerSeasonScreen> {
               ),
               const Spacer(),
               Text(
-                '${season.matches} Mac Oynadin',
+                '${season.matches} Maç Oynadın',
                 style: const TextStyle(fontSize: 10.5, color: AppColors.textMuted),
               ),
             ],
@@ -410,32 +427,38 @@ class _CareerSeasonScreenState extends State<CareerSeasonScreen> {
             children: [
               _buildMiniMetric('GOL', '${season.goals}'),
               const SizedBox(width: 12),
-              _buildMiniMetric('ASIST', '${season.assists}'),
+              _buildMiniMetric('ASİST', '${season.assists}'),
               const SizedBox(width: 12),
               _buildMiniMetric('KUPA', '${season.trophiesWon.length}'),
               const Spacer(),
               if (season.trophiesWon.isNotEmpty)
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: AppColors.gold.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(6),
-                    border: Border.all(color: AppColors.gold, width: 0.8),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.emoji_events_outlined, size: 13, color: AppColors.gold),
-                      const SizedBox(width: 4),
-                      Text(
-                        season.trophiesWon.first,
-                        style: const TextStyle(
-                          fontSize: 10.5,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.gold,
+                Flexible(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: AppColors.gold.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(color: AppColors.gold, width: 0.8),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.emoji_events_outlined, size: 13, color: AppColors.gold),
+                        const SizedBox(width: 4),
+                        Flexible(
+                          child: Text(
+                            season.trophiesWon.first,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.gold,
+                            ),
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
             ],
@@ -496,25 +519,27 @@ class _CareerSeasonScreenState extends State<CareerSeasonScreen> {
   }
 
   Widget _buildOfferCard({
-    required BuildContext context,
+    required CareerGameProvider provider,
     required ClubModel club,
     required String label,
     required bool isStayOption,
   }) {
+    final rolePromise = provider.getOfferRoleDescription(club, isStay: isStayOption);
+
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppColors.surface.withValues(alpha: 0.9),
+        color: AppColors.surface.withValues(alpha: 0.92),
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color: isStayOption ? AppColors.silver.withValues(alpha: 0.4) : AppColors.pitchGreen.withValues(alpha: 0.5),
+          color: isStayOption ? AppColors.silver.withValues(alpha: 0.4) : AppColors.pitchGreen.withValues(alpha: 0.55),
           width: 1.0,
         ),
       ),
       child: Row(
         children: [
-          ClubCrestWidget(club: club, size: 48),
-          const SizedBox(width: 12),
+          ClubCrestWidget(club: club, size: 46),
+          const SizedBox(width: 11),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -524,13 +549,13 @@ class _CareerSeasonScreenState extends State<CareerSeasonScreen> {
                   decoration: BoxDecoration(
                     color: isStayOption
                         ? Colors.white.withValues(alpha: 0.1)
-                        : AppColors.pitchGreen.withValues(alpha: 0.15),
+                        : AppColors.pitchGreen.withValues(alpha: 0.16),
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Text(
                     label.toUpperCase(),
                     style: TextStyle(
-                      fontSize: 9,
+                      fontSize: 8.5,
                       fontWeight: FontWeight.w800,
                       color: isStayOption ? AppColors.silver : AppColors.greenLight,
                     ),
@@ -539,6 +564,8 @@ class _CareerSeasonScreenState extends State<CareerSeasonScreen> {
                 const SizedBox(height: 3),
                 Text(
                   club.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w800,
@@ -547,19 +574,32 @@ class _CareerSeasonScreenState extends State<CareerSeasonScreen> {
                 ),
                 Text(
                   '${club.country} • ${club.league}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
                     fontSize: 10.5,
                     color: AppColors.textMuted,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  rolePromise,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 9.5,
+                    fontWeight: FontWeight.w700,
+                    color: isStayOption ? AppColors.gold : AppColors.greenLight,
                   ),
                 ),
               ],
             ),
           ),
           const SizedBox(width: 8),
-          ConstrainedBox(
-            constraints: const BoxConstraints(minWidth: 84, maxWidth: 104),
+          SizedBox(
+            width: 96,
             child: CustomButton(
-              text: isStayOption ? 'Takimda Kal' : 'Imzala',
+              text: isStayOption ? 'Takımda Kal' : 'İmzala',
               isOutlined: isStayOption,
               height: 38,
               onPressed: () => _onSelectClub(isStayOption ? null : club),

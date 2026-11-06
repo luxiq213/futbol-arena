@@ -141,7 +141,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
               const SizedBox(height: 6),
               Text(
-                'Tuttugu Takim: ${user.favoriteTeam}',
+                'Tuttuğu Takım: ${user.favoriteTeam}',
                 style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
               ),
             ],
@@ -158,7 +158,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             const SizedBox(width: 8),
             Expanded(
-              child: _buildStatCard('Galibiyet Orani', '%$winRate', Icons.trending_up, AppColors.silver),
+              child: _buildStatCard('Galibiyet Oranı', '%$winRate', Icons.trending_up, AppColors.silver),
             ),
           ],
         ),
@@ -179,7 +179,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
         // Edit Profile Form
         const Text(
-          'Profil Ayarlari',
+          'Profil Ayarları',
           style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Colors.white),
         ),
         const SizedBox(height: 10),
@@ -188,7 +188,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           controller: _nameController,
           style: const TextStyle(fontSize: 13),
           decoration: const InputDecoration(
-            labelText: 'Kullanici Adi',
+            labelText: 'Kullanıcı Adı',
             prefixIcon: Icon(Icons.person_outline, color: AppColors.gold, size: 18),
           ),
         ),
@@ -196,7 +196,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
         // Avatar selector
         const Text(
-          'Profil Rolü / Kisaltmasi',
+          'Profil Rolü / Kısaltması',
           style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
         ),
         const SizedBox(height: 6),
@@ -237,7 +237,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
         // Favorite Team
         const Text(
-          'Tuttugun Takim',
+          'Tuttuğun Takım',
           style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
         ),
         const SizedBox(height: 6),
@@ -270,7 +270,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         const SizedBox(height: 18),
 
         CustomButton(
-          text: 'Degisiklikleri Kaydet',
+          text: 'Değişiklikleri Kaydet',
           icon: Icons.check,
           backgroundColor: AppColors.pitchGreen,
           textColor: Colors.white,

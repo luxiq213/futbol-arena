@@ -14,18 +14,18 @@ class CareerSummaryScreen extends StatelessWidget {
 
   void _shareCareer(BuildContext context, CareerSummary summary) {
     final buffer = StringBuffer();
-    buffer.writeln('--- FUTBOLCU KARIYER OZETI ---');
+    buffer.writeln('--- FUTBOLCU KARİYER ÖZETİ ---');
     buffer.writeln('Oyuncu: ${summary.playerName}');
     buffer.writeln('Mevki: ${summary.position.label} (${summary.position.shortCode})');
-    buffer.writeln('Ulke: ${summary.nationality}');
+    buffer.writeln('Ülke: ${summary.nationality}');
     buffer.writeln('Genel Derece: ${summary.careerRating} OVR - ${summary.legacyTitle}');
-    buffer.writeln('Toplam Mac: ${summary.totalMatches}');
+    buffer.writeln('Toplam Maç: ${summary.totalMatches}');
     buffer.writeln('Toplam Gol: ${summary.totalGoals}');
     buffer.writeln('Toplam Asist: ${summary.totalAssists}');
     buffer.writeln('Toplam Kupa: ${summary.allTrophies.length}');
 
     if (summary.allTrophies.isNotEmpty) {
-      buffer.writeln('Kazanilan Kupalar:');
+      buffer.writeln('Kazanılan Kupalar:');
       final trophyCounts = <String, int>{};
       for (var t in summary.allTrophies) {
         trophyCounts[t] = (trophyCounts[t] ?? 0) + 1;
@@ -35,7 +35,7 @@ class CareerSummaryScreen extends StatelessWidget {
       });
     }
 
-    buffer.writeln('Forma Giyilen Kulupler:');
+    buffer.writeln('Forma Giyilen Kulüpler:');
     final clubNames = summary.clubsPlayed.map((c) => c.name).join(' -> ');
     buffer.writeln('  $clubNames');
     buffer.writeln('--------------------------------');
@@ -46,7 +46,7 @@ class CareerSummaryScreen extends StatelessWidget {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text(
-          'Kariyer ozeti panoya kopyalandi! Sosyal medyada paylasabilirsin.',
+          'Kariyer özeti panoya kopyalandı! Sosyal medyada paylaşabilirsin.',
           style: TextStyle(color: Colors.white, fontSize: 13),
         ),
         backgroundColor: AppColors.pitchGreen,
@@ -68,12 +68,12 @@ class CareerSummaryScreen extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               const Text(
-                'Kariyer ozeti bulunamadi.',
+                'Kariyer özeti bulunamadı.',
                 style: TextStyle(color: Colors.white),
               ),
               const SizedBox(height: 12),
               CustomButton(
-                text: 'Ana Menuye Don',
+                text: 'Ana Menüye Dön',
                 onPressed: () => Navigator.popUntil(context, (r) => r.isFirst),
               ),
             ],
@@ -89,7 +89,7 @@ class CareerSummaryScreen extends StatelessWidget {
         elevation: 0,
         automaticallyImplyLeading: false,
         title: const Text(
-          'Kariyer Jubilesi & Efsane Karti',
+          'Kariyer Jübilesi & Efsane Kartı',
           style: TextStyle(
             fontWeight: FontWeight.w700,
             fontSize: 16,
@@ -98,7 +98,7 @@ class CareerSummaryScreen extends StatelessWidget {
         ),
         actions: [
           IconButton(
-            tooltip: 'Kariyeri Kopyala & Paylas',
+            tooltip: 'Kariyeri Kopyala & Paylaş',
             icon: const Icon(Icons.share_outlined, color: AppColors.gold),
             onPressed: () => _shareCareer(context, summary),
           ),
@@ -133,7 +133,7 @@ class CareerSummaryScreen extends StatelessWidget {
 
               // Action Buttons
               CustomButton(
-                text: 'Kariyeri Kopyala & Paylas',
+                text: 'Kariyeri Kopyala & Paylaş',
                 icon: Icons.copy_rounded,
                 onPressed: () => _shareCareer(context, summary),
               ),
@@ -141,7 +141,7 @@ class CareerSummaryScreen extends StatelessWidget {
               const SizedBox(height: 10),
 
               CustomButton(
-                text: 'Yeni Bir Kariyer Baslat',
+                text: 'Yeni Bir Kariyer Başlat',
                 icon: Icons.replay_rounded,
                 isOutlined: true,
                 onPressed: () {
@@ -162,7 +162,7 @@ class CareerSummaryScreen extends StatelessWidget {
                 ),
                 onPressed: () => Navigator.popUntil(context, (r) => r.isFirst),
                 child: const Text(
-                  'Ana Menuye Don',
+                  'Ana Menüye Dön',
                   style: TextStyle(
                     color: AppColors.textMuted,
                     fontSize: 14,
@@ -207,7 +207,7 @@ class CareerSummaryScreen extends StatelessWidget {
       child: Stack(
         children: [
           // Background Pitch Watermark Pattern
-          Positioned(
+          const Positioned(
             right: -20,
             bottom: -20,
             child: Opacity(
@@ -327,11 +327,11 @@ class CareerSummaryScreen extends StatelessWidget {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
-                      _buildStatColumn('MAC', '${summary.totalMatches}'),
+                      _buildStatColumn('MAÇ', '${summary.totalMatches}'),
                       _buildDivider(),
                       _buildStatColumn('GOL', '${summary.totalGoals}'),
                       _buildDivider(),
-                      _buildStatColumn('ASIST', '${summary.totalAssists}'),
+                      _buildStatColumn('ASİST', '${summary.totalAssists}'),
                       _buildDivider(),
                       _buildStatColumn('KUPA', '${summary.allTrophies.length}'),
                     ],
@@ -383,9 +383,9 @@ class CareerSummaryScreen extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AppColors.surface.withValues(alpha: 0.85),
+        color: AppColors.surface.withValues(alpha: 0.88),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.borderGreen.withValues(alpha: 0.3)),
+        border: Border.all(color: AppColors.borderGreen.withValues(alpha: 0.35)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -395,7 +395,7 @@ class CareerSummaryScreen extends StatelessWidget {
               const Icon(Icons.shield_outlined, size: 16, color: AppColors.pitchGreen),
               const SizedBox(width: 8),
               const Text(
-                'KARIYER FORMA YOLCULUGU',
+                'KARİYER FORMA YOLCULUĞU',
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w800,
@@ -405,7 +405,7 @@ class CareerSummaryScreen extends StatelessWidget {
               ),
               const Spacer(),
               Text(
-                '${summary.clubsPlayed.length} Kulup',
+                '${summary.clubsPlayed.length} Kulüp',
                 style: const TextStyle(fontSize: 11, color: AppColors.textMuted),
               ),
             ],
@@ -468,9 +468,9 @@ class CareerSummaryScreen extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AppColors.surface.withValues(alpha: 0.85),
+        color: AppColors.surface.withValues(alpha: 0.88),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.borderGreen.withValues(alpha: 0.3)),
+        border: Border.all(color: AppColors.borderGreen.withValues(alpha: 0.35)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -480,7 +480,7 @@ class CareerSummaryScreen extends StatelessWidget {
               const Icon(Icons.military_tech_outlined, size: 18, color: AppColors.gold),
               const SizedBox(width: 8),
               const Text(
-                'KUPA VE ZAFERLER MUZESI',
+                'KUPA VE ZAFERLER MÜZESİ',
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w800,
@@ -500,7 +500,7 @@ class CareerSummaryScreen extends StatelessWidget {
             const Padding(
               padding: EdgeInsets.symmetric(vertical: 8),
               child: Text(
-                'Kariyerinde resmi kupa sampiyonlugu bulunmuyor.',
+                'Kariyerinde resmi kupa şampiyonluğu bulunmuyor.',
                 style: TextStyle(fontSize: 12, color: AppColors.textMuted),
               ),
             )
@@ -509,17 +509,19 @@ class CareerSummaryScreen extends StatelessWidget {
               spacing: 8,
               runSpacing: 8,
               children: trophyCounts.entries.map((entry) {
-                final isBigTrophy = entry.key.contains('Sampiyonlar Ligi') || entry.key.contains('Ballon d\'Or');
+                final isBigTrophy = entry.key.contains('Şampiyonlar Ligi') ||
+                    entry.key.contains('Ballon d\'Or') ||
+                    entry.key.contains('Altın Ayakkabı');
                 return Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                   decoration: BoxDecoration(
                     color: isBigTrophy
-                        ? AppColors.gold.withValues(alpha: 0.15)
-                        : AppColors.darkGreen.withValues(alpha: 0.4),
+                        ? AppColors.gold.withValues(alpha: 0.16)
+                        : AppColors.darkGreen.withValues(alpha: 0.45),
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
                       color: isBigTrophy ? AppColors.gold : AppColors.borderGreen,
-                      width: 0.8,
+                      width: 0.9,
                     ),
                   ),
                   child: Row(
@@ -532,7 +534,7 @@ class CareerSummaryScreen extends StatelessWidget {
                       ),
                       const SizedBox(width: 6),
                       Text(
-                        '${entry.key} ${entry.value > 1 ? "x${entry.value}" : ""}',
+                        '${entry.key}${entry.value > 1 ? " x${entry.value}" : ""}',
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w700,
@@ -556,9 +558,9 @@ class CareerSummaryScreen extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AppColors.surface.withValues(alpha: 0.85),
+        color: AppColors.surface.withValues(alpha: 0.88),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.borderGreen.withValues(alpha: 0.3)),
+        border: Border.all(color: AppColors.borderGreen.withValues(alpha: 0.35)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -586,7 +588,7 @@ class CareerSummaryScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Container(
-                    margin: const EdgeInsets.only(top: 4),
+                    margin: const EdgeInsets.only(top: 5),
                     width: 6,
                     height: 6,
                     decoration: const BoxDecoration(

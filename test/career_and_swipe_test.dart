@@ -51,14 +51,14 @@ void main() {
       await tester.pump(const Duration(milliseconds: 200));
 
       // Initially on Oyunlar tab (Page 0)
-      expect(find.text('OYUN MODLARI'), findsOneWidget);
+      expect(find.textContaining('OYUN MODLARI'), findsOneWidget);
       expect(find.text('Futbolcu Kariyeri Yap'), findsOneWidget);
 
       // Test tapping footer tabs for direct animated transition
       await tester.tap(find.text('Sıralama'));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 400));
-      expect(find.text('Genel Siralama'), findsOneWidget);
+      expect(find.text('Genel Sıralama'), findsOneWidget);
 
       await tester.tap(find.text('Profil'));
       await tester.pump();
@@ -68,12 +68,12 @@ void main() {
       await tester.tap(find.text('Oyunlar'));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 400));
-      expect(find.text('OYUN MODLARI'), findsOneWidget);
+      expect(find.textContaining('OYUN MODLARI'), findsOneWidget);
 
       // Test horizontal fling gesture between screens
       await tester.fling(find.byType(PageView), const Offset(-600, 0), 2000);
       await tester.pump(const Duration(milliseconds: 400));
-      expect(find.text('Genel Siralama'), findsOneWidget);
+      expect(find.text('Genel Sıralama'), findsOneWidget);
     });
 
     testWidgets('Tapping category filter updates visible game modes', (WidgetTester tester) async {
@@ -90,8 +90,8 @@ void main() {
       // Common player duel is filtered out in career view
       expect(find.text('Ortak Oyuncu Düellosu (3-2-1)'), findsNothing);
 
-      // Tap "Tumu" to restore
-      await tester.tap(find.text('Tumu'));
+      // Tap "Tümü" to restore
+      await tester.tap(find.text('Tümü'));
       await tester.pump(const Duration(milliseconds: 300));
 
       expect(find.text('Ortak Oyuncu Düellosu (3-2-1)'), findsOneWidget);

@@ -30,6 +30,12 @@ class _HomeScreenState extends State<HomeScreen> {
   // Game category filter
   String _selectedCategory = 'all';
 
+  static const List<String> _tabTitles = [
+    'Futbol Trivia',
+    'Sıralama & Lig',
+    'Oyuncu Profili',
+  ];
+
   @override
   void initState() {
     super.initState();
@@ -60,12 +66,15 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: const AppTopBar(title: 'Futbol Trivia'),
+      appBar: AppTopBar(
+        title: _tabTitles[_activeTab.clamp(0, _tabTitles.length - 1)],
+        showProfileShortcut: false,
+      ),
       body: StadiumBackground(
         showFieldLines: true,
         child: Stack(
           children: [
-            // Horizontal Swipeable PageView
+            // Horizontal Swipeable PageView (Oyunlar <-> Sıralama <-> Profil)
             Positioned.fill(
               child: PageView(
                 controller: _pageController,
@@ -75,14 +84,14 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   // Page 0: Oyunlar (Games Hub)
                   SingleChildScrollView(
-                    padding: EdgeInsets.fromLTRB(14, 6, 14, bottomInset + 80),
+                    padding: EdgeInsets.fromLTRB(14, 4, 14, bottomInset + 84),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         _buildUserHeaderCard(user),
                         const SizedBox(height: 10),
                         _buildCategoryFilterRow(),
-                        const SizedBox(height: 10),
+                        const SizedBox(height: 12),
                         _buildGamesSection(context),
                       ],
                     ),
@@ -90,7 +99,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
                   // Page 1: Sıralama (Leaderboard)
                   SingleChildScrollView(
-                    padding: EdgeInsets.fromLTRB(14, 6, 14, bottomInset + 80),
+                    padding: EdgeInsets.fromLTRB(14, 4, 14, bottomInset + 84),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
@@ -103,7 +112,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
                   // Page 2: Profil (Profile & Settings)
                   SingleChildScrollView(
-                    padding: EdgeInsets.fromLTRB(14, 6, 14, bottomInset + 80),
+                    padding: EdgeInsets.fromLTRB(14, 4, 14, bottomInset + 84),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
@@ -115,7 +124,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
 
-            // Floating Colorless Glass Footer
+            // Floating Smoked Glass Footer
             Positioned(
               left: 0,
               right: 0,
@@ -132,94 +141,102 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildUserHeaderCard(UserModel? user) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-      decoration: BoxDecoration(
-        color: AppColors.surface.withValues(alpha: 0.85),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: AppColors.borderGreen.withValues(alpha: 0.3),
-          width: 0.8,
+    return GestureDetector(
+      onTap: () => _onFooterTabTapped(2),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              const Color(0xFF0E2B1F).withValues(alpha: 0.90),
+              const Color(0xFF081B13).withValues(alpha: 0.90),
+            ],
+          ),
+          borderRadius: BorderRadius.circular(13),
+          border: Border.all(
+            color: AppColors.borderGreen.withValues(alpha: 0.40),
+            width: 0.9,
+          ),
         ),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 32,
-            height: 32,
-            decoration: BoxDecoration(
-              color: AppColors.darkGreen,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: AppColors.pitchGreen, width: 1.0),
-            ),
-            child: Center(
-              child: Text(
-                user?.avatar.isNotEmpty == true ? user!.avatar : 'KP',
-                style: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.greenLight,
+        child: Row(
+          children: [
+            Container(
+              width: 34,
+              height: 34,
+              decoration: BoxDecoration(
+                color: AppColors.darkGreen,
+                borderRadius: BorderRadius.circular(9),
+                border: Border.all(color: AppColors.pitchGreen, width: 1.1),
+              ),
+              child: Center(
+                child: Text(
+                  user?.avatar.isNotEmpty == true ? user!.avatar : 'KP',
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.greenLight,
+                  ),
                 ),
               ),
             ),
-          ),
-          const SizedBox(width: 9),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  user?.username ?? 'Kaptan',
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white,
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    user?.username ?? 'Kaptan',
+                    style: const TextStyle(
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white,
+                    ),
                   ),
-                ),
-                Text(
-                  '${user?.favoriteTeam ?? "Galatasaray"} • ${user?.rankTitle ?? "Genc Yetenek"}',
-                  style: const TextStyle(
-                    fontSize: 10,
-                    color: AppColors.textMuted,
+                  Text(
+                    '${user?.favoriteTeam ?? "Galatasaray"} • ${user?.rankTitle ?? "Genç Yetenek"}',
+                    style: const TextStyle(
+                      fontSize: 10.5,
+                      color: AppColors.textSecondary,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-            decoration: BoxDecoration(
-              color: AppColors.surfaceLight,
-              borderRadius: BorderRadius.circular(6),
-              border: Border.all(color: AppColors.border),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.star_outline, size: 12, color: AppColors.gold),
-                const SizedBox(width: 3),
-                Text(
-                  '${user?.points ?? 0} XP',
-                  style: const TextStyle(
-                    fontSize: 10.5,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.gold,
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: AppColors.gold.withValues(alpha: 0.14),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: AppColors.gold.withValues(alpha: 0.45), width: 0.8),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.star_rounded, size: 13, color: AppColors.gold),
+                  const SizedBox(width: 4),
+                  Text(
+                    '${user?.points ?? 0} XP',
+                    style: const TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.gold,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildCategoryFilterRow() {
     final categories = [
-      {'id': 'all', 'label': 'Tumu'},
+      {'id': 'all', 'label': 'Tümü'},
       {'id': 'career', 'label': 'Kariyer'},
-      {'id': 'duel', 'label': 'Duello'},
+      {'id': 'duel', 'label': 'Düello'},
       {'id': 'tactics', 'label': 'Taktik'},
       {'id': 'party', 'label': 'Parti & Online'},
     ];
@@ -238,11 +255,11 @@ class _HomeScreenState extends State<HomeScreen> {
               },
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 6),
                 decoration: BoxDecoration(
                   color: isSelected
                       ? AppColors.pitchGreen.withValues(alpha: 0.25)
-                      : AppColors.surface.withValues(alpha: 0.7),
+                      : AppColors.surface.withValues(alpha: 0.78),
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
                     color: isSelected ? AppColors.pitchGreen : AppColors.border,
@@ -252,9 +269,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Text(
                   cat['label']!,
                   style: TextStyle(
-                    fontSize: 11,
+                    fontSize: 11.5,
                     fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-                    color: isSelected ? Colors.white : AppColors.textMuted,
+                    color: isSelected ? Colors.white : AppColors.textSecondary,
                   ),
                 ),
               ),
@@ -275,76 +292,70 @@ class _HomeScreenState extends State<HomeScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // Hero Featured Banner for New Career Mode
+        // 1. Vitrin: Futbolcu Kariyeri Hero Banner
         if (showCareer) ...[
+          _buildSectionHeader('KARİYER SİMÜLASYONU', 'TikTok Filtre Modu'),
+          const SizedBox(height: 6),
           _buildCareerHeroCard(context),
-          const SizedBox(height: 10),
+          const SizedBox(height: 14),
         ],
 
-        // Section Title
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            const Text(
-              'OYUN MODLARI',
-              style: TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.w800,
-                letterSpacing: 0.8,
-                color: AppColors.pitchGreen,
-              ),
+        // 2. Bölüm: Trivia & Analiz Düelloları (2'li Yan Yana Bento Grid)
+        if (showDuel) ...[
+          _buildSectionHeader('OYUN MODLARI • TRİVİA & DÜELLO', 'Bireysel Rekabet'),
+          const SizedBox(height: 6),
+          IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(
+                  child: BentoGameModeCard(
+                    title: 'Ortak Oyuncu Düellosu (3-2-1)',
+                    subtitle: 'İki kulüpte de forma giymiş ortak efsaneyi bul.',
+                    icon: Icons.compare_arrows_rounded,
+                    tag: 'KLASİK DÜELLO',
+                    tagColor: AppColors.pitchGreen,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const CommonPlayerScreen()),
+                      );
+                    },
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: BentoGameModeCard(
+                    title: '5 Takım 1 Oyuncu',
+                    subtitle: '5 kulübün en çoğunda oynamış yıldızı keşfet.',
+                    icon: Icons.shield_outlined,
+                    tag: 'REKOR ANALİZİ',
+                    tagColor: AppColors.greenLight,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const FiveClubsScreen()),
+                      );
+                    },
+                  ),
+                ),
+              ],
             ),
-            Text(
-              'Yana kaydirarak sayfalara gec',
-              style: TextStyle(
-                fontSize: 9.5,
-                color: AppColors.textMuted.withValues(alpha: 0.8),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 6),
-
-        // Mode 1: Ortak Oyuncu Düellosu (3-2-1)
-        if (showDuel)
-          GameModeCard(
-            title: 'Ortak Oyuncu Düellosu (3-2-1)',
-            subtitle: 'İki dev kulüp armasını gör, her iki takımda oynamış efsaneyi bul.',
-            icon: Icons.compare_arrows_rounded,
-            tag: 'KLASİK DÜELLO',
-            tagColor: AppColors.pitchGreen,
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const CommonPlayerScreen()),
-              );
-            },
           ),
+          const SizedBox(height: 14),
+        ],
 
-        // Mode 2: 5 Takım 1 Oyuncu (Solo & Scout AI)
-        if (showDuel)
-          GameModeCard(
-            title: '5 Takim 1 Oyuncu',
-            subtitle: 'Ekrana gelen 5 kulubun en cogunda forma giymis futbolcuyu tespit et.',
-            icon: Icons.shield_outlined,
-            tag: 'REKOR ANALIZI',
-            tagColor: AppColors.greenLight,
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const FiveClubsScreen()),
-              );
-            },
-          ),
-
-        // Mode 3: Futbol Grid (3x3 Tic-Tac-Toe)
-        if (showTactics)
+        // 3. Bölüm: Taktik Tahtası (Futbol Grid 3x3)
+        if (showTactics) ...[
+          _buildSectionHeader('TAKTİK TAHTASI', '3x3 Kesişim Matrisi'),
+          const SizedBox(height: 6),
           GameModeCard(
             title: 'Futbol Grid 3x3',
-            subtitle: 'Kulupler ve basari kriterlerinin kesisim noktalarina uygun oyunculari yerlestir.',
+            subtitle: 'Kulüpler ve başarı kriterlerinin kesişim noktalarına uygun oyuncuları yerleştir.',
             icon: Icons.grid_3x3_outlined,
-            tag: 'STRATEJI MATRISI',
+            tag: 'STRATEJİ MATRİSİ',
             tagColor: AppColors.gold,
+            trailingPreview: _buildMiniTacticalGridPreview(),
             onTap: () {
               Navigator.push(
                 context,
@@ -352,39 +363,124 @@ class _HomeScreenState extends State<HomeScreen> {
               );
             },
           ),
+          const SizedBox(height: 6),
+        ],
 
-        // Mode 4: 3-2-1 Bomba (Masada / Yan Yana Arkadaş Grubu)
-        if (showParty)
-          GameModeCard(
-            title: '3-2-1 Duello Turlari (Yan Yana)',
-            subtitle: 'Masada arkadaslarinla elden ele oynayin. Sure bitmeden ortak oyuncuyu soyle!',
-            icon: Icons.alarm_outlined,
-            tag: 'PARTI MODU',
-            tagColor: AppColors.silver,
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const PartySetupScreen()),
-              );
-            },
+        // 4. Bölüm: Arkadaş & Çok Oyunculu Arena (2'li Yan Yana Bento Grid)
+        if (showParty) ...[
+          _buildSectionHeader('ARKADAŞ & ÇOK OYUNCULU ARENA', 'Yan Yana & Online'),
+          const SizedBox(height: 6),
+          IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(
+                  child: BentoGameModeCard(
+                    title: '3-2-1 Düello Turları (Yan Yana)',
+                    subtitle: 'Masada arkadaşlarınla süre bitmeden ortak oyuncuyu söyle.',
+                    icon: Icons.alarm_outlined,
+                    tag: 'PARTİ MODU',
+                    tagColor: AppColors.silver,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const PartySetupScreen()),
+                      );
+                    },
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: BentoGameModeCard(
+                    title: 'Online Oda & Arkadaş Daveti',
+                    subtitle: '6 haneli oda kodu kur, uzaktaki arkadaşlarınla yarış.',
+                    icon: Icons.cell_tower_outlined,
+                    tag: 'ÇOK OYUNCULU',
+                    tagColor: AppColors.pitchGreen,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const LobbyHubScreen()),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
           ),
-
-        // Mode 5: Online Lobi & Oda Daveti
-        if (showParty)
-          GameModeCard(
-            title: 'Online Oda & Arkadas Daveti',
-            subtitle: '6 haneli oda kodu olustur, uzaktaki arkadaslarinla ayni anda yaris.',
-            icon: Icons.cell_tower_outlined,
-            tag: 'COK OYUNCULU',
-            tagColor: AppColors.pitchGreen,
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const LobbyHubScreen()),
-              );
-            },
-          ),
+        ],
       ],
+    );
+  }
+
+  Widget _buildSectionHeader(String title, String rightSubtitle) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Row(
+          children: [
+            Container(
+              width: 3,
+              height: 12,
+              decoration: BoxDecoration(
+                color: AppColors.pitchGreen,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(width: 6),
+            Text(
+              title,
+              style: const TextStyle(
+                fontSize: 10.5,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 0.7,
+                color: AppColors.greenLight,
+              ),
+            ),
+          ],
+        ),
+        Text(
+          rightSubtitle,
+          style: TextStyle(
+            fontSize: 9.5,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textMuted.withValues(alpha: 0.9),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMiniTacticalGridPreview() {
+    return Container(
+      width: 38,
+      height: 38,
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.35),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppColors.gold.withValues(alpha: 0.4), width: 0.8),
+      ),
+      child: GridView.builder(
+        physics: const NeverScrollableScrollPhysics(),
+        itemCount: 9,
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 3,
+          crossAxisSpacing: 2,
+          mainAxisSpacing: 2,
+        ),
+        itemBuilder: (_, index) {
+          final isHighlighted = index == 0 || index == 4 || index == 8;
+          return Container(
+            decoration: BoxDecoration(
+              color: isHighlighted
+                  ? AppColors.gold.withValues(alpha: 0.75)
+                  : AppColors.pitchGreen.withValues(alpha: 0.25),
+              borderRadius: BorderRadius.circular(1.5),
+            ),
+          );
+        },
+      ),
     );
   }
 
@@ -395,19 +491,19 @@ class _HomeScreenState extends State<HomeScreen> {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            Color(0xFF0F3824),
-            Color(0xFF0A2216),
-            Color(0xFF061410),
+            Color(0xFF12402A),
+            Color(0xFF0A2619),
+            Color(0xFF06160F),
           ],
         ),
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(15),
         border: Border.all(
-          color: AppColors.pitchGreen.withValues(alpha: 0.6),
+          color: AppColors.pitchGreen.withValues(alpha: 0.65),
           width: 1.2,
         ),
         boxShadow: [
           BoxShadow(
-            color: AppColors.pitchGreen.withValues(alpha: 0.15),
+            color: AppColors.pitchGreen.withValues(alpha: 0.16),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -416,7 +512,7 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(15),
           onTap: () {
             Navigator.push(
               context,
@@ -424,7 +520,7 @@ class _HomeScreenState extends State<HomeScreen> {
             );
           },
           child: Padding(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(13),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -433,22 +529,29 @@ class _HomeScreenState extends State<HomeScreen> {
                   children: [
                     // Mini Pitch Badge
                     Container(
-                      width: 44,
-                      height: 44,
+                      width: 46,
+                      height: 46,
                       decoration: BoxDecoration(
-                        color: AppColors.pitchGreen.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: AppColors.pitchGreen, width: 1.2),
+                        gradient: const LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            Color(0xFF14904C),
+                            Color(0xFF095028),
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(11),
+                        border: Border.all(color: AppColors.greenLight, width: 1.1),
                       ),
                       child: const Center(
                         child: Icon(
                           Icons.sports_soccer,
-                          color: AppColors.greenLight,
+                          color: Colors.white,
                           size: 24,
                         ),
                       ),
                     ),
-                    const SizedBox(width: 10),
+                    const SizedBox(width: 11),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -458,17 +561,17 @@ class _HomeScreenState extends State<HomeScreen> {
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                 decoration: BoxDecoration(
-                                  color: AppColors.gold.withValues(alpha: 0.2),
-                                  borderRadius: BorderRadius.circular(4),
+                                  color: AppColors.gold.withValues(alpha: 0.18),
+                                  borderRadius: BorderRadius.circular(5),
                                   border: Border.all(color: AppColors.gold, width: 0.8),
                                 ),
                                 child: const Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    Icon(Icons.star, size: 10, color: AppColors.gold),
+                                    Icon(Icons.star_rounded, size: 11, color: AppColors.gold),
                                     SizedBox(width: 3),
                                     Text(
-                                      'YENI TIKTOK MODU',
+                                      'YENİ TİKTOK MODU',
                                       style: TextStyle(
                                         fontSize: 9,
                                         fontWeight: FontWeight.w800,
@@ -479,28 +582,49 @@ class _HomeScreenState extends State<HomeScreen> {
                                 ),
                               ),
                               const Spacer(),
-                              const Icon(
-                                Icons.arrow_forward_ios_rounded,
-                                size: 13,
-                                color: AppColors.pitchGreen,
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                decoration: BoxDecoration(
+                                  color: AppColors.pitchGreen.withValues(alpha: 0.22),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: const Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      'Başla',
+                                      style: TextStyle(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w800,
+                                        color: AppColors.greenLight,
+                                      ),
+                                    ),
+                                    SizedBox(width: 3),
+                                    Icon(
+                                      Icons.arrow_forward_ios_rounded,
+                                      size: 10,
+                                      color: AppColors.greenLight,
+                                    ),
+                                  ],
+                                ),
                               ),
                             ],
                           ),
-                          const SizedBox(height: 4),
+                          const SizedBox(height: 5),
                           const Text(
                             'Futbolcu Kariyeri Yap',
                             style: TextStyle(
-                              fontSize: 15,
+                              fontSize: 15.5,
                               fontWeight: FontWeight.w800,
                               color: Colors.white,
                             ),
                           ),
-                          const SizedBox(height: 2),
+                          const SizedBox(height: 3),
                           const Text(
-                            'Mevkini ve bolgeni sec, transfer tekliflerini yonet, 36 yasina kadar kupalar kazan ve paylasilabilir jubile kartini cikar!',
+                            'Mevkini ve bölgeni seç, kulüp tekliflerini değerlendir, kupalar kazan ve paylaşılabilir efsane jübile kartını çıkar!',
                             style: TextStyle(
-                              fontSize: 10.5,
-                              color: AppColors.textMuted,
+                              fontSize: 11,
+                              color: AppColors.textSecondary,
                               height: 1.3,
                             ),
                           ),
@@ -511,13 +635,13 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 const SizedBox(height: 10),
                 // Feature Badges
-                Row(
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
                   children: [
-                    _buildHeroBadge(Icons.hourglass_top_outlined, '6 Donem Similasyon'),
-                    const SizedBox(width: 6),
-                    _buildHeroBadge(Icons.swap_horiz_rounded, 'Transfer Masasi'),
-                    const SizedBox(width: 6),
-                    _buildHeroBadge(Icons.workspace_premium_outlined, 'Jubile Karti'),
+                    _buildHeroBadge(Icons.hourglass_top_outlined, '6 Dönem Simülasyon'),
+                    _buildHeroBadge(Icons.swap_horiz_rounded, 'Transfer Masası'),
+                    _buildHeroBadge(Icons.workspace_premium_outlined, 'Paylaşılabilir Jübile Kartı'),
                   ],
                 ),
               ],
@@ -530,11 +654,11 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildHeroBadge(IconData icon, String label) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3.5),
       decoration: BoxDecoration(
         color: Colors.black.withValues(alpha: 0.35),
         borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

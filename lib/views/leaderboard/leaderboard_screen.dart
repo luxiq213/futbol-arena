@@ -63,7 +63,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                           ),
                           const SizedBox(width: 6),
                           Text(
-                            'Genel Siralama',
+                            'Genel Sıralama',
                             style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w700,
@@ -96,7 +96,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                           ),
                           const SizedBox(width: 6),
                           Text(
-                            'Arkadaslarim',
+                            'Arkadaşlarım',
                             style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w700,

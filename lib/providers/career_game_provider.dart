@@ -167,9 +167,22 @@ class CareerGameProvider extends ChangeNotifier {
     int assists = 0;
     final List<String> trophies = [];
 
-    // Prime bonus at age 25-29
+    // Realistic age curve multiplier
     final isPrime = age >= 25 && age <= 29;
-    final multiplier = isPrime ? 1.3 : 1.0;
+    final double multiplier;
+    if (age <= 18) {
+      multiplier = 0.72;
+    } else if (age <= 22) {
+      multiplier = 1.00;
+    } else if (isPrime) {
+      multiplier = 1.35;
+    } else if (age <= 30) {
+      multiplier = 1.15;
+    } else if (age <= 33) {
+      multiplier = 0.92;
+    } else {
+      multiplier = 0.78;
+    }
 
     switch (_position) {
       case PlayerPosition.striker:
@@ -257,6 +270,26 @@ class CareerGameProvider extends ChangeNotifier {
     available.shuffle(_random);
 
     _currentOffers = available.take(2).toList();
+  }
+
+  /// Provides a strategic contract & role promise for a transfer offer card
+  String getOfferRoleDescription(ClubModel club, {required bool isStay}) {
+    if (isStay) {
+      return 'Takım Kaptanlığı • Taraftarın Bayrak Adamı';
+    }
+    const topTier = [
+      'real_madrid', 'man_city', 'bayern', 'barcelona', 'psg', 'inter', 'liverpool', 'arsenal'
+    ];
+    const turkishGiants = [
+      'galatasaray', 'fenerbahce', 'besiktas', 'trabzonspor'
+    ];
+    if (topTier.contains(club.id)) {
+      return 'Dev Proje • Şampiyonlar Ligi Şampiyonluk Adayı';
+    }
+    if (turkishGiants.contains(club.id)) {
+      return 'Yıldız Transfer • İlk 11 & Şampiyonluk Hedefi';
+    }
+    return 'Anahtar Oyuncu • İlk 11 Garantisi & Avrupa Hedefi';
   }
 
   ClubModel _getInitialClubForRegion(String reg) {
