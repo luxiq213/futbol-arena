@@ -49,6 +49,7 @@ class _CustomButtonState extends State<CustomButton> {
             side: const BorderSide(color: AppColors.border, width: 1.0),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             backgroundColor: Colors.transparent,
+            padding: const EdgeInsets.symmetric(horizontal: 8),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
