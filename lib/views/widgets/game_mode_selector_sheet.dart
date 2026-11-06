@@ -34,6 +34,7 @@ class GameModeSelectorSheet extends StatefulWidget {
 
 class _GameModeSelectorSheetState extends State<GameModeSelectorSheet> {
   GameDifficulty _selectedDifficulty = GameDifficulty.medium;
+  CommonPlayerPairMode _selectedPairFormat = CommonPlayerPairMode.clubVsClub;
 
   void _launchSolo(BuildContext context) {
     Navigator.of(context).pop();
@@ -43,6 +44,7 @@ class _GameModeSelectorSheetState extends State<GameModeSelectorSheet> {
         destination = CommonPlayerScreen(
           playMode: PlayModeType.solo,
           difficulty: _selectedDifficulty,
+          initialPairFormat: _selectedPairFormat,
         );
         break;
       case GameTargetType.fiveClubs:
@@ -70,6 +72,7 @@ class _GameModeSelectorSheetState extends State<GameModeSelectorSheet> {
         builder: (_) => MatchmakingScreen(
           targetGame: widget.targetGame,
           difficulty: _selectedDifficulty,
+          commonPlayerPairFormat: _selectedPairFormat,
         ),
       ),
     );
@@ -88,7 +91,9 @@ class _GameModeSelectorSheetState extends State<GameModeSelectorSheet> {
     Navigator.of(context).pop();
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => const PartySetupScreen(),
+        builder: (_) => PartySetupScreen(
+          initialPairFormat: _selectedPairFormat,
+        ),
       ),
     );
   }
@@ -96,27 +101,31 @@ class _GameModeSelectorSheetState extends State<GameModeSelectorSheet> {
   @override
   Widget build(BuildContext context) {
     final bottomInset = MediaQuery.of(context).padding.bottom;
+    final maxSheetHeight = MediaQuery.of(context).size.height * 0.88;
 
-    return Container(
-      padding: EdgeInsets.fromLTRB(18, 14, 18, bottomInset + 18),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            Color(0xFF0E2B1F),
-            Color(0xFF061610),
-          ],
+    return ConstrainedBox(
+      constraints: BoxConstraints(maxHeight: maxSheetHeight),
+      child: Container(
+        padding: EdgeInsets.fromLTRB(18, 14, 18, bottomInset + 16),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color(0xFF0E2B1F),
+              Color(0xFF061610),
+            ],
+          ),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          border: Border(
+            top: BorderSide(color: AppColors.pitchGreen.withValues(alpha: 0.65), width: 1.4),
+          ),
         ),
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-        border: Border(
-          top: BorderSide(color: AppColors.pitchGreen.withValues(alpha: 0.65), width: 1.4),
-        ),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
           // Drag handle
           Center(
             child: Container(
@@ -173,6 +182,119 @@ class _GameModeSelectorSheetState extends State<GameModeSelectorSheet> {
           ),
 
           const SizedBox(height: 14),
+
+          // If CommonPlayer (3-2-1), show Format Selector: Takım × Takım | Takım × Ülke | Karışık
+          if (widget.targetGame == GameTargetType.commonPlayer) ...[
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'EŞLEŞME FORMATI (3-2-1 MODU)',
+                  style: TextStyle(
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 0.8,
+                    color: AppColors.greenLight,
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: AppColors.pitchGreen.withValues(alpha: 0.20),
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(color: AppColors.pitchGreen.withValues(alpha: 0.6), width: 0.8),
+                  ),
+                  child: Text(
+                    _selectedPairFormat.shortTag,
+                    style: const TextStyle(
+                      fontSize: 8.5,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.greenLight,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            Container(
+              padding: const EdgeInsets.all(5),
+              decoration: BoxDecoration(
+                color: AppColors.surface.withValues(alpha: 0.90),
+                borderRadius: BorderRadius.circular(13),
+                border: Border.all(color: AppColors.border),
+              ),
+              child: Column(
+                children: [
+                  Row(
+                    children: CommonPlayerPairMode.values.map((format) {
+                      final isSelected = _selectedPairFormat == format;
+                      final icon = format == CommonPlayerPairMode.clubVsClub
+                          ? Icons.shield_outlined
+                          : (format == CommonPlayerPairMode.clubVsCountry
+                              ? Icons.public_rounded
+                              : Icons.shuffle_rounded);
+                      return Expanded(
+                        child: GestureDetector(
+                          onTap: () => setState(() => _selectedPairFormat = format),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 180),
+                            margin: const EdgeInsets.symmetric(horizontal: 2.5),
+                            padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 4),
+                            decoration: BoxDecoration(
+                              color: isSelected
+                                  ? AppColors.pitchGreen.withValues(alpha: 0.25)
+                                  : Colors.transparent,
+                              borderRadius: BorderRadius.circular(9),
+                              border: Border.all(
+                                color: isSelected ? AppColors.pitchGreen : Colors.transparent,
+                                width: 1.2,
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  icon,
+                                  size: 13,
+                                  color: isSelected ? AppColors.gold : AppColors.textMuted,
+                                ),
+                                const SizedBox(width: 4),
+                                Flexible(
+                                  child: Text(
+                                    format.label,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                                      color: isSelected ? Colors.white : AppColors.textMuted,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                  const SizedBox(height: 5),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 6),
+                    child: Text(
+                      _selectedPairFormat.description,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 10,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+          ],
 
           // 1. Difficulty Selector Section (Kolay / Orta / Zor)
           Row(
@@ -347,7 +469,9 @@ class _GameModeSelectorSheetState extends State<GameModeSelectorSheet> {
               onTap: () => _launchLocalParty(context),
             ),
           ],
-        ],
+            ],
+          ),
+        ),
       ),
     );
   }

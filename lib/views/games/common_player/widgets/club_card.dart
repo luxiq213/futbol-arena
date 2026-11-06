@@ -60,18 +60,42 @@ class ClubCard extends StatelessWidget {
 
           // League & Country pill
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2.5),
             decoration: BoxDecoration(
-              color: AppColors.surfaceLight,
+              color: club.isNationalTeam
+                  ? AppColors.pitchGreen.withValues(alpha: 0.22)
+                  : AppColors.surfaceLight,
               borderRadius: BorderRadius.circular(8),
+              border: club.isNationalTeam
+                  ? Border.all(color: AppColors.pitchGreen.withValues(alpha: 0.6), width: 0.8)
+                  : null,
             ),
-            child: Text(
-              '${club.country} • ${club.league}',
-              style: const TextStyle(
-                fontSize: 10,
-                color: AppColors.textSecondary,
-                fontWeight: FontWeight.w500,
-              ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (club.isNationalTeam) ...[
+                  const Icon(
+                    Icons.public_rounded,
+                    size: 11,
+                    color: AppColors.greenLight,
+                  ),
+                  const SizedBox(width: 4),
+                ],
+                Flexible(
+                  child: Text(
+                    club.isNationalTeam
+                        ? 'ÜLKE • ${club.country}'
+                        : '${club.country} • ${club.league}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: club.isNationalTeam ? AppColors.greenLight : AppColors.textSecondary,
+                      fontWeight: club.isNationalTeam ? FontWeight.w800 : FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ],

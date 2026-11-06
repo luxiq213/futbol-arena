@@ -141,9 +141,9 @@ class ClubCrestWidget extends StatelessWidget {
               ),
               child: Center(
                 child: Icon(
-                  Icons.sports_soccer,
+                  club.isNationalTeam ? Icons.flag_rounded : Icons.sports_soccer,
                   size: size * 0.22,
-                  color: AppColors.gold,
+                  color: club.isNationalTeam ? AppColors.greenLight : AppColors.gold,
                 ),
               ),
             ),

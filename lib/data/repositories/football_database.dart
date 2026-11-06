@@ -310,6 +310,172 @@ class FootballDatabase {
     ),
   };
 
+  // --- NATIONAL TEAMS / COUNTRIES (FOR TAKIM x ÜLKE MODE) ---
+  final Map<String, ClubModel> _nationalTeams = {
+    'nat_brezilya': const ClubModel(
+      id: 'nat_brezilya',
+      name: 'Brezilya',
+      shortName: 'BRA',
+      country: 'Güney Amerika',
+      league: 'Milli Takım',
+      primaryColor: Color(0xFFFFDF00),
+      secondaryColor: Color(0xFF009C3B),
+      accentColor: Color(0xFF002776),
+      pattern: BadgePattern.solidWithTrim,
+    ),
+    'nat_fransa': const ClubModel(
+      id: 'nat_fransa',
+      name: 'Fransa',
+      shortName: 'FRA',
+      country: 'Avrupa',
+      league: 'Milli Takım',
+      primaryColor: Color(0xFF002395),
+      secondaryColor: Color(0xFFFFFFFF),
+      accentColor: Color(0xFFED2939),
+      pattern: BadgePattern.stripesVertical,
+    ),
+    'nat_arjantin': const ClubModel(
+      id: 'nat_arjantin',
+      name: 'Arjantin',
+      shortName: 'ARG',
+      country: 'Güney Amerika',
+      league: 'Milli Takım',
+      primaryColor: Color(0xFF74ACDF),
+      secondaryColor: Color(0xFFFFFFFF),
+      accentColor: Color(0xFFF6B40E),
+      pattern: BadgePattern.stripesVertical,
+    ),
+    'nat_portekiz': const ClubModel(
+      id: 'nat_portekiz',
+      name: 'Portekiz',
+      shortName: 'POR',
+      country: 'Avrupa',
+      league: 'Milli Takım',
+      primaryColor: Color(0xFFFF0000),
+      secondaryColor: Color(0xFF006600),
+      accentColor: Color(0xFFFFCC00),
+      pattern: BadgePattern.halves,
+    ),
+    'nat_almanya': const ClubModel(
+      id: 'nat_almanya',
+      name: 'Almanya',
+      shortName: 'GER',
+      country: 'Avrupa',
+      league: 'Milli Takım',
+      primaryColor: Color(0xFFFFFFFF),
+      secondaryColor: Color(0xFFDD0000),
+      accentColor: Color(0xFFFFCE00),
+      pattern: BadgePattern.solidWithTrim,
+    ),
+    'nat_ingiltere': const ClubModel(
+      id: 'nat_ingiltere',
+      name: 'İngiltere',
+      shortName: 'ENG',
+      country: 'Avrupa',
+      league: 'Milli Takım',
+      primaryColor: Color(0xFFFFFFFF),
+      secondaryColor: Color(0xFFCE1124),
+      accentColor: Color(0xFF00247D),
+      pattern: BadgePattern.solidWithTrim,
+    ),
+    'nat_ispanya': const ClubModel(
+      id: 'nat_ispanya',
+      name: 'İspanya',
+      shortName: 'ESP',
+      country: 'Avrupa',
+      league: 'Milli Takım',
+      primaryColor: Color(0xFFAA151B),
+      secondaryColor: Color(0xFFF1BF00),
+      pattern: BadgePattern.solidWithTrim,
+    ),
+    'nat_italya': const ClubModel(
+      id: 'nat_italya',
+      name: 'İtalya',
+      shortName: 'ITA',
+      country: 'Avrupa',
+      league: 'Milli Takım',
+      primaryColor: Color(0xFF0064AA),
+      secondaryColor: Color(0xFFFFFFFF),
+      accentColor: Color(0xFF009246),
+      pattern: BadgePattern.solidWithTrim,
+    ),
+    'nat_turkiye': const ClubModel(
+      id: 'nat_turkiye',
+      name: 'Türkiye',
+      shortName: 'TUR',
+      country: 'Avrupa / Asya',
+      league: 'Milli Takım',
+      primaryColor: Color(0xFFE30A17),
+      secondaryColor: Color(0xFFFFFFFF),
+      pattern: BadgePattern.solidWithTrim,
+    ),
+    'nat_hollanda': const ClubModel(
+      id: 'nat_hollanda',
+      name: 'Hollanda',
+      shortName: 'NED',
+      country: 'Avrupa',
+      league: 'Milli Takım',
+      primaryColor: Color(0xFFF36C21),
+      secondaryColor: Color(0xFF21468B),
+      accentColor: Color(0xFFFFFFFF),
+      pattern: BadgePattern.solidWithTrim,
+    ),
+    'nat_belcika': const ClubModel(
+      id: 'nat_belcika',
+      name: 'Belçika',
+      shortName: 'BEL',
+      country: 'Avrupa',
+      league: 'Milli Takım',
+      primaryColor: Color(0xFFE30613),
+      secondaryColor: Color(0xFFFFD500),
+      accentColor: Color(0xFF000000),
+      pattern: BadgePattern.stripesVertical,
+    ),
+    'nat_uruguay': const ClubModel(
+      id: 'nat_uruguay',
+      name: 'Uruguay',
+      shortName: 'URU',
+      country: 'Güney Amerika',
+      league: 'Milli Takım',
+      primaryColor: Color(0xFF55A6D9),
+      secondaryColor: Color(0xFFFFFFFF),
+      accentColor: Color(0xFFFCD116),
+      pattern: BadgePattern.stripesVertical,
+    ),
+    'nat_hirvatistan': const ClubModel(
+      id: 'nat_hirvatistan',
+      name: 'Hırvatistan',
+      shortName: 'CRO',
+      country: 'Avrupa',
+      league: 'Milli Takım',
+      primaryColor: Color(0xFFFF0000),
+      secondaryColor: Color(0xFFFFFFFF),
+      accentColor: Color(0xFF171796),
+      pattern: BadgePattern.stripesVertical,
+    ),
+    'nat_kolombiya': const ClubModel(
+      id: 'nat_kolombiya',
+      name: 'Kolombiya',
+      shortName: 'COL',
+      country: 'Güney Amerika',
+      league: 'Milli Takım',
+      primaryColor: Color(0xFFFCD116),
+      secondaryColor: Color(0xFF003893),
+      accentColor: Color(0xFFCE1126),
+      pattern: BadgePattern.solidWithTrim,
+    ),
+    'nat_fas': const ClubModel(
+      id: 'nat_fas',
+      name: 'Fas',
+      shortName: 'MAR',
+      country: 'Afrika',
+      league: 'Milli Takım',
+      primaryColor: Color(0xFFC1272D),
+      secondaryColor: Color(0xFF006233),
+      pattern: BadgePattern.solidWithTrim,
+    ),
+  };
+
   // --- EXTENSIVE PLAYERS DATABASE (170+ PLAYERS) ---
   final List<PlayerModel> _players = [
     // 1. CRISTIANO RONALDO
@@ -2292,20 +2458,125 @@ class FootballDatabase {
       activeYears: '2006-2022',
       hint: 'Kollarıyla dans eden İngiliz forvet; City, Chelsea, Liverpool ve Trabzonspor forması giydi.',
     ),
+    // 181. ALEX DE SOUZA
+    const PlayerModel(
+      id: 'alex_de_souza',
+      name: 'Alex de Souza',
+      country: 'Brezilya',
+      position: '10 Numara',
+      clubIds: ['fenerbahce'],
+      aliases: ['alex', 'alex de souza', 'doktor'],
+      activeYears: '1995-2014',
+      hint: 'Kadıköy\'de heykeli dikilen, Fenerbahçe\'nin efsanevi Brezilyalı 10 numarası ve kaptanı.',
+    ),
+    // 182. FERNANDO MUSLERA
+    const PlayerModel(
+      id: 'fernando_muslera',
+      name: 'Fernando Muslera',
+      country: 'Uruguay',
+      position: 'Kaleci',
+      clubIds: ['galatasaray'],
+      aliases: ['muslera', 'nando'],
+      activeYears: '2004-Aktif',
+      hint: 'Galatasaray tarihinde en çok kupa kazanan yabancı efsane Uruguaylı kaleci.',
+    ),
+    // 183. CLAUDIO TAFFAREL
+    const PlayerModel(
+      id: 'claudio_taffarel',
+      name: 'Cláudio Taffarel',
+      country: 'Brezilya',
+      position: 'Kaleci',
+      clubIds: ['galatasaray'],
+      aliases: ['taffarel'],
+      activeYears: '1985-2003',
+      hint: 'Brezilya ile Dünya Kupası, Galatasaray ile 2000 UEFA Kupası kazanan efsane kaleci.',
+    ),
+    // 184. HAKAN ŞÜKÜR
+    const PlayerModel(
+      id: 'hakan_sukur',
+      name: 'Hakan Şükür',
+      country: 'Türkiye',
+      position: 'Santrafor',
+      clubIds: ['galatasaray', 'inter'],
+      aliases: ['kral', 'hakan sukur'],
+      activeYears: '1987-2008',
+      hint: 'Süper Lig tarihinin en golcü ismi; Galatasaray ve Inter forması giydi.',
+    ),
+    // 185. EMRE BELÖZOĞLU
+    const PlayerModel(
+      id: 'emre_belozoglu',
+      name: 'Emre Belözoğlu',
+      country: 'Türkiye',
+      position: 'Orta Saha',
+      clubIds: ['galatasaray', 'inter', 'fenerbahce', 'atletico_madrid'],
+      aliases: ['emre', 'emre belozoglu'],
+      activeYears: '1996-2020',
+      hint: 'Galatasaray ile UEFA Kupası, ardından Inter, Fenerbahçe ve Atletico Madrid formaları giydi.',
+    ),
+    // 186. SERGEN YALÇIN
+    const PlayerModel(
+      id: 'sergen_yalcin',
+      name: 'Sergen Yalçın',
+      country: 'Türkiye',
+      position: '10 Numara',
+      clubIds: ['besiktas', 'fenerbahce', 'galatasaray', 'trabzonspor'],
+      aliases: ['sergen', 'sergen yalcin'],
+      activeYears: '1991-2008',
+      hint: 'Beşiktaş efsanesi ve Türkiye\'nin dört büyük kulübünde de forma giymiş sol ayaklı dahi.',
+    ),
+    // 187. CANER ERKİN
+    const PlayerModel(
+      id: 'caner_erkin',
+      name: 'Caner Erkin',
+      country: 'Türkiye',
+      position: 'Sol Bek',
+      clubIds: ['galatasaray', 'fenerbahce', 'inter', 'besiktas'],
+      aliases: ['caner', 'caner erkin'],
+      activeYears: '2004-Aktif',
+      hint: 'Galatasaray, Fenerbahçe, Inter ve Beşiktaş forması giymiş adrese teslim ortalarıyla ünlü sol bek.',
+    ),
+    // 188. UĞURCAN ÇAKIR
+    const PlayerModel(
+      id: 'ugurcan_cakir',
+      name: 'Uğurcan Çakır',
+      country: 'Türkiye',
+      position: 'Kaleci',
+      clubIds: ['trabzonspor'],
+      aliases: ['ugurcan', 'ugurcan cakir'],
+      activeYears: '2014-Aktif',
+      hint: 'Trabzonspor\'un 2021-22 Süper Lig şampiyonluğundaki kaptanı ve milli kalecisi.',
+    ),
   ];
 
   /// Get list of all clubs
   List<ClubModel> getAllClubs() => _clubs.values.toList();
 
-  /// Get club by ID
-  ClubModel? getClub(String id) => _clubs[id];
+  /// Get club or national team by ID
+  ClubModel? getClub(String id) => _clubs[id] ?? _nationalTeams[id];
+
+  /// Get all national teams
+  List<ClubModel> getAllNationalTeams() => _nationalTeams.values.toList();
 
   /// Get all players
   List<PlayerModel> getAllPlayers() => _players;
 
-  /// Find all players who played for BOTH clubs
+  bool _doesPlayerBelongToEntity(PlayerModel player, String entityId) {
+    final natTeam = _nationalTeams[entityId];
+    if (natTeam != null) {
+      return player.country == natTeam.name;
+    }
+    return player.playedFor(entityId);
+  }
+
+  /// Find all players who match BOTH entities (Club x Club or Club x Country)
   List<PlayerModel> getMutualPlayers(String clubAId, String clubBId) {
-    return _players.where((p) => p.playedForBoth(clubAId, clubBId)).toList();
+    return _players
+        .where(
+          (p) =>
+              _doesPlayerBelongToEntity(p, clubAId) &&
+              _doesPlayerBelongToEntity(p, clubBId),
+        )
+        .toList();
   }
 
   /// Get all unique club pairs that actually share at least 1 player
@@ -2325,11 +2596,37 @@ class FootballDatabase {
     return validPairs;
   }
 
-  /// Get a random club pair filtered by difficulty level
+  /// Get all unique (Club x Country) pairs that share at least 1 player
+  List<MapEntry<ClubModel, ClubModel>> getValidClubCountryPairs() {
+    final List<MapEntry<ClubModel, ClubModel>> validPairs = [];
+    final clubList = _clubs.values.toList();
+    final countryList = _nationalTeams.values.toList();
+
+    for (final club in clubList) {
+      for (final country in countryList) {
+        if (getMutualPlayers(club.id, country.id).isNotEmpty) {
+          validPairs.add(MapEntry(club, country));
+        }
+      }
+    }
+    return validPairs;
+  }
+
+  /// Get a random pair (Club x Club or Club x Country) filtered by difficulty level
   MapEntry<ClubModel, ClubModel> getRandomClubPair({
     GameDifficulty difficulty = GameDifficulty.medium,
+    CommonPlayerPairMode pairFormat = CommonPlayerPairMode.clubVsClub,
   }) {
-    final pairs = getValidClubPairs();
+    final effectiveFormat = pairFormat == CommonPlayerPairMode.mixed
+        ? (_random.nextBool()
+            ? CommonPlayerPairMode.clubVsClub
+            : CommonPlayerPairMode.clubVsCountry)
+        : pairFormat;
+
+    final pairs = effectiveFormat == CommonPlayerPairMode.clubVsCountry
+        ? getValidClubCountryPairs()
+        : getValidClubPairs();
+
     if (pairs.isEmpty) {
       return MapEntry(_clubs['real_madrid']!, _clubs['arsenal']!);
     }

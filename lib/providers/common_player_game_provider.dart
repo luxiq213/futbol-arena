@@ -14,6 +14,7 @@ class CommonPlayerGameProvider extends ChangeNotifier {
   final PlayModeType playMode;
   final GameDifficulty difficulty;
   final OpponentProfile? opponent;
+  CommonPlayerPairMode _pairFormat = CommonPlayerPairMode.clubVsClub;
 
   ClubModel? _clubA;
   ClubModel? _clubB;
@@ -31,6 +32,8 @@ class CommonPlayerGameProvider extends ChangeNotifier {
 
   ClubModel? get clubA => _clubA;
   ClubModel? get clubB => _clubB;
+  CommonPlayerPairMode get pairFormat => _pairFormat;
+  bool get isCurrentRoundClubVsCountry => _clubB?.isNationalTeam ?? false;
   List<PlayerModel> get mutualPlayers => _mutualPlayers;
   Set<String> get foundPlayerIds => _foundPlayerIds;
   Set<String> get foundByOpponentIds => _foundByOpponentIds;
@@ -51,12 +54,23 @@ class CommonPlayerGameProvider extends ChangeNotifier {
     this.playMode = PlayModeType.solo,
     this.difficulty = GameDifficulty.medium,
     this.opponent,
+    CommonPlayerPairMode pairFormat = CommonPlayerPairMode.clubVsClub,
   }) {
+    _pairFormat = pairFormat;
+    startNewRound();
+  }
+
+  void setPairFormat(CommonPlayerPairMode mode) {
+    if (_pairFormat == mode) return;
+    _pairFormat = mode;
     startNewRound();
   }
 
   void startNewRound() {
-    final pair = _db.getRandomClubPair(difficulty: difficulty);
+    final pair = _db.getRandomClubPair(
+      difficulty: difficulty,
+      pairFormat: _pairFormat,
+    );
     _clubA = pair.key;
     _clubB = pair.value;
     _mutualPlayers = _db.getMutualPlayers(_clubA!.id, _clubB!.id);
@@ -78,12 +92,10 @@ class CommonPlayerGameProvider extends ChangeNotifier {
     // Search within mutual players
     PlayerModel? matched;
     for (final player in _mutualPlayers) {
-      if (player.playedForBoth(_clubA!.id, _clubB!.id)) {
-        if (query.toLowerCase().trim() == player.name.toLowerCase().trim() ||
-            player.aliases.any((a) => a.toLowerCase().trim() == query.toLowerCase().trim())) {
-          matched = player;
-          break;
-        }
+      if (query.toLowerCase().trim() == player.name.toLowerCase().trim() ||
+          player.aliases.any((a) => a.toLowerCase().trim() == query.toLowerCase().trim())) {
+        matched = player;
+        break;
       }
     }
 
@@ -120,10 +132,14 @@ class CommonPlayerGameProvider extends ChangeNotifier {
       if (isAllFound && !isDuelMode) {
         final bonus = (150 * difficulty.pointsMultiplier).round();
         _score += bonus;
-        _lastFeedback = 'MÜKEMMEL! İki takımın tüm ortak oyuncularını bildin! (+$bonus Bonus Puan)';
+        _lastFeedback = isCurrentRoundClubVsCountry
+            ? 'MÜKEMMEL! ${_clubA!.name} & ${_clubB!.name} kesişimindeki tüm oyuncuları bildin! (+$bonus Bonus Puan)'
+            : 'MÜKEMMEL! İki takımın tüm ortak oyuncularını bildin! (+$bonus Bonus Puan)';
       }
     } else {
-      _lastFeedback = '"$query" bu iki kulüpte birden oynamadı!';
+      _lastFeedback = isCurrentRoundClubVsCountry
+          ? '"$query" ${_clubA!.name} forması giymiş bir ${_clubB!.name} oyuncusu değil!'
+          : '"$query" bu iki kulüpte birden oynamadı!';
       _isSuccessFeedback = false;
       GameFeedback.error();
     }

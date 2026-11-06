@@ -330,10 +330,10 @@ class _HomeScreenState extends State<HomeScreen> {
               children: [
                 Expanded(
                   child: BentoGameModeCard(
-                    title: 'Ortak Oyuncu',
-                    subtitle: 'İki kulüpte de forma giymiş ortak yıldızları tek başına veya düelloda bul.',
+                    title: 'Ortak Oyuncu (3-2-1)',
+                    subtitle: 'Takım × Takım veya Takım × Ülke kesişimlerinde ortak yıldızları bul.',
                     icon: Icons.compare_arrows_rounded,
-                    tag: 'KESİŞİM TRİVİA',
+                    tag: 'TAKIM×TAKIM • ÜLKE',
                     tagColor: AppColors.pitchGreen,
                     onTap: () {
                       showGameModeSelectorSheet(

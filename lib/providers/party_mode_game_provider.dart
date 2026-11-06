@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import '../data/models/club_model.dart';
+import '../data/models/play_mode_model.dart';
 import '../data/models/player_model.dart';
 import '../data/repositories/football_database.dart';
 import '../../core/utils/sound_effects.dart';
@@ -35,6 +36,7 @@ class PartyModeGameProvider extends ChangeNotifier {
   int _selectedTimerDuration = 8;
   int _initialLives = 3;
   int _countdownNumber = 3;
+  CommonPlayerPairMode _pairFormat = CommonPlayerPairMode.clubVsClub;
 
   ClubModel? _clubA;
   ClubModel? _clubB;
@@ -53,14 +55,24 @@ class PartyModeGameProvider extends ChangeNotifier {
   int get selectedTimerDuration => _selectedTimerDuration;
   int get initialLives => _initialLives;
   int get countdownNumber => _countdownNumber;
+  CommonPlayerPairMode get pairFormat => _pairFormat;
+  bool get isCurrentRoundClubVsCountry => _clubB?.isNationalTeam ?? false;
   ClubModel? get clubA => _clubA;
   ClubModel? get clubB => _clubB;
   List<PlayerModel> get currentMutualPlayers => _currentMutualPlayers;
   bool get answersRevealed => _answersRevealed;
   PartyPlayer? get winner => activePlayers.length == 1 ? activePlayers.first : null;
 
-  PartyModeGameProvider() {
+  PartyModeGameProvider({
+    CommonPlayerPairMode initialPairFormat = CommonPlayerPairMode.clubVsClub,
+  }) {
+    _pairFormat = initialPairFormat;
     _initDefaultPlayers();
+  }
+
+  void setPairFormat(CommonPlayerPairMode format) {
+    _pairFormat = format;
+    notifyListeners();
   }
 
   void _initDefaultPlayers() {
@@ -136,7 +148,7 @@ class PartyModeGameProvider extends ChangeNotifier {
   }
 
   void _startRound() {
-    final pair = _db.getRandomClubPair();
+    final pair = _db.getRandomClubPair(pairFormat: _pairFormat);
     _clubA = pair.key;
     _clubB = pair.value;
     _currentMutualPlayers = _db.getMutualPlayers(_clubA!.id, _clubB!.id);

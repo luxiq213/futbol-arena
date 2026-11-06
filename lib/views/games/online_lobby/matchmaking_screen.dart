@@ -13,11 +13,13 @@ import '../football_grid/football_grid_screen.dart';
 class MatchmakingScreen extends StatefulWidget {
   final GameTargetType targetGame;
   final GameDifficulty difficulty;
+  final CommonPlayerPairMode commonPlayerPairFormat;
 
   const MatchmakingScreen({
     super.key,
     required this.targetGame,
     this.difficulty = GameDifficulty.medium,
+    this.commonPlayerPairFormat = CommonPlayerPairMode.clubVsClub,
   });
 
   @override
@@ -78,6 +80,7 @@ class _MatchmakingScreenState extends State<MatchmakingScreen> {
           playMode: PlayModeType.onlineMatchmaking,
           difficulty: widget.difficulty,
           opponent: opponent,
+          initialPairFormat: widget.commonPlayerPairFormat,
         );
         break;
       case GameTargetType.fiveClubs:

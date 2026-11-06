@@ -30,6 +30,8 @@ class ClubModel {
     this.pattern = BadgePattern.solidWithTrim,
   });
 
+  bool get isNationalTeam => id.startsWith('nat_') || league == 'Milli Takım';
+
   Map<String, dynamic> toJson() => {
     'id': id,
     'name': name,

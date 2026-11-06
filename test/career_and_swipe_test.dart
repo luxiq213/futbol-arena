@@ -8,6 +8,7 @@ import 'package:futbol_party/data/repositories/football_database.dart';
 import 'package:futbol_party/data/repositories/leaderboard_repository.dart';
 import 'package:futbol_party/main.dart';
 import 'package:futbol_party/providers/career_game_provider.dart';
+import 'package:futbol_party/providers/common_player_game_provider.dart';
 import 'package:futbol_party/views/profile/profile_screen.dart';
 import 'package:futbol_party/views/widgets/player_avatar_widget.dart';
 
@@ -92,6 +93,41 @@ void main() {
         expect(preset.name, isNotEmpty);
       }
     });
+
+    test('3-2-1 Common Player supports both Takım x Takım and Takım x Ülke modes', () {
+      final db = FootballDatabase();
+
+      // Verify Club x Country pairs exist and return valid mutual players
+      final clubCountryPairs = db.getValidClubCountryPairs();
+      expect(clubCountryPairs.length, greaterThanOrEqualTo(40));
+
+      final fbBrazil = db.getMutualPlayers('fenerbahce', 'nat_brezilya');
+      expect(fbBrazil, isNotEmpty);
+      expect(fbBrazil.any((p) => p.id == 'alex_de_souza'), isTrue);
+
+      // Verify CommonPlayerGameProvider works in both modes
+      final provider = CommonPlayerGameProvider(
+        pairFormat: CommonPlayerPairMode.clubVsCountry,
+      );
+      expect(provider.pairFormat, CommonPlayerPairMode.clubVsCountry);
+      expect(provider.isCurrentRoundClubVsCountry, isTrue);
+      expect(provider.clubA!.isNationalTeam, isFalse);
+      expect(provider.clubB!.isNationalTeam, isTrue);
+      expect(provider.mutualPlayers, isNotEmpty);
+
+      // Guess the first valid player in Club x Country mode
+      final targetPlayer = provider.mutualPlayers.first;
+      final success = provider.submitGuess(targetPlayer.name);
+      expect(success, isTrue);
+      expect(provider.foundPlayerIds.contains(targetPlayer.id), isTrue);
+
+      // Switch to Club x Club mode dynamically
+      provider.setPairFormat(CommonPlayerPairMode.clubVsClub);
+      expect(provider.pairFormat, CommonPlayerPairMode.clubVsClub);
+      expect(provider.isCurrentRoundClubVsCountry, isFalse);
+      expect(provider.clubB!.isNationalTeam, isFalse);
+      expect(provider.mutualPlayers, isNotEmpty);
+    });
   });
 
   group('Swipe Navigation & Category Filtering Tests', () {
@@ -137,13 +173,13 @@ void main() {
       expect(find.text('Futbolcu Kariyeri Yap'), findsOneWidget);
 
       // Common player duel is filtered out in career view
-      expect(find.text('Ortak Oyuncu'), findsNothing);
+      expect(find.text('Ortak Oyuncu (3-2-1)'), findsNothing);
 
       // Tap "Tümü" to restore
       await tester.tap(find.text('Tümü'));
       await tester.pump(const Duration(milliseconds: 300));
 
-      expect(find.text('Ortak Oyuncu'), findsOneWidget);
+      expect(find.text('Ortak Oyuncu (3-2-1)'), findsOneWidget);
     });
   });
 }

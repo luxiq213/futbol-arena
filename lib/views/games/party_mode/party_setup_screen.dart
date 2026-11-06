@@ -1,12 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../data/models/play_mode_model.dart';
 import '../../../../providers/party_mode_game_provider.dart';
 import '../../widgets/custom_button.dart';
 import 'party_game_screen.dart';
 
 class PartySetupScreen extends StatefulWidget {
-  const PartySetupScreen({super.key});
+  final CommonPlayerPairMode initialPairFormat;
+
+  const PartySetupScreen({
+    super.key,
+    this.initialPairFormat = CommonPlayerPairMode.clubVsClub,
+  });
 
   @override
   State<PartySetupScreen> createState() => _PartySetupScreenState();
@@ -31,7 +37,7 @@ class _PartySetupScreenState extends State<PartySetupScreen> {
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (_) => PartyModeGameProvider(),
+      create: (_) => PartyModeGameProvider(initialPairFormat: widget.initialPairFormat),
       child: Consumer<PartyModeGameProvider>(
         builder: (context, provider, _) {
           return Scaffold(
@@ -68,7 +74,7 @@ class _PartySetupScreenState extends State<PartySetupScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  'Arkadaslarla Yan Yana Oynanis',
+                                  'Arkadaşlarla Yan Yana Oynanış',
                                   style: TextStyle(
                                     fontWeight: FontWeight.w700,
                                     fontSize: 14,
@@ -77,7 +83,7 @@ class _PartySetupScreenState extends State<PartySetupScreen> {
                                 ),
                                 SizedBox(height: 4),
                                 Text(
-                                  '3-2-1 sayimindan sonra iki takim armasi belirir. Sirasi gelen oyuncu süre bitmeden ortak futbolcuyu sesli olarak söyler.',
+                                  '3-2-1 sayımından sonra Takım × Takım veya Takım × Ülke eşleşmesi belirir. Sırası gelen oyuncu süre bitmeden ortak futbolcuyu sesli olarak söyler.',
                                   style: TextStyle(
                                     fontSize: 12,
                                     color: AppColors.textSecondary,
@@ -91,11 +97,72 @@ class _PartySetupScreenState extends State<PartySetupScreen> {
                       ),
                     ),
 
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 18),
+
+                    // Pair Format Selector (Takım × Takım | Takım × Ülke | Karışık)
+                    const Text(
+                      'Eşleşme Formatı (3-2-1 Modu)',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: CommonPlayerPairMode.values.map((mode) {
+                        final isSelected = provider.pairFormat == mode;
+                        final modeIcon = mode == CommonPlayerPairMode.clubVsClub
+                            ? Icons.shield_outlined
+                            : (mode == CommonPlayerPairMode.clubVsCountry
+                                ? Icons.public_rounded
+                                : Icons.shuffle_rounded);
+                        return Expanded(
+                          child: GestureDetector(
+                            onTap: () => provider.setPairFormat(mode),
+                            child: Container(
+                              margin: const EdgeInsets.symmetric(horizontal: 4),
+                              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 6),
+                              decoration: BoxDecoration(
+                                color: isSelected
+                                    ? AppColors.pitchGreen.withValues(alpha: 0.25)
+                                    : AppColors.surface,
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(
+                                  color: isSelected ? AppColors.gold : AppColors.border,
+                                  width: isSelected ? 1.3 : 1.0,
+                                ),
+                              ),
+                              child: Column(
+                                children: [
+                                  Icon(
+                                    modeIcon,
+                                    size: 16,
+                                    color: isSelected ? AppColors.gold : AppColors.textMuted,
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    mode.label,
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w700,
+                                      color: isSelected ? Colors.white : AppColors.textSecondary,
+                                      fontSize: 11.5,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+
+                    const SizedBox(height: 18),
 
                     // Turn Timer Duration
                     const Text(
-                      'Tur Basina Süre',
+                      'Tur Başına Süre',
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
@@ -139,7 +206,7 @@ class _PartySetupScreenState extends State<PartySetupScreen> {
 
                     // Lives Selection
                     const Text(
-                      'Oyuncu Basina Can Hakki',
+                      'Oyuncu Başına Can Hakkı',
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
@@ -226,7 +293,7 @@ class _PartySetupScreenState extends State<PartySetupScreen> {
                             onSubmitted: (_) => _addPlayer(provider),
                             style: const TextStyle(fontSize: 13),
                             decoration: const InputDecoration(
-                              hintText: 'Yeni oyuncu adi girin...',
+                              hintText: 'Yeni oyuncu adı girin...',
                               prefixIcon: Icon(Icons.person_add_alt, color: AppColors.gold, size: 18),
                               contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                             ),
@@ -322,7 +389,7 @@ class _PartySetupScreenState extends State<PartySetupScreen> {
 
                     // Start Game Button
                     CustomButton(
-                      text: 'Düelloyu Baslat',
+                      text: 'Düelloyu Başlat',
                       icon: Icons.play_arrow_outlined,
                       backgroundColor: AppColors.pitchGreen,
                       textColor: Colors.white,

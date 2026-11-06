@@ -161,7 +161,7 @@ class PartyGameScreen extends StatelessWidget {
 
                     const SizedBox(height: 14),
 
-                    // Two Clubs Display
+                    // Two Clubs / Club x Country Display
                     if (clubA != null && clubB != null)
                       Row(
                         children: [
@@ -169,19 +169,38 @@ class PartyGameScreen extends StatelessWidget {
                           Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 8),
                             child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
                               decoration: BoxDecoration(
-                                color: AppColors.surfaceLight,
+                                color: provider.isCurrentRoundClubVsCountry
+                                    ? AppColors.pitchGreen.withValues(alpha: 0.22)
+                                    : AppColors.surfaceLight,
                                 borderRadius: BorderRadius.circular(6),
-                                border: Border.all(color: AppColors.border),
-                              ),
-                              child: const Text(
-                                'VS',
-                                style: TextStyle(
-                                  color: AppColors.gold,
-                                  fontWeight: FontWeight.w800,
-                                  fontSize: 11,
+                                border: Border.all(
+                                  color: provider.isCurrentRoundClubVsCountry
+                                      ? AppColors.pitchGreen
+                                      : AppColors.border,
                                 ),
+                              ),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    provider.isCurrentRoundClubVsCountry
+                                        ? Icons.public_rounded
+                                        : Icons.compare_arrows_rounded,
+                                    size: 13,
+                                    color: AppColors.gold,
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    provider.isCurrentRoundClubVsCountry ? 'ÜLKE' : 'VS',
+                                    style: const TextStyle(
+                                      color: AppColors.gold,
+                                      fontWeight: FontWeight.w800,
+                                      fontSize: 10,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ),
