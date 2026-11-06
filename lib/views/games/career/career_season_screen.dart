@@ -566,10 +566,11 @@ class _CareerSeasonScreenState extends State<CareerSeasonScreen> {
                 const SizedBox(height: 3),
                 Text(
                   club.name,
-                  maxLines: 1,
+                  maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
                     fontSize: 14,
+                    height: 1.15,
                     fontWeight: FontWeight.w800,
                     color: Colors.white,
                   ),

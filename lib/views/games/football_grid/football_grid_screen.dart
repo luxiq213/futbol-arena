@@ -5,6 +5,7 @@ import '../../../../providers/auth_provider.dart';
 import '../../../../providers/football_grid_game_provider.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/club_crest_widget.dart';
+import '../../widgets/stadium_background.dart';
 import '../common_player/widgets/search_guess_bar.dart';
 
 class FootballGridScreen extends StatelessWidget {
@@ -18,7 +19,9 @@ class FootballGridScreen extends StatelessWidget {
         builder: (context, grid, _) {
           return Scaffold(
             backgroundColor: AppColors.background,
+            extendBodyBehindAppBar: true,
             appBar: AppBar(
+              toolbarHeight: 46,
               backgroundColor: Colors.transparent,
               elevation: 0,
               iconTheme: const IconThemeData(color: Colors.white),
@@ -57,7 +60,7 @@ class FootballGridScreen extends StatelessWidget {
                 ),
               ],
             ),
-            body: SafeArea(
+            body: StadiumBackground(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                 child: Column(
@@ -67,7 +70,7 @@ class FootballGridScreen extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                       decoration: BoxDecoration(
-                        color: AppColors.surface,
+                        color: AppColors.surface.withValues(alpha: 0.90),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(color: AppColors.border),
                       ),
@@ -88,7 +91,7 @@ class FootballGridScreen extends StatelessWidget {
                               ),
                               const SizedBox(height: 2),
                               Text(
-                                '${grid.solvedCount} / 9 Hücre Tamamlandi',
+                                '${grid.solvedCount} / 9 Hücre Tamamlandı',
                                 style: const TextStyle(
                                   fontSize: 12,
                                   color: AppColors.textSecondary,
@@ -145,12 +148,14 @@ class FootballGridScreen extends StatelessWidget {
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Text(
-                                  'Hücre: ${grid.challenge.rowCriteria[grid.activeRow!].label} x ${grid.challenge.colCriteria[grid.activeCol!].label}',
-                                  style: const TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w700,
-                                    color: AppColors.gold,
+                                Expanded(
+                                  child: Text(
+                                    'Hücre: ${grid.challenge.rowCriteria[grid.activeRow!].club?.name ?? grid.challenge.rowCriteria[grid.activeRow!].label} × ${grid.challenge.colCriteria[grid.activeCol!].club?.name ?? grid.challenge.colCriteria[grid.activeCol!].label}',
+                                    style: const TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w700,
+                                      color: AppColors.gold,
+                                    ),
                                   ),
                                 ),
                                 IconButton(
@@ -186,7 +191,7 @@ class FootballGridScreen extends StatelessWidget {
                       children: [
                         Expanded(
                           child: CustomButton(
-                            text: 'Yeni Grid Baslat',
+                            text: 'Yeni Grid Başlat',
                             isOutlined: true,
                             icon: Icons.refresh,
                             onPressed: () => grid.startNewGrid(),
@@ -212,18 +217,18 @@ class FootballGridScreen extends StatelessWidget {
 
     return Column(
       children: [
-        // Top Header Row (Empty corner + 3 Columns)
+        // Top Header Row (Empty corner + 3 Columns with Full Club Names)
         Row(
           children: [
-            const SizedBox(width: 76), // Empty corner spacer
+            const SizedBox(width: 88), // Empty corner spacer matching left header width
             ...colCriteria.map(
               (col) => Expanded(
                 child: Container(
-                  height: 68,
+                  height: 84,
                   margin: const EdgeInsets.all(3),
-                  padding: const EdgeInsets.all(4),
+                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 5),
                   decoration: BoxDecoration(
-                    color: AppColors.surface,
+                    color: AppColors.surface.withValues(alpha: 0.92),
                     borderRadius: BorderRadius.circular(10),
                     border: Border.all(color: AppColors.border),
                   ),
@@ -231,21 +236,35 @@ class FootballGridScreen extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       if (col.club != null)
-                        ClubCrestWidget(club: col.club!, size: 30, showShortName: false)
+                        ClubCrestWidget(club: col.club!, size: 28, showShortName: false)
                       else
                         const Icon(Icons.military_tech_outlined, color: AppColors.gold, size: 20),
                       const SizedBox(height: 4),
                       Text(
-                        col.label,
+                        col.club?.name ?? col.label,
                         textAlign: TextAlign.center,
-                        maxLines: 1,
+                        maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w700,
+                          fontSize: 10.5,
+                          height: 1.12,
+                          fontWeight: FontWeight.w800,
                           color: Colors.white,
                         ),
                       ),
+                      if (col.sublabel.isNotEmpty) ...[
+                        const SizedBox(height: 1),
+                        Text(
+                          col.sublabel,
+                          textAlign: TextAlign.center,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 8.5,
+                            color: AppColors.textMuted,
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -254,7 +273,7 @@ class FootballGridScreen extends StatelessWidget {
           ],
         ),
 
-        // 3 Data Rows (Left Criterion + 3 Interactive Cells)
+        // 3 Data Rows (Left Criterion with Full Club Name + 3 Interactive Cells)
         ...List.generate(3, (r) {
           final rowCrit = rowCriteria[r];
 
@@ -262,13 +281,13 @@ class FootballGridScreen extends StatelessWidget {
             children: [
               // Row Criterion Header
               SizedBox(
-                width: 76,
-                height: 76,
+                width: 88,
+                height: 84,
                 child: Container(
                   margin: const EdgeInsets.all(3),
-                  padding: const EdgeInsets.all(4),
+                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 5),
                   decoration: BoxDecoration(
-                    color: AppColors.surface,
+                    color: AppColors.surface.withValues(alpha: 0.92),
                     borderRadius: BorderRadius.circular(10),
                     border: Border.all(color: AppColors.border),
                   ),
@@ -276,21 +295,35 @@ class FootballGridScreen extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       if (rowCrit.club != null)
-                        ClubCrestWidget(club: rowCrit.club!, size: 30, showShortName: false)
+                        ClubCrestWidget(club: rowCrit.club!, size: 28, showShortName: false)
                       else
                         const Icon(Icons.military_tech_outlined, color: AppColors.gold, size: 20),
                       const SizedBox(height: 4),
                       Text(
-                        rowCrit.label,
+                        rowCrit.club?.name ?? rowCrit.label,
                         textAlign: TextAlign.center,
-                        maxLines: 1,
+                        maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w700,
+                          fontSize: 10.5,
+                          height: 1.12,
+                          fontWeight: FontWeight.w800,
                           color: Colors.white,
                         ),
                       ),
+                      if (rowCrit.sublabel.isNotEmpty) ...[
+                        const SizedBox(height: 1),
+                        Text(
+                          rowCrit.sublabel,
+                          textAlign: TextAlign.center,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 8.5,
+                            color: AppColors.textMuted,
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -305,13 +338,13 @@ class FootballGridScreen extends StatelessWidget {
                   child: GestureDetector(
                     onTap: () => grid.selectCell(r, c),
                     child: Container(
-                      height: 76,
+                      height: 84,
                       margin: const EdgeInsets.all(3),
                       padding: const EdgeInsets.all(6),
                       decoration: BoxDecoration(
                         color: cell.isSolved
                             ? AppColors.pitchGreen.withValues(alpha: 0.35)
-                            : (isSelected ? AppColors.surfaceLight : AppColors.surface),
+                            : (isSelected ? AppColors.surfaceLight : AppColors.surface.withValues(alpha: 0.90)),
                         borderRadius: BorderRadius.circular(10),
                         border: Border.all(
                           color: isSelected

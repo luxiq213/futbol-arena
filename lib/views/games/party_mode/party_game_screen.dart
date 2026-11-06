@@ -4,6 +4,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../providers/party_mode_game_provider.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/countdown_overlay.dart';
+import '../../widgets/stadium_background.dart';
 import '../common_player/widgets/club_card.dart';
 import 'party_winner_screen.dart';
 
@@ -30,7 +31,9 @@ class PartyGameScreen extends StatelessWidget {
       },
       child: Scaffold(
         backgroundColor: AppColors.background,
+        extendBodyBehindAppBar: true,
         appBar: AppBar(
+          toolbarHeight: 46,
           backgroundColor: Colors.transparent,
           elevation: 0,
           iconTheme: const IconThemeData(color: Colors.white),
@@ -39,7 +42,7 @@ class PartyGameScreen extends StatelessWidget {
             onPressed: () => _showExitConfirmation(context, provider),
           ),
           title: const Text(
-            '3-2-1 Düello Turlari',
+            '3-2-1 Düello Turları',
             style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
           ),
           actions: [
@@ -64,7 +67,7 @@ class PartyGameScreen extends StatelessWidget {
             ),
           ],
         ),
-        body: SafeArea(
+        body: StadiumBackground(
           child: Stack(
             children: [
               Padding(
@@ -76,7 +79,7 @@ class PartyGameScreen extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: AppColors.surface,
+                          color: AppColors.surface.withValues(alpha: 0.90),
                           borderRadius: BorderRadius.circular(14),
                           border: Border.all(
                             color: curPlayer.isEliminated ? AppColors.border : AppColors.gold,
@@ -193,7 +196,7 @@ class PartyGameScreen extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: AppColors.surface,
+                          color: AppColors.surface.withValues(alpha: 0.92),
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(color: AppColors.border),
                         ),
@@ -241,7 +244,7 @@ class PartyGameScreen extends StatelessWidget {
                         children: [
                           Expanded(
                             child: CustomButton(
-                              text: 'Pas / Yandi',
+                              text: 'Pas / Yandı',
                               icon: Icons.close,
                               backgroundColor: AppColors.surfaceLight,
                               textColor: AppColors.error,
@@ -294,7 +297,7 @@ class PartyGameScreen extends StatelessWidget {
                             children: [
                               Expanded(
                                 child: CustomButton(
-                                  text: provider.answersRevealed ? 'Gizle' : 'Cevaplari Gör',
+                                  text: provider.answersRevealed ? 'Gizle' : 'Cevapları Gör',
                                   isOutlined: true,
                                   icon: Icons.visibility_outlined,
                                   height: 44,
@@ -304,7 +307,7 @@ class PartyGameScreen extends StatelessWidget {
                               const SizedBox(width: 10),
                               Expanded(
                                 child: CustomButton(
-                                  text: 'Siradaki Tur',
+                                  text: 'Sıradaki Tur',
                                   icon: Icons.arrow_forward,
                                   backgroundColor: AppColors.pitchGreen,
                                   textColor: Colors.white,
@@ -385,7 +388,7 @@ class PartyGameScreen extends StatelessWidget {
       builder: (_) => AlertDialog(
         backgroundColor: AppColors.surface,
         title: const Text('Oyundan Çıkılsın mı?', style: TextStyle(fontSize: 16)),
-        content: const Text('Mevcut düello oturumu sonlandirilacak.', style: TextStyle(fontSize: 13)),
+        content: const Text('Mevcut düello oturumu sonlandırılacak.', style: TextStyle(fontSize: 13)),
         actions: [
           TextButton(
             child: const Text('Devam Et', style: TextStyle(color: AppColors.textSecondary)),

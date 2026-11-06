@@ -320,7 +320,7 @@ class FootballDatabase {
       clubIds: ['sporting', 'man_united', 'real_madrid', 'juventus'],
       aliases: ['cr7', 'ronaldo', 'cristiano'],
       activeYears: '2002-Aktif',
-      hint: '5 Ballon d\'Or sahibi efsane, Man Utd, Madrid ve Juve forması giydi.',
+      hint: '5 Ballon d\'Or sahibi efsane, Manchester United, Madrid ve Juventus forması giydi.',
     ),
     // 2. LIONEL MESSI
     const PlayerModel(
@@ -342,7 +342,7 @@ class FootballDatabase {
       clubIds: ['ajax', 'juventus', 'inter', 'barcelona', 'milan', 'psg', 'man_united'],
       aliases: ['zlatan', 'ibrahimovic', 'ibra'],
       activeYears: '1999-2023',
-      hint: 'Ajax, Juve, Inter, Barca, Milan, PSG ve Man Utd forması giymiş gezgin dev forvet.',
+      hint: 'Ajax, Juventus, Inter, Barcelona, Milan, PSG ve Manchester United forması giymiş gezgin dev forvet.',
     ),
     // 4. RONALDO NAZARIO
     const PlayerModel(
@@ -364,7 +364,7 @@ class FootballDatabase {
       clubIds: ['psg', 'barcelona', 'milan'],
       aliases: ['ronaldinho', 'gaucho', 'dinho'],
       activeYears: '1998-2015',
-      hint: 'Gülümsemesi ve sambasıyla meşhur büyücü; PSG, Barça ve Milan\'da oynadı.',
+      hint: 'Gülümsemesi ve sambasıyla meşhur büyücü; PSG, Barcelona ve Milan\'da oynadı.',
     ),
     // 6. LUIS FIGO
     const PlayerModel(
@@ -452,7 +452,7 @@ class FootballDatabase {
       clubIds: ['galatasaray', 'atletico_madrid', 'barcelona'],
       aliases: ['arda', 'arda turan'],
       activeYears: '2005-2022',
-      hint: 'Atletico ile La Liga şampiyonu olup Barça\'ya transfer olan Türk futbol ikonu.',
+      hint: 'Atletico ile La Liga şampiyonu olup Barcelona\'ya transfer olan Türk futbol ikonu.',
     ),
     // 14. NICOLAS ANELKA
     const PlayerModel(
@@ -463,7 +463,7 @@ class FootballDatabase {
       clubIds: ['psg', 'arsenal', 'real_madrid', 'liverpool', 'man_city', 'fenerbahce', 'chelsea', 'juventus'],
       aliases: ['anelka'],
       activeYears: '1996-2015',
-      hint: 'PSG, Arsenal, Real Madrid, Liverpool, City, FB, Chelsea ve Juve forması giydi!',
+      hint: 'PSG, Arsenal, Real Madrid, Liverpool, City, Fenerbahçe, Chelsea ve Juventus forması giydi!',
     ),
     // 15. CESC FABREGAS
     const PlayerModel(
@@ -507,7 +507,7 @@ class FootballDatabase {
       clubIds: ['benfica', 'real_madrid', 'man_united', 'psg', 'juventus'],
       aliases: ['di maria', 'dimaria', 'fideo'],
       activeYears: '2005-Aktif',
-      hint: 'Finallerin adamı! Real Madrid, Man Utd, PSG ve Juventus forması giydi.',
+      hint: 'Finallerin adamı! Real Madrid, Manchester United, PSG ve Juventus forması giydi.',
     ),
     // 19. TONI KROOS
     const PlayerModel(
@@ -573,7 +573,7 @@ class FootballDatabase {
       clubIds: ['man_united', 'real_madrid', 'milan', 'psg'],
       aliases: ['beckham', 'becks'],
       activeYears: '1992-2013',
-      hint: 'Tarihin en popüler frikikçisi; Man Utd, Real Madrid, Milan ve PSG\'de oynadı.',
+      hint: 'Tarihin en popüler frikikçisi; Manchester United, Real Madrid, Milan ve PSG\'de oynadı.',
     ),
     // 25. CASEMIRO
     const PlayerModel(
@@ -606,7 +606,7 @@ class FootballDatabase {
       clubIds: ['man_united', 'real_madrid'],
       aliases: ['van nistelrooy', 'ruud'],
       activeYears: '1993-2012',
-      hint: 'Ceza sahası içi ölümcül bitirici; Man Utd ve Real Madrid\'de gol krallıkları yaşadı.',
+      hint: 'Ceza sahası içi ölümcül bitirici; Manchester United ve Real Madrid\'de gol krallıkları yaşadı.',
     ),
     // 28. GIANLUIGI BUFFON
     const PlayerModel(
@@ -617,7 +617,7 @@ class FootballDatabase {
       clubIds: ['juventus', 'psg'],
       aliases: ['buffon', 'gigi'],
       activeYears: '1995-2023',
-      hint: 'İtalya ile Dünya Kupası kazanan efsane kaleci; Juve ve PSG kalelerini korudu.',
+      hint: 'İtalya ile Dünya Kupası kazanan efsane kaleci; Juventus ve PSG kalelerini korudu.',
     ),
     // 29. DANI ALVES
     const PlayerModel(
@@ -683,7 +683,7 @@ class FootballDatabase {
       clubIds: ['galatasaray', 'fenerbahce', 'inter', 'besiktas'],
       aliases: ['caner', 'fisek'],
       activeYears: '2004-Aktif',
-      hint: 'GS, FB, BJK üç büyüklerinde ve Inter\'de forma giymiş sol bek.',
+      hint: 'Galatasaray, Fenerbahçe, Beşiktaş üç büyüklerinde ve Inter\'de forma giymiş sol bek.',
     ),
     // 35. EMRE BELÖZOĞLU
     const PlayerModel(
@@ -705,7 +705,7 @@ class FootballDatabase {
       clubIds: ['galatasaray', 'inter'],
       aliases: ['kral hakan', 'sukur'],
       activeYears: '1987-2008',
-      hint: 'Dünya Kupası tarihinin en hızlı golcüsü, GS ve Inter santraforu.',
+      hint: 'Dünya Kupası tarihinin en hızlı golcüsü, Galatasaray ve Inter santraforu.',
     ),
     // 37. RIGOBERT SONG
     const PlayerModel(
@@ -771,7 +771,7 @@ class FootballDatabase {
       clubIds: ['sporting', 'barcelona', 'porto', 'inter', 'chelsea', 'besiktas'],
       aliases: ['quaresma', 'trivela', 'q7'],
       activeYears: '2001-2022',
-      hint: 'Trivela ve rabona ustası Portekizli büyücü; Sporting, Barça, Porto, Inter, Chelsea ve BJK ikonu.',
+      hint: 'Trivela ve rabona ustası Portekizli büyücü; Sporting, Barcelona, Porto, Inter, Chelsea ve Beşiktaş ikonu.',
     ),
     // 43. SIMAO SABROSA
     const PlayerModel(
@@ -782,7 +782,7 @@ class FootballDatabase {
       clubIds: ['sporting', 'barcelona', 'benfica', 'atletico_madrid', 'besiktas'],
       aliases: ['simao'],
       activeYears: '1997-2014',
-      hint: 'Sporting, Barça, Benfica, Atletico ve Beşiktaş\'ta oynamış Portekizli kanat.',
+      hint: 'Sporting, Barcelona, Benfica, Atletico ve Beşiktaş\'ta oynamış Portekizli kanat.',
     ),
     // 44. GUTI HERNANDEZ
     const PlayerModel(
@@ -837,7 +837,7 @@ class FootballDatabase {
       clubIds: ['juventus', 'galatasaray', 'inter'],
       aliases: ['melo', 'pitbull'],
       activeYears: '2001-Aktif',
-      hint: 'Pitbull lakaplı agresif Brezilyalı orta saha; Juve, Galatasaray ve Inter\'de oynadı.',
+      hint: 'Pitbull lakaplı agresif Brezilyalı orta saha; Juventus, Galatasaray ve Inter\'de oynadı.',
     ),
     // 49. ALEX TELLES
     const PlayerModel(
@@ -848,7 +848,7 @@ class FootballDatabase {
       clubIds: ['galatasaray', 'inter', 'porto', 'man_united', 'sevilla'],
       aliases: ['telles', 'alex telles'],
       activeYears: '2011-Aktif',
-      hint: 'Galatasaray, Inter, Porto, Man United ve Sevilla forması giymiş Brezilyalı sol bek.',
+      hint: 'Galatasaray, Inter, Porto, Manchester United ve Sevilla forması giymiş Brezilyalı sol bek.',
     ),
     // 50. ROBIN VAN PERSIE
     const PlayerModel(
@@ -870,7 +870,7 @@ class FootballDatabase {
       clubIds: ['sporting', 'man_united', 'fenerbahce'],
       aliases: ['nani'],
       activeYears: '2005-Aktif',
-      hint: 'Sporting altyapısı, Man Utd ile Devler Ligi şampiyonu, Fenerbahçe\'de de oynadı.',
+      hint: 'Sporting altyapısı, Manchester United ile Devler Ligi şampiyonu, Fenerbahçe\'de de oynadı.',
     ),
     // 52. SAMIR NASRI
     const PlayerModel(
@@ -1090,7 +1090,7 @@ class FootballDatabase {
       clubIds: ['atletico_madrid', 'man_city', 'barcelona'],
       aliases: ['aguero', 'kun aguero'],
       activeYears: '2003-2021',
-      hint: 'Atletico Madrid, City efsanesi (93:20 golü) ve kariyerini Barça\'da noktalayan santrafor.',
+      hint: 'Atletico Madrid, City efsanesi (93:20 golü) ve kariyerini Barcelona\'da noktalayan santrafor.',
     ),
     // 72. RODRI
     const PlayerModel(
@@ -1123,7 +1123,7 @@ class FootballDatabase {
       clubIds: ['liverpool', 'real_madrid', 'man_united'],
       aliases: ['owen', 'michael owen'],
       activeYears: '1996-2013',
-      hint: 'Ballon d\'Or sahibi İngiliz yıldız; Liverpool, Real Madrid ve Man United formaları giydi.',
+      hint: 'Ballon d\'Or sahibi İngiliz yıldız; Liverpool, Real Madrid ve Manchester United formaları giydi.',
     ),
     // 75. ALVARO MORATA
     const PlayerModel(
@@ -1178,7 +1178,7 @@ class FootballDatabase {
       clubIds: ['chelsea', 'man_united', 'inter', 'roma', 'napoli'],
       aliases: ['lukaku'],
       activeYears: '2009-Aktif',
-      hint: 'Chelsea, Man United, Inter, Roma ve Napoli formaları giyen dev Belçikalı 9 numara.',
+      hint: 'Chelsea, Manchester United, Inter, Roma ve Napoli formaları giyen dev Belçikalı 9 numara.',
     ),
     // 80. HAKIM ZIYECH
     const PlayerModel(
@@ -1233,7 +1233,7 @@ class FootballDatabase {
       clubIds: ['chelsea', 'dortmund', 'besiktas', 'fenerbahce', 'galatasaray'],
       aliases: ['batshuayi', 'batsman'],
       activeYears: '2011-Aktif',
-      hint: 'Chelsea ve Dortmund sonrası Türkiye\'de BJK, FB ve GS formalarını giyen Batman.',
+      hint: 'Chelsea ve Dortmund sonrası Türkiye\'de Beşiktaş, Fenerbahçe ve Galatasaray formalarını giyen Batman.',
     ),
     // 85. VICTOR OSIMHEN
     const PlayerModel(
@@ -1398,7 +1398,7 @@ class FootballDatabase {
       clubIds: ['man_united', 'fenerbahce'],
       aliases: ['amrabat', 'sofyan'],
       activeYears: '2014-Aktif',
-      hint: 'Fas ile Dünya Kupası yarı finali oynayan tank; Man United ve Fenerbahçe forması giydi.',
+      hint: 'Fas ile Dünya Kupası yarı finali oynayan tank; Manchester United ve Fenerbahçe forması giydi.',
     ),
     // 100. YOUSSEF EN-NESYRI
     const PlayerModel(
@@ -1475,7 +1475,7 @@ class FootballDatabase {
       clubIds: ['milan', 'monaco', 'dortmund', 'arsenal', 'barcelona', 'chelsea'],
       aliases: ['auba', 'aubameyang'],
       activeYears: '2008-Aktif',
-      hint: 'Dortmund ve Arsenal\'de gol krallıkları yaşadı; Milan, Barça ve Chelsea\'de de oynadı.',
+      hint: 'Dortmund ve Arsenal\'de gol krallıkları yaşadı; Milan, Barcelona ve Chelsea\'de de oynadı.',
     ),
     // 107. HENRIKH MKHITARYAN
     const PlayerModel(
@@ -1486,7 +1486,7 @@ class FootballDatabase {
       clubIds: ['dortmund', 'man_united', 'arsenal', 'roma', 'inter'],
       aliases: ['mkhitaryan', 'miki'],
       activeYears: '2006-Aktif',
-      hint: 'Dortmund, Man Utd (Avrupa Ligi golü), Arsenal, Roma ve Inter forması giydi.',
+      hint: 'Dortmund, Manchester United (Avrupa Ligi golü), Arsenal, Roma ve Inter forması giydi.',
     ),
     // 108. JAMES RODRIGUEZ
     const PlayerModel(
@@ -1508,7 +1508,7 @@ class FootballDatabase {
       clubIds: ['porto', 'atletico_madrid', 'monaco', 'man_united', 'chelsea', 'galatasaray'],
       aliases: ['falcao', 'el tigre'],
       activeYears: '1999-Aktif',
-      hint: 'El Tigre! Porto, Atletico Madrid, Monaco, Man Utd, Chelsea ve Galatasaray santraforu.',
+      hint: 'El Tigre! Porto, Atletico Madrid, Monaco, Manchester United, Chelsea ve Galatasaray santraforu.',
     ),
     // 110. DIEGO COSTA
     const PlayerModel(
@@ -1563,7 +1563,7 @@ class FootballDatabase {
       clubIds: ['juventus', 'barcelona', 'real_madrid', 'ajax'],
       aliases: ['laudrup'],
       activeYears: '1981-1998',
-      hint: 'Juve, Cruyff\'un Barça Rüya Takımı ve ardından Real Madrid\'de şampiyon olan Danimarkalı dahi.',
+      hint: 'Juventus, Cruyff\'un Barcelona Rüya Takımı ve ardından Real Madrid\'de şampiyon olan Danimarkalı dahi.',
     ),
     // 115. LUIS ENRIQUE
     const PlayerModel(
@@ -1585,7 +1585,7 @@ class FootballDatabase {
       clubIds: ['barcelona', 'real_madrid', 'atletico_madrid', 'leverkusen'],
       aliases: ['schuster'],
       activeYears: '1978-1997',
-      hint: 'İspanya\'nın üç devi Barça, Real Madrid ve Atletico Madrid formalarını giyen sarı saçlı melek.',
+      hint: 'İspanya\'nın üç devi Barcelona, Real Madrid ve Atletico Madrid formalarını giyen sarı saçlı melek.',
     ),
     // 117. JAVIER SAVIOLA
     const PlayerModel(
@@ -1607,7 +1607,7 @@ class FootballDatabase {
       clubIds: ['chelsea', 'man_united', 'galatasaray'],
       aliases: ['mata'],
       activeYears: '2006-Aktif',
-      hint: 'Dünya Kupası şampiyonu; Chelsea, Man United ve Galatasaray formaları giydi.',
+      hint: 'Dünya Kupası şampiyonu; Chelsea, Manchester United ve Galatasaray formaları giydi.',
     ),
     // 119. NEMANJA MATIC
     const PlayerModel(
@@ -1684,7 +1684,7 @@ class FootballDatabase {
       clubIds: ['milan', 'arsenal', 'juventus', 'inter', 'man_city'],
       aliases: ['vieira'],
       activeYears: '1993-2011',
-      hint: 'Arsenal yenilmez kaptanı; Milan, Juve, Inter ve City formaları da giydi.',
+      hint: 'Arsenal yenilmez kaptanı; Milan, Juventus, Inter ve City formaları da giydi.',
     ),
     // 126. GAEL CLICHY
     const PlayerModel(
@@ -1816,7 +1816,7 @@ class FootballDatabase {
       clubIds: ['napoli', 'psg', 'man_united'],
       aliases: ['cavani', 'el matador'],
       activeYears: '2005-Aktif',
-      hint: 'El Matador! Napoli, PSG tarihinin en çok gol atanlarından ve Man United santraforu.',
+      hint: 'El Matador! Napoli, PSG tarihinin en çok gol atanlarından ve Manchester United santraforu.',
     ),
     // 138. GONZALO HIGUAIN
     const PlayerModel(
@@ -1838,7 +1838,7 @@ class FootballDatabase {
       clubIds: ['man_united', 'man_city', 'juventus'],
       aliases: ['tevez', 'apache'],
       activeYears: '2001-2021',
-      hint: 'El Apache! Man United, ezeli rakip Man City ve Juventus\'un savaşçı golcüsü.',
+      hint: 'El Apache! Manchester United, ezeli rakip Man City ve Juventus\'un savaşçı golcüsü.',
     ),
     // 140. HERNAN CRESPO
     const PlayerModel(
@@ -1860,7 +1860,7 @@ class FootballDatabase {
       clubIds: ['juventus', 'atletico_madrid', 'inter', 'milan', 'monaco'],
       aliases: ['vieri', 'bobo'],
       activeYears: '1991-2009',
-      hint: 'Bobo Vieri; Juve, Atletico (gol kralı), Inter (rekor bonservis), Milan ve Monaco\'da oynadı.',
+      hint: 'Bobo Vieri; Juventus, Atletico (gol kralı), Inter (rekor bonservis), Milan ve Monaco\'da oynadı.',
     ),
     // 142. FILIPPO INZAGHI
     const PlayerModel(
@@ -1893,7 +1893,7 @@ class FootballDatabase {
       clubIds: ['inter', 'juventus', 'milan', 'fenerbahce'],
       aliases: ['bonucci'],
       activeYears: '2005-2024',
-      hint: 'Inter altyapısı, Juve efsanesi, Milan ve kariyer sonu Fenerbahçe forması giyen Euro 2020 şampiyonu.',
+      hint: 'Inter altyapısı, Juventus efsanesi, Milan ve kariyer sonu Fenerbahçe forması giyen Euro 2020 şampiyonu.',
     ),
     // 145. EDGAR DAVIDS
     const PlayerModel(
@@ -1904,7 +1904,7 @@ class FootballDatabase {
       clubIds: ['ajax', 'milan', 'juventus', 'barcelona', 'inter', 'tottenham'],
       aliases: ['davids', 'pitbull davids'],
       activeYears: '1991-2014',
-      hint: 'Gözlükleriyle meşhur Pitbull; Ajax, Milan, Juve, Barça, Inter ve Spurs\'te oynadı.',
+      hint: 'Gözlükleriyle meşhur Pitbull; Ajax, Milan, Juventus, Barcelona, Inter ve Spurs\'te oynadı.',
     ),
     // 146. FABIO CANNAVARO
     const PlayerModel(
@@ -1915,7 +1915,7 @@ class FootballDatabase {
       clubIds: ['napoli', 'inter', 'juventus', 'real_madrid'],
       aliases: ['cannavaro'],
       activeYears: '1992-2011',
-      hint: '2006 Dünya Kupası\'nı kaldırıp Ballon d\'Or kazanan stoper; Napoli, Inter, Juve ve Real Madrid.',
+      hint: '2006 Dünya Kupası\'nı kaldırıp Ballon d\'Or kazanan stoper; Napoli, Inter, Juventus ve Real Madrid.',
     ),
     // 147. JUAN CUADRADO
     const PlayerModel(
@@ -2080,7 +2080,7 @@ class FootballDatabase {
       clubIds: ['man_city', 'dortmund', 'man_united', 'chelsea'],
       aliases: ['sancho', 'jadon'],
       activeYears: '2017-Aktif',
-      hint: 'City altyapısı, Dortmund\'da fırtına, Man United ve Chelsea forması giydi.',
+      hint: 'City altyapısı, Dortmund\'da fırtına, Manchester United ve Chelsea forması giydi.',
     ),
     // 162. COLE PALMER
     const PlayerModel(
@@ -2168,7 +2168,7 @@ class FootballDatabase {
       clubIds: ['bayern', 'napoli', 'atletico_madrid', 'besiktas', 'milan', 'trabzonspor', 'fenerbahce'],
       aliases: ['sosa'],
       activeYears: '2002-Aktif',
-      hint: 'Bayern, Napoli, Atletico, BJK, Milan, Trabzonspor ve Fenerbahçe formaları giydi.',
+      hint: 'Bayern, Napoli, Atletico, Beşiktaş, Milan, Trabzonspor ve Fenerbahçe formaları giydi.',
     ),
     // 170. KEVIN-PRINCE BOATENG
     const PlayerModel(
@@ -2179,7 +2179,7 @@ class FootballDatabase {
       clubIds: ['tottenham', 'dortmund', 'milan', 'barcelona', 'besiktas'],
       aliases: ['boateng', 'prince'],
       activeYears: '2005-2023',
-      hint: 'Tottenham, Dortmund, Milan, Barça ve Beşiktaş forması giyen gezgin Ganalı.',
+      hint: 'Tottenham, Dortmund, Milan, Barcelona ve Beşiktaş forması giyen gezgin Ganalı.',
     ),
     // 171. MAREK HAMSIK
     const PlayerModel(
@@ -2493,7 +2493,7 @@ class FootballDatabase {
         rowCriteria: [
           GridCriterion(
             id: 'man_united',
-            label: 'Man United',
+            label: 'Manchester United',
             sublabel: 'Premier League',
             isClub: true,
             club: _clubs['man_united'],

@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../data/models/club_model.dart';
 import '../../../../data/models/player_model.dart';
 import '../../../../providers/auth_provider.dart';
 import '../../../../providers/five_clubs_game_provider.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/club_crest_widget.dart';
+import '../../widgets/stadium_background.dart';
 import '../common_player/widgets/search_guess_bar.dart';
 
 class FiveClubsScreen extends StatelessWidget {
@@ -17,14 +19,19 @@ class FiveClubsScreen extends StatelessWidget {
       create: (_) => FiveClubsGameProvider(),
       child: Consumer<FiveClubsGameProvider>(
         builder: (context, game, _) {
+          final topRowClubs = game.clubs.take(3).toList();
+          final bottomRowClubs = game.clubs.skip(3).take(2).toList();
+
           return Scaffold(
             backgroundColor: AppColors.background,
+            extendBodyBehindAppBar: true,
             appBar: AppBar(
+              toolbarHeight: 46,
               backgroundColor: Colors.transparent,
               elevation: 0,
               iconTheme: const IconThemeData(color: Colors.white),
               title: const Text(
-                '5 Takim 1 Oyuncu',
+                '5 Takım 1 Oyuncu',
                 style: TextStyle(
                   fontWeight: FontWeight.w700,
                   fontSize: 16,
@@ -57,7 +64,7 @@ class FiveClubsScreen extends StatelessWidget {
                 ),
               ],
             ),
-            body: SafeArea(
+            body: StadiumBackground(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: Column(
@@ -67,14 +74,14 @@ class FiveClubsScreen extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(
-                        color: AppColors.surface,
+                        color: AppColors.surface.withValues(alpha: 0.90),
                         borderRadius: BorderRadius.circular(14),
                         border: Border.all(color: AppColors.border),
                       ),
-                      child: Column(
+                      child: const Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Row(
+                          Row(
                             children: [
                               Icon(Icons.military_tech_outlined, color: AppColors.gold, size: 18),
                               SizedBox(width: 8),
@@ -89,7 +96,7 @@ class FiveClubsScreen extends StatelessWidget {
                               ),
                             ],
                           ),
-                          const SizedBox(height: 6),
+                          SizedBox(height: 6),
                           Text(
                             'Aşağıdaki 5 kulübün en çoğunda forma giymiş ortak futbolcuyu tahmin et.',
                             style: TextStyle(
@@ -102,59 +109,51 @@ class FiveClubsScreen extends StatelessWidget {
                       ),
                     ),
 
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 14),
 
-                    // 5 Clubs Crests Display Row
+                    // 5 Clubs Display in a 3 + 2 Formation Layout with Full Team Names
                     Container(
-                      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
+                      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 10),
                       decoration: BoxDecoration(
-                        color: AppColors.surface,
+                        color: AppColors.surface.withValues(alpha: 0.92),
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(color: AppColors.border),
                       ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: game.clubs.map((club) {
-                          final isUserMatch = game.userMatchedClubs.any((c) => c.id == club.id);
-                          final isAiMatch = game.aiMatchedClubs.any((c) => c.id == club.id);
-
-                          return Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              ClubCrestWidget(club: club, size: 48),
-                              const SizedBox(height: 6),
-                              Text(
-                                club.shortName,
-                                style: const TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w700,
-                                  color: Colors.white,
-                                ),
-                              ),
-                              if (game.phase != FiveClubsPhase.playing) ...[
-                                const SizedBox(height: 4),
-                                Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(
-                                      isUserMatch ? Icons.check_circle : Icons.remove,
-                                      size: 14,
-                                      color: isUserMatch ? AppColors.gold : AppColors.textMuted,
-                                    ),
-                                    if (game.phase == FiveClubsPhase.roundSummary) ...[
-                                      const SizedBox(width: 2),
-                                      Icon(
-                                        isAiMatch ? Icons.smart_toy : Icons.remove,
-                                        size: 12,
-                                        color: isAiMatch ? AppColors.silver : AppColors.textMuted,
+                      child: Column(
+                        children: [
+                          // Top Row: 3 Clubs
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: topRowClubs
+                                .map((club) => Expanded(
+                                      child: Padding(
+                                        padding: const EdgeInsets.symmetric(horizontal: 4),
+                                        child: _buildClubTile(game, club),
                                       ),
-                                    ],
-                                  ],
+                                    ))
+                                .toList(),
+                          ),
+                          if (bottomRowClubs.isNotEmpty) ...[
+                            const SizedBox(height: 12),
+                            // Bottom Row: 2 Clubs Centered
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Spacer(flex: 1),
+                                ...bottomRowClubs.map(
+                                  (club) => Expanded(
+                                    flex: 2,
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                                      child: _buildClubTile(game, club),
+                                    ),
+                                  ),
                                 ),
+                                const Spacer(flex: 1),
                               ],
-                            ],
-                          );
-                        }).toList(),
+                            ),
+                          ],
+                        ],
                       ),
                     ),
 
@@ -257,7 +256,7 @@ class FiveClubsScreen extends StatelessWidget {
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(
-                                'Bu turun en güçlü cevabi: ${game.bestPossible.name} (${game.maxPossible}/5 kulüp)',
+                                'Bu turun en güçlü cevabı: ${game.bestPossible.name} (${game.maxPossible}/5 kulüp)',
                                 style: const TextStyle(
                                   fontSize: 12,
                                   color: AppColors.silver,
@@ -290,6 +289,77 @@ class FiveClubsScreen extends StatelessWidget {
             ),
           );
         },
+      ),
+    );
+  }
+
+  Widget _buildClubTile(FiveClubsGameProvider game, ClubModel club) {
+    final isUserMatch = game.userMatchedClubs.any((c) => c.id == club.id);
+    final isAiMatch = game.aiMatchedClubs.any((c) => c.id == club.id);
+
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
+      decoration: BoxDecoration(
+        color: isUserMatch
+            ? AppColors.pitchGreen.withValues(alpha: 0.22)
+            : AppColors.surfaceLight.withValues(alpha: 0.45),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isUserMatch ? AppColors.gold.withValues(alpha: 0.65) : AppColors.border,
+          width: isUserMatch ? 1.2 : 0.8,
+        ),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ClubCrestWidget(club: club, size: 40),
+          const SizedBox(height: 6),
+          Text(
+            club.name,
+            textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              fontSize: 11,
+              height: 1.15,
+              fontWeight: FontWeight.w800,
+              color: Colors.white,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            club.country,
+            textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              fontSize: 9.5,
+              color: AppColors.textMuted,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          if (game.phase != FiveClubsPhase.playing) ...[
+            const SizedBox(height: 4),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  isUserMatch ? Icons.check_circle : Icons.remove_circle_outline,
+                  size: 14,
+                  color: isUserMatch ? AppColors.gold : AppColors.textMuted,
+                ),
+                if (game.phase == FiveClubsPhase.roundSummary) ...[
+                  const SizedBox(width: 4),
+                  Icon(
+                    isAiMatch ? Icons.smart_toy : Icons.remove,
+                    size: 12,
+                    color: isAiMatch ? AppColors.silver : AppColors.textMuted,
+                  ),
+                ],
+              ],
+            ),
+          ],
+        ],
       ),
     );
   }
@@ -341,9 +411,7 @@ class FiveClubsScreen extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
-              color: isWinner
-                  ? AppColors.pitchGreen
-                  : AppColors.surfaceLight,
+              color: isWinner ? AppColors.pitchGreen : AppColors.surfaceLight,
               borderRadius: BorderRadius.circular(6),
             ),
             child: Text(

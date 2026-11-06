@@ -64,7 +64,7 @@ class FiveClubsGameProvider extends ChangeNotifier {
 
     final results = _db.searchPlayers(query);
     if (results.isEmpty) {
-      _feedback = 'Futbolcu bulunamadi. Lütfen gecerli bir isim girin.';
+      _feedback = 'Futbolcu bulunamadı. Lütfen geçerli bir isim girin.';
       GameFeedback.error();
       notifyListeners();
       return;
@@ -111,7 +111,7 @@ class FiveClubsGameProvider extends ChangeNotifier {
         _feedback = 'Tebrikler! $_userScore kulüp tutturdun. (+$earned Puan)';
       } else {
         GameFeedback.explode();
-        _feedback = 'Scout AI $_aiScore kulüp ile bu turu önde tamamladi.';
+        _feedback = 'Scout AI $_aiScore kulüp ile bu turu önde tamamladı.';
       }
 
       _phase = FiveClubsPhase.roundSummary;

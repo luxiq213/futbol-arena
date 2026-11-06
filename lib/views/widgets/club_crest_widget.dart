@@ -11,7 +11,7 @@ class ClubCrestWidget extends StatelessWidget {
     super.key,
     required this.club,
     this.size = 64,
-    this.showShortName = true,
+    this.showShortName = false,
   });
 
   @override
@@ -78,7 +78,7 @@ class ClubCrestWidget extends StatelessWidget {
             ),
           ),
 
-          // Center Emblem with Club Short Name
+          // Center Emblem (Heraldic Medallion without abbreviation by default)
           if (showShortName)
             Positioned(
               bottom: height * 0.22,
@@ -117,6 +117,33 @@ class ClubCrestWidget extends StatelessWidget {
                       ),
                     ],
                   ),
+                ),
+              ),
+            )
+          else
+            Container(
+              width: size * 0.36,
+              height: size * 0.36,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: AppColors.background.withValues(alpha: 0.78),
+                border: Border.all(
+                  color: AppColors.gold.withValues(alpha: 0.75),
+                  width: 1.1,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.45),
+                    blurRadius: 3,
+                    offset: const Offset(0, 1),
+                  ),
+                ],
+              ),
+              child: Center(
+                child: Icon(
+                  Icons.sports_soccer,
+                  size: size * 0.22,
+                  color: AppColors.gold,
                 ),
               ),
             ),

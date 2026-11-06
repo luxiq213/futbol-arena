@@ -60,7 +60,7 @@ class _SearchGuessBarState extends State<SearchGuessBar> {
                 textInputAction: TextInputAction.send,
                 style: const TextStyle(color: Colors.white, fontSize: 14),
                 decoration: InputDecoration(
-                  hintText: 'Futbolcu ismi yazin (Örn: Sneijder, Ronaldo)...',
+                  hintText: 'Futbolcu ismi yazın (Örn: Sneijder, Ronaldo)...',
                   prefixIcon: const Icon(Icons.search, color: AppColors.gold, size: 18),
                   suffixIcon: _controller.text.isNotEmpty
                       ? IconButton(

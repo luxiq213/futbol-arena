@@ -418,34 +418,51 @@ class CareerSummaryScreen extends StatelessWidget {
             child: Row(
               children: [
                 for (int i = 0; i < summary.clubsPlayed.length; i++) ...[
-                  Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      ClubCrestWidget(
-                        club: summary.clubsPlayed[i],
-                        size: 44,
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        summary.clubsPlayed[i].shortName,
-                        style: const TextStyle(
-                          fontSize: 10.5,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white,
+                  Container(
+                    width: 96,
+                    padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
+                    decoration: BoxDecoration(
+                      color: AppColors.surfaceLight.withValues(alpha: 0.45),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: AppColors.border, width: 0.8),
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        ClubCrestWidget(
+                          club: summary.clubsPlayed[i],
+                          size: 40,
                         ),
-                      ),
-                      Text(
-                        summary.clubsPlayed[i].country,
-                        style: const TextStyle(
-                          fontSize: 9,
-                          color: AppColors.textMuted,
+                        const SizedBox(height: 6),
+                        Text(
+                          summary.clubsPlayed[i].name,
+                          textAlign: TextAlign.center,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 10.5,
+                            height: 1.15,
+                            fontWeight: FontWeight.w800,
+                            color: Colors.white,
+                          ),
                         ),
-                      ),
-                    ],
+                        const SizedBox(height: 2),
+                        Text(
+                          summary.clubsPlayed[i].country,
+                          textAlign: TextAlign.center,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 9,
+                            color: AppColors.textMuted,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                   if (i < summary.clubsPlayed.length - 1)
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
                       child: Icon(
                         Icons.arrow_forward_ios_rounded,
                         size: 14,

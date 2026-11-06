@@ -4,6 +4,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../providers/auth_provider.dart';
 import '../../../../providers/common_player_game_provider.dart';
 import '../../widgets/custom_button.dart';
+import '../../widgets/stadium_background.dart';
 import 'widgets/club_card.dart';
 import 'widgets/search_guess_bar.dart';
 import 'widgets/answer_reveal_sheet.dart';
@@ -22,7 +23,9 @@ class CommonPlayerScreen extends StatelessWidget {
 
           return Scaffold(
             backgroundColor: AppColors.background,
+            extendBodyBehindAppBar: true,
             appBar: AppBar(
+              toolbarHeight: 46,
               backgroundColor: Colors.transparent,
               elevation: 0,
               iconTheme: const IconThemeData(color: Colors.white),
@@ -61,7 +64,7 @@ class CommonPlayerScreen extends StatelessWidget {
                 ),
               ],
             ),
-            body: SafeArea(
+            body: StadiumBackground(
               child: Column(
                 children: [
                   Expanded(
@@ -105,34 +108,37 @@ class CommonPlayerScreen extends StatelessWidget {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                             decoration: BoxDecoration(
-                              color: AppColors.surface,
+                              color: AppColors.surface.withValues(alpha: 0.90),
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(color: AppColors.border),
                             ),
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      '${clubA?.name} & ${clubB?.name}',
-                                      style: const TextStyle(
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w600,
-                                        color: Colors.white,
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        '${clubA?.name} & ${clubB?.name}',
+                                        style: const TextStyle(
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w700,
+                                          color: Colors.white,
+                                        ),
                                       ),
-                                    ),
-                                    const SizedBox(height: 2),
-                                    Text(
-                                      'Tarihte her iki kulüpte oynamis ${game.totalPossible} futbolcu bulunuyor',
-                                      style: const TextStyle(
-                                        fontSize: 11,
-                                        color: AppColors.textMuted,
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        'Tarihte her iki kulüpte oynamış ${game.totalPossible} futbolcu bulunuyor',
+                                        style: const TextStyle(
+                                          fontSize: 11,
+                                          color: AppColors.textMuted,
+                                        ),
                                       ),
-                                    ),
-                                  ],
+                                    ],
+                                  ),
                                 ),
+                                const SizedBox(width: 8),
                                 Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                                   decoration: BoxDecoration(
@@ -227,13 +233,13 @@ class CommonPlayerScreen extends StatelessWidget {
                             Container(
                               padding: const EdgeInsets.symmetric(vertical: 24),
                               decoration: BoxDecoration(
-                                color: AppColors.surface,
+                                color: AppColors.surface.withValues(alpha: 0.90),
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(color: AppColors.border),
                               ),
                               child: const Center(
                                 child: Text(
-                                  'Henüz bir futbolcu bulunamadi.\nAklina gelen ismi arama kutusuna yaz.',
+                                  'Henüz bir futbolcu bulunamadı.\nAklına gelen ismi arama kutusuna yaz.',
                                   textAlign: TextAlign.center,
                                   style: TextStyle(
                                     fontSize: 12,
@@ -250,7 +256,7 @@ class CommonPlayerScreen extends StatelessWidget {
                                     margin: const EdgeInsets.only(bottom: 6),
                                     padding: const EdgeInsets.all(12),
                                     decoration: BoxDecoration(
-                                      color: AppColors.surface,
+                                      color: AppColors.surface.withValues(alpha: 0.90),
                                       borderRadius: BorderRadius.circular(12),
                                       border: Border.all(color: AppColors.border),
                                     ),
@@ -317,7 +323,7 @@ class CommonPlayerScreen extends StatelessWidget {
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
                                         const Text(
-                                          'Ipucu:',
+                                          'İpucu:',
                                           style: TextStyle(
                                             color: AppColors.gold,
                                             fontWeight: FontWeight.w700,
@@ -354,7 +360,7 @@ class CommonPlayerScreen extends StatelessWidget {
                       children: [
                         Expanded(
                           child: CustomButton(
-                            text: game.hintsUsed == 0 ? 'Ipucu (-20 Puan)' : 'Ipucu Alindi',
+                            text: game.hintsUsed == 0 ? 'İpucu (-20 Puan)' : 'İpucu Alındı',
                             isOutlined: true,
                             icon: Icons.lightbulb_outline,
                             height: 44,
@@ -364,7 +370,7 @@ class CommonPlayerScreen extends StatelessWidget {
                         const SizedBox(width: 10),
                         Expanded(
                           child: CustomButton(
-                            text: game.isAllFound ? 'Sonraki Tur' : 'Cevaplari Gör',
+                            text: game.isAllFound ? 'Sonraki Tur' : 'Cevapları Gör',
                             height: 44,
                             backgroundColor: AppColors.pitchGreen,
                             textColor: Colors.white,

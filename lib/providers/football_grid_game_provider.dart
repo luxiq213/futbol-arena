@@ -80,7 +80,7 @@ class FootballGridGameProvider extends ChangeNotifier {
 
     final searchResults = _db.searchPlayers(query);
     if (searchResults.isEmpty) {
-      _feedback = 'Futbolcu bulunamadi. Lütfen gecerli bir isim girin.';
+      _feedback = 'Futbolcu bulunamadı. Lütfen geçerli bir isim girin.';
       GameFeedback.error();
       notifyListeners();
       return false;
@@ -92,7 +92,7 @@ class FootballGridGameProvider extends ChangeNotifier {
     for (var r in _cells) {
       for (var c in r) {
         if (c.isSolved && c.player?.id == player.id) {
-          _feedback = '${player.name} baska bir hücrede zaten kullanildi!';
+          _feedback = '${player.name} başka bir hücrede zaten kullanıldı!';
           GameFeedback.tick();
           notifyListeners();
           return false;
@@ -108,14 +108,14 @@ class FootballGridGameProvider extends ChangeNotifier {
       _cells[row][col].player = player;
       _cells[row][col].isSolved = true;
       _score += 150;
-      _feedback = 'Mükemmel! ${player.name} kriterleri sagladi. (+150 Puan)';
+      _feedback = 'Mükemmel! ${player.name} kriterleri sağladı. (+150 Puan)';
       GameFeedback.success();
       _activeRow = null;
       _activeCol = null;
       notifyListeners();
       return true;
     } else {
-      _feedback = '${player.name} bu iki kriteri ayni anda saglamiyor.';
+      _feedback = '${player.name} bu iki kriteri aynı anda sağlamıyor.';
       GameFeedback.error();
       notifyListeners();
       return false;

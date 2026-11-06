@@ -43,14 +43,15 @@ class ClubCard extends StatelessWidget {
 
           SizedBox(height: isCompact ? 8 : 12),
 
-          // Club Name
+          // Club Full Name (up to 2 lines so long names never get truncated)
           Text(
             club.name,
             textAlign: TextAlign.center,
-            maxLines: 1,
+            maxLines: 2,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
-              fontSize: isCompact ? 13 : 16,
+              fontSize: isCompact ? 13 : 15,
+              height: 1.15,
               fontWeight: FontWeight.w800,
               color: AppColors.textPrimary,
             ),
