@@ -134,7 +134,9 @@ class _CareerSeasonScreenState extends State<CareerSeasonScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
+        toolbarHeight: 46,
         backgroundColor: Colors.transparent,
         elevation: 0,
         title: Text(
@@ -155,7 +157,7 @@ class _CareerSeasonScreenState extends State<CareerSeasonScreen> {
       body: StadiumBackground(
         showFieldLines: true,
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
