@@ -1,3 +1,5 @@
+import 'play_mode_model.dart';
+
 class RoomParticipant {
   final String id;
   final String name;
@@ -41,6 +43,7 @@ class GameRoomModel {
   final String code;
   final String hostId;
   final String gameTitle;
+  final GameTargetType targetGame;
   final List<RoomParticipant> participants;
   final GameRoomStatus status;
   final int currentRound;
@@ -51,6 +54,7 @@ class GameRoomModel {
     required this.code,
     required this.hostId,
     required this.gameTitle,
+    this.targetGame = GameTargetType.commonPlayer,
     required this.participants,
     this.status = GameRoomStatus.waiting,
     this.currentRound = 1,
@@ -62,11 +66,14 @@ class GameRoomModel {
     List<RoomParticipant>? participants,
     GameRoomStatus? status,
     int? currentRound,
+    GameTargetType? targetGame,
+    String? gameTitle,
   }) {
     return GameRoomModel(
       code: code,
       hostId: hostId,
-      gameTitle: gameTitle,
+      gameTitle: gameTitle ?? this.gameTitle,
+      targetGame: targetGame ?? this.targetGame,
       participants: participants ?? this.participants,
       status: status ?? this.status,
       currentRound: currentRound ?? this.currentRound,

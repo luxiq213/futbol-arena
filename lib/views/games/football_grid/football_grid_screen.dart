@@ -1,20 +1,35 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../data/models/play_mode_model.dart';
 import '../../../../providers/auth_provider.dart';
 import '../../../../providers/football_grid_game_provider.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/club_crest_widget.dart';
+import '../../widgets/duel_scoreboard_banner.dart';
 import '../../widgets/stadium_background.dart';
 import '../common_player/widgets/search_guess_bar.dart';
 
 class FootballGridScreen extends StatelessWidget {
-  const FootballGridScreen({super.key});
+  final PlayModeType playMode;
+  final OpponentProfile? opponent;
+
+  const FootballGridScreen({
+    super.key,
+    this.playMode = PlayModeType.solo,
+    this.opponent,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final auth = context.watch<AuthProvider>();
+    final user = auth.currentUser;
+
     return ChangeNotifierProvider(
-      create: (_) => FootballGridGameProvider(),
+      create: (_) => FootballGridGameProvider(
+        playMode: playMode,
+        opponent: opponent,
+      ),
       child: Consumer<FootballGridGameProvider>(
         builder: (context, grid, _) {
           return Scaffold(
@@ -25,11 +40,11 @@ class FootballGridScreen extends StatelessWidget {
               backgroundColor: Colors.transparent,
               elevation: 0,
               iconTheme: const IconThemeData(color: Colors.white),
-              title: const Text(
-                'Futbol Grid (3x3)',
-                style: TextStyle(
+              title: Text(
+                grid.isDuelMode ? 'Futbol Grid 3x3 • Düello' : 'Futbol Grid 3x3 • Kendini Sına',
+                style: const TextStyle(
                   fontWeight: FontWeight.w700,
-                  fontSize: 16,
+                  fontSize: 15,
                   color: Colors.white,
                 ),
               ),
@@ -66,6 +81,19 @@ class FootballGridScreen extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
+                    // Live 1v1 Scoreboard if in Duel Mode
+                    if (grid.isDuelMode && grid.opponent != null) ...[
+                      DuelScoreboardBanner(
+                        userName: user?.username ?? 'Kaptan',
+                        userAvatar: user?.avatar ?? 'KP',
+                        userScore: grid.score,
+                        opponent: grid.opponent!,
+                        opponentScore: grid.opponentScore,
+                        centerSubtitle: 'HÜCRE: ${grid.userSolvedCount}-${grid.opponentSolvedCount}',
+                      ),
+                      const SizedBox(height: 12),
+                    ],
+
                     // Grid Info Card
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
@@ -80,9 +108,11 @@ class FootballGridScreen extends StatelessWidget {
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text(
-                                'KESİŞİM MATRİSİ',
-                                style: TextStyle(
+                              Text(
+                                grid.isDuelMode
+                                    ? 'TAKTİK DÜELLOSU • KESİŞİM MATRİSİ'
+                                    : 'KENDİNİ SINA • KESİŞİM MATRİSİ',
+                                style: const TextStyle(
                                   fontSize: 11,
                                   fontWeight: FontWeight.w700,
                                   letterSpacing: 0.8,
@@ -111,7 +141,37 @@ class FootballGridScreen extends StatelessWidget {
                       ),
                     ),
 
-                    const SizedBox(height: 14),
+                    const SizedBox(height: 12),
+
+                    // Opponent Thinking Indicator
+                    if (grid.isOpponentThinking)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        margin: const EdgeInsets.only(bottom: 12),
+                        decoration: BoxDecoration(
+                          color: AppColors.surface,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: AppColors.gold.withValues(alpha: 0.5)),
+                        ),
+                        child: Row(
+                          children: [
+                            const SizedBox(
+                              width: 14,
+                              height: 14,
+                              child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.gold),
+                            ),
+                            const SizedBox(width: 10),
+                            Text(
+                              '${grid.opponent?.name ?? "Rakip"} hücre seçiyor...',
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.gold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
 
                     // Feedback Message
                     if (grid.feedback != null)
@@ -343,13 +403,17 @@ class FootballGridScreen extends StatelessWidget {
                       padding: const EdgeInsets.all(6),
                       decoration: BoxDecoration(
                         color: cell.isSolved
-                            ? AppColors.pitchGreen.withValues(alpha: 0.35)
+                            ? (cell.solvedByOpponent
+                                ? AppColors.surfaceLight.withValues(alpha: 0.85)
+                                : AppColors.pitchGreen.withValues(alpha: 0.35))
                             : (isSelected ? AppColors.surfaceLight : AppColors.surface.withValues(alpha: 0.90)),
                         borderRadius: BorderRadius.circular(10),
                         border: Border.all(
                           color: isSelected
                               ? AppColors.gold
-                              : (cell.isSolved ? AppColors.goldMuted : AppColors.border),
+                              : (cell.isSolved
+                                  ? (cell.solvedByOpponent ? AppColors.silver : AppColors.goldMuted)
+                                  : AppColors.border),
                           width: isSelected ? 1.5 : 1.0,
                         ),
                       ),
@@ -363,17 +427,21 @@ class FootballGridScreen extends StatelessWidget {
                                   maxLines: 2,
                                   overflow: TextOverflow.ellipsis,
                                   style: const TextStyle(
-                                    fontSize: 11,
+                                    fontSize: 10.5,
+                                    height: 1.1,
                                     fontWeight: FontWeight.w700,
                                     color: Colors.white,
                                   ),
                                 ),
                                 const SizedBox(height: 2),
                                 Text(
-                                  cell.player!.country,
-                                  style: const TextStyle(
-                                    fontSize: 9,
-                                    color: AppColors.gold,
+                                  grid.isDuelMode
+                                      ? (cell.solvedByOpponent ? 'Rakip' : 'Sen')
+                                      : cell.player!.country,
+                                  style: TextStyle(
+                                    fontSize: 8.5,
+                                    fontWeight: FontWeight.w700,
+                                    color: cell.solvedByOpponent ? AppColors.silver : AppColors.gold,
                                   ),
                                 ),
                               ],

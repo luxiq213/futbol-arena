@@ -22,12 +22,14 @@ class GridCellState {
   final int colIndex;
   PlayerModel? player;
   bool isSolved;
+  bool solvedByOpponent;
 
   GridCellState({
     required this.rowIndex,
     required this.colIndex,
     this.player,
     this.isSolved = false,
+    this.solvedByOpponent = false,
   });
 }
 

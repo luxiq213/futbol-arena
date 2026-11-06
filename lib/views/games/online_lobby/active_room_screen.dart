@@ -2,14 +2,46 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../data/models/play_mode_model.dart';
 import '../../../../providers/auth_provider.dart';
 import '../../../../providers/online_room_provider.dart';
 import '../../widgets/stadium_background.dart';
 import '../../widgets/custom_button.dart';
 import '../common_player/common_player_screen.dart';
+import '../five_clubs/five_clubs_screen.dart';
+import '../football_grid/football_grid_screen.dart';
 
 class ActiveRoomScreen extends StatelessWidget {
   const ActiveRoomScreen({super.key});
+
+  void _launchRoomDuel(BuildContext context, GameTargetType targetGame, OpponentProfile friendOpponent) {
+    Widget destination;
+    switch (targetGame) {
+      case GameTargetType.commonPlayer:
+        destination = CommonPlayerScreen(
+          playMode: PlayModeType.friendInvite,
+          opponent: friendOpponent,
+        );
+        break;
+      case GameTargetType.fiveClubs:
+        destination = FiveClubsScreen(
+          playMode: PlayModeType.friendInvite,
+          opponent: friendOpponent,
+        );
+        break;
+      case GameTargetType.footballGrid:
+        destination = FootballGridScreen(
+          playMode: PlayModeType.friendInvite,
+          opponent: friendOpponent,
+        );
+        break;
+    }
+
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (_) => destination),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -44,14 +76,31 @@ class ActiveRoomScreen extends StatelessWidget {
       (p) => p.id == currentUserId,
       orElse: () => room.participants.first,
     );
+    final rivalParticipant = room.participants.firstWhere(
+      (p) => p.id != currentUserId,
+      orElse: () => room.participants.last,
+    );
+
+    final friendOpponent = OpponentProfile(
+      id: rivalParticipant.id,
+      name: rivalParticipant.name,
+      avatar: rivalParticipant.avatar,
+      favoriteTeam: 'Arkadaş Lobisi',
+      rankTitle: 'Davetli Rakip',
+      isAiFallback: false,
+    );
 
     return Scaffold(
+      backgroundColor: AppColors.background,
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
+        toolbarHeight: 46,
         backgroundColor: Colors.transparent,
         elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.white),
         title: Text(
-          room.gameTitle,
-          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
+          '${room.gameTitle} • Lobi',
+          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15, color: Colors.white),
         ),
         actions: [
           IconButton(
@@ -74,19 +123,19 @@ class ActiveRoomScreen extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: AppColors.surface,
+                  color: AppColors.surface.withValues(alpha: 0.92),
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(color: AppColors.borderActive, width: 1.5),
                 ),
                 child: Column(
                   children: [
-                    const Text(
-                      'ODA KODU',
-                      style: TextStyle(
+                    Text(
+                      'DAVET KODU • ${room.gameTitle.toUpperCase()}',
+                      style: const TextStyle(
                         fontSize: 11,
-                        letterSpacing: 2,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textMuted,
+                        letterSpacing: 1.5,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.greenLight,
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -111,6 +160,7 @@ class ActiveRoomScreen extends StatelessWidget {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
                                 content: Text('Oda kodu kopyalandı! Arkadaşına gönder.'),
+                                backgroundColor: AppColors.pitchGreen,
                                 duration: Duration(seconds: 2),
                               ),
                             );
@@ -120,21 +170,22 @@ class ActiveRoomScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     const Text(
-                      'Arkadaşlarını beklerken hazır duruma geçebilirsin',
+                      'Arkadaşın kodu girerek odaya katıldığında düelloyu başlatabilirsin.',
+                      textAlign: TextAlign.center,
                       style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
                     ),
                   ],
                 ),
               ),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: 20),
 
               // PARTICIPANTS LIST
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   const Text(
-                    'Oyuncular',
+                    'Odadaki Oyuncular',
                     style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w700,
@@ -142,7 +193,7 @@ class ActiveRoomScreen extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    '${room.participants.length} / 6 Kişi',
+                    '${room.participants.length} / 2 Oyuncu',
                     style: const TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
@@ -164,7 +215,7 @@ class ActiveRoomScreen extends StatelessWidget {
                     return Container(
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                       decoration: BoxDecoration(
-                        color: isMe ? AppColors.surfaceLight : AppColors.surface,
+                        color: isMe ? AppColors.surfaceLight : AppColors.surface.withValues(alpha: 0.90),
                         borderRadius: BorderRadius.circular(14),
                         border: Border.all(
                           color: p.isReady ? AppColors.gold : AppColors.border,
@@ -193,40 +244,38 @@ class ActiveRoomScreen extends StatelessWidget {
                           ),
                           const SizedBox(width: 12),
                           Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                            child: Row(
                               children: [
-                                Row(
-                                  children: [
-                                    Text(
-                                      p.name + (isMe ? ' (Sen)' : ''),
+                                Flexible(
+                                  child: Text(
+                                    p.name + (isMe ? ' (Sen)' : ''),
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: isMe ? FontWeight.w700 : FontWeight.w600,
+                                      color: AppColors.textPrimary,
+                                    ),
+                                  ),
+                                ),
+                                if (p.isHost) ...[
+                                  const SizedBox(width: 8),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.surface,
+                                      borderRadius: BorderRadius.circular(6),
+                                      border: Border.all(color: AppColors.gold, width: 0.8),
+                                    ),
+                                    child: const Text(
+                                      'Kurucu',
                                       style: TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: isMe ? FontWeight.w700 : FontWeight.w600,
-                                        color: AppColors.textPrimary,
+                                        color: AppColors.gold,
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w700,
                                       ),
                                     ),
-                                    if (p.isHost) ...[
-                                      const SizedBox(width: 8),
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                        decoration: BoxDecoration(
-                                          color: AppColors.surface,
-                                          borderRadius: BorderRadius.circular(6),
-                                          border: Border.all(color: AppColors.gold, width: 0.8),
-                                        ),
-                                        child: const Text(
-                                          'Kurucu',
-                                          style: TextStyle(
-                                            color: AppColors.gold,
-                                            fontSize: 10,
-                                            fontWeight: FontWeight.w700,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ],
-                                ),
+                                  ),
+                                ],
                               ],
                             ),
                           ),
@@ -255,25 +304,20 @@ class ActiveRoomScreen extends StatelessWidget {
               ),
 
               // ACTION BUTTON
-              if (isHost) ...[
-                CustomButton(
-                  text: 'Düelloyu Başlat',
-                  backgroundColor: AppColors.pitchGreen,
-                  textColor: AppColors.textPrimary,
-                  height: 52,
-                  onPressed: () {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(builder: (_) => const CommonPlayerScreen()),
-                    );
-                  },
-                ),
-              ] else ...[
+              CustomButton(
+                text: isHost ? '${room.gameTitle} Düellosunu Başlat' : 'Maça Başla',
+                backgroundColor: AppColors.pitchGreen,
+                textColor: AppColors.textPrimary,
+                icon: Icons.sports_soccer,
+                height: 52,
+                onPressed: () => _launchRoomDuel(context, room.targetGame, friendOpponent),
+              ),
+              if (!isHost) ...[
+                const SizedBox(height: 8),
                 CustomButton(
                   text: myParticipant.isReady ? 'Hazır Durumu İptal Et' : 'Hazırım',
-                  backgroundColor: myParticipant.isReady ? AppColors.surfaceLight : AppColors.pitchGreen,
-                  textColor: AppColors.textPrimary,
-                  height: 52,
+                  isOutlined: true,
+                  height: 44,
                   onPressed: () {
                     if (currentUserId != null) {
                       roomProvider.toggleReady(currentUserId);

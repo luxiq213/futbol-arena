@@ -1,27 +1,39 @@
+import 'dart:async';
+import 'dart:math';
 import 'package:flutter/foundation.dart';
 import '../data/models/player_model.dart';
 import '../data/models/grid_challenge_model.dart';
+import '../data/models/play_mode_model.dart';
 import '../data/repositories/football_database.dart';
 import '../../core/utils/sound_effects.dart';
 
 class FootballGridGameProvider extends ChangeNotifier {
   final FootballDatabase _db = FootballDatabase();
+  final Random _random = Random();
+
+  final PlayModeType playMode;
+  final OpponentProfile? opponent;
 
   late GridChallenge _challenge;
   late List<List<GridCellState>> _cells;
   int _guessesRemaining = 9;
   int _score = 0;
+  int _opponentScore = 0;
   int? _activeRow;
   int? _activeCol;
+  bool _isOpponentThinking = false;
   String? _feedback;
 
   GridChallenge get challenge => _challenge;
   List<List<GridCellState>> get cells => _cells;
   int get guessesRemaining => _guessesRemaining;
   int get score => _score;
+  int get opponentScore => _opponentScore;
   int? get activeRow => _activeRow;
   int? get activeCol => _activeCol;
+  bool get isOpponentThinking => _isOpponentThinking;
   String? get feedback => _feedback;
+  bool get isDuelMode => playMode != PlayModeType.solo && opponent != null;
 
   int get solvedCount {
     int count = 0;
@@ -33,9 +45,32 @@ class FootballGridGameProvider extends ChangeNotifier {
     return count;
   }
 
+  int get userSolvedCount {
+    int count = 0;
+    for (var r in _cells) {
+      for (var c in r) {
+        if (c.isSolved && !c.solvedByOpponent) count++;
+      }
+    }
+    return count;
+  }
+
+  int get opponentSolvedCount {
+    int count = 0;
+    for (var r in _cells) {
+      for (var c in r) {
+        if (c.isSolved && c.solvedByOpponent) count++;
+      }
+    }
+    return count;
+  }
+
   bool get isGameOver => _guessesRemaining <= 0 || solvedCount == 9;
 
-  FootballGridGameProvider() {
+  FootballGridGameProvider({
+    this.playMode = PlayModeType.solo,
+    this.opponent,
+  }) {
     startNewGrid();
   }
 
@@ -50,14 +85,16 @@ class FootballGridGameProvider extends ChangeNotifier {
     );
     _guessesRemaining = 9;
     _score = 0;
+    _opponentScore = 0;
     _activeRow = null;
     _activeCol = null;
+    _isOpponentThinking = false;
     _feedback = null;
     notifyListeners();
   }
 
   void selectCell(int row, int col) {
-    if (_cells[row][col].isSolved || isGameOver) return;
+    if (_cells[row][col].isSolved || isGameOver || _isOpponentThinking) return;
     _activeRow = row;
     _activeCol = col;
     _feedback = null;
@@ -71,7 +108,9 @@ class FootballGridGameProvider extends ChangeNotifier {
   }
 
   bool submitPlayerGuess(String query) {
-    if (_activeRow == null || _activeCol == null || isGameOver) return false;
+    if (_activeRow == null || _activeCol == null || isGameOver || _isOpponentThinking) {
+      return false;
+    }
 
     final row = _activeRow!;
     final col = _activeCol!;
@@ -104,22 +143,83 @@ class FootballGridGameProvider extends ChangeNotifier {
 
     _guessesRemaining--;
 
+    bool solved = false;
     if (isValid) {
       _cells[row][col].player = player;
       _cells[row][col].isSolved = true;
+      _cells[row][col].solvedByOpponent = false;
       _score += 150;
       _feedback = 'Mükemmel! ${player.name} kriterleri sağladı. (+150 Puan)';
       GameFeedback.success();
       _activeRow = null;
       _activeCol = null;
-      notifyListeners();
-      return true;
+      solved = true;
     } else {
       _feedback = '${player.name} bu iki kriteri aynı anda sağlamıyor.';
       GameFeedback.error();
-      notifyListeners();
-      return false;
     }
+
+    notifyListeners();
+
+    if (isDuelMode && !isGameOver) {
+      _triggerOpponentCellTurn();
+    }
+
+    return solved;
+  }
+
+  void _triggerOpponentCellTurn() {
+    // Collect unsolved cells
+    final unsolved = <GridCellState>[];
+    for (var r in _cells) {
+      for (var c in r) {
+        if (!c.isSolved) unsolved.add(c);
+      }
+    }
+    if (unsolved.isEmpty) return;
+
+    _isOpponentThinking = true;
+    notifyListeners();
+
+    Timer(const Duration(milliseconds: 700), () {
+      _isOpponentThinking = false;
+      final currentUnsolved = <GridCellState>[];
+      final usedIds = <String>{};
+      for (var r in _cells) {
+        for (var c in r) {
+          if (c.isSolved && c.player != null) {
+            usedIds.add(c.player!.id);
+          } else if (!c.isSolved) {
+            currentUnsolved.add(c);
+          }
+        }
+      }
+      if (currentUnsolved.isEmpty) {
+        notifyListeners();
+        return;
+      }
+
+      final oppName = opponent?.name ?? 'Rakip';
+      final targetCell = currentUnsolved[_random.nextInt(currentUnsolved.length)];
+      final rCrit = _challenge.rowCriteria[targetCell.rowIndex];
+      final cCrit = _challenge.colCriteria[targetCell.colIndex];
+      final validPlayers = _db
+          .getValidPlayersForCell(rCrit, cCrit)
+          .where((p) => !usedIds.contains(p.id))
+          .toList();
+
+      if (validPlayers.isNotEmpty && _random.nextDouble() < 0.72) {
+        final chosen = validPlayers[_random.nextInt(validPlayers.length)];
+        targetCell.player = chosen;
+        targetCell.isSolved = true;
+        targetCell.solvedByOpponent = true;
+        _opponentScore += 150;
+        _feedback = '$oppName (${rCrit.club?.name ?? rCrit.label} × ${cCrit.club?.name ?? cCrit.label}) hücresini ${chosen.name} ile çözdü!';
+      } else {
+        _feedback = '$oppName hamlesinde doğru kesişimi bulamadı. Sıra sende!';
+      }
+      notifyListeners();
+    });
   }
 
   List<PlayerModel> getValidAnswersForActiveCell() {

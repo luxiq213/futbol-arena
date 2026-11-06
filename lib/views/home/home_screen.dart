@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
+import '../../data/models/play_mode_model.dart';
 import '../../data/models/user_model.dart';
 import '../../providers/auth_provider.dart';
 import '../widgets/app_floating_glass_footer.dart';
+import '../widgets/game_mode_selector_sheet.dart';
 import '../widgets/stadium_background.dart';
 import '../games/career/career_setup_screen.dart';
-import '../games/common_player/common_player_screen.dart';
-import '../games/five_clubs/five_clubs_screen.dart';
-import '../games/football_grid/football_grid_screen.dart';
 import '../games/party_mode/party_setup_screen.dart';
 import '../games/online_lobby/lobby_hub_screen.dart';
 import '../leaderboard/leaderboard_screen.dart';
@@ -336,7 +335,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
         // 2. Bölüm: Trivia & Analiz Düelloları (2'li Yan Yana Bento Grid)
         if (showDuel) ...[
-          _buildSectionHeader('OYUN MODLARI • TRİVİA & DÜELLO', 'Bireysel Rekabet'),
+          _buildSectionHeader('OYUN MODLARI • TRİVİA & DÜELLO', 'Kendini Sına • Online • Davet'),
           const SizedBox(height: 5),
           IntrinsicHeight(
             child: Row(
@@ -345,14 +344,14 @@ class _HomeScreenState extends State<HomeScreen> {
                 Expanded(
                   child: BentoGameModeCard(
                     title: 'Ortak Oyuncu Düellosu (3-2-1)',
-                    subtitle: 'İki kulüpte de forma giymiş ortak efsaneyi bul.',
+                    subtitle: 'Kendini sına, online/AI rakiple eşleş veya arkadaşını davet et.',
                     icon: Icons.compare_arrows_rounded,
-                    tag: 'KLASİK DÜELLO',
+                    tag: 'SOLO / DÜELLO',
                     tagColor: AppColors.pitchGreen,
                     onTap: () {
-                      Navigator.push(
+                      showGameModeSelectorSheet(
                         context,
-                        MaterialPageRoute(builder: (_) => const CommonPlayerScreen()),
+                        targetGame: GameTargetType.commonPlayer,
                       );
                     },
                   ),
@@ -361,14 +360,14 @@ class _HomeScreenState extends State<HomeScreen> {
                 Expanded(
                   child: BentoGameModeCard(
                     title: '5 Takım 1 Oyuncu',
-                    subtitle: '5 kulübün en çoğunda oynamış yıldızı keşfet.',
+                    subtitle: '5 kulübün en çoğunda oynamış yıldızı tek başına veya düelloda bul.',
                     icon: Icons.shield_outlined,
-                    tag: 'REKOR ANALİZİ',
+                    tag: 'SOLO / DÜELLO',
                     tagColor: AppColors.greenLight,
                     onTap: () {
-                      Navigator.push(
+                      showGameModeSelectorSheet(
                         context,
-                        MaterialPageRoute(builder: (_) => const FiveClubsScreen()),
+                        targetGame: GameTargetType.fiveClubs,
                       );
                     },
                   ),
@@ -381,19 +380,19 @@ class _HomeScreenState extends State<HomeScreen> {
 
         // 3. Bölüm: Taktik Tahtası (Futbol Grid 3x3)
         if (showTactics) ...[
-          _buildSectionHeader('TAKTİK TAHTASI', '3x3 Kesişim Matrisi'),
+          _buildSectionHeader('TAKTİK TAHTASI', 'Kendini Sına • 1v1 Düello'),
           const SizedBox(height: 5),
           GameModeCard(
             title: 'Futbol Grid 3x3',
-            subtitle: 'Kulüpler ve başarı kriterlerinin kesişim noktalarına uygun oyuncuları yerleştir.',
+            subtitle: 'Kulüp kesişim matrisini tek başına çöz veya online/arkadaş düellosunda yarış.',
             icon: Icons.grid_3x3_outlined,
             tag: 'STRATEJİ MATRİSİ',
             tagColor: AppColors.gold,
             trailingPreview: _buildMiniTacticalGridPreview(),
             onTap: () {
-              Navigator.push(
+              showGameModeSelectorSheet(
                 context,
-                MaterialPageRoute(builder: (_) => const FootballGridScreen()),
+                targetGame: GameTargetType.footballGrid,
               );
             },
           ),

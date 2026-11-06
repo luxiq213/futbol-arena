@@ -1,15 +1,21 @@
 import 'dart:async';
+import 'dart:math';
 import 'package:flutter/foundation.dart';
 import '../data/models/club_model.dart';
 import '../data/models/player_model.dart';
 import '../data/models/grid_challenge_model.dart';
+import '../data/models/play_mode_model.dart';
 import '../data/repositories/football_database.dart';
 import '../../core/utils/sound_effects.dart';
 
-enum FiveClubsPhase { playing, evaluating, roundSummary }
+enum FiveClubsPhase { playing, evaluatingOpponent, roundSummary }
 
 class FiveClubsGameProvider extends ChangeNotifier {
   final FootballDatabase _db = FootballDatabase();
+  final Random _random = Random();
+
+  final PlayModeType playMode;
+  final OpponentProfile? opponent;
 
   late FiveClubsChallenge _currentChallenge;
   FiveClubsPhase _phase = FiveClubsPhase.playing;
@@ -18,12 +24,13 @@ class FiveClubsGameProvider extends ChangeNotifier {
   int _userScore = 0;
   List<ClubModel> _userMatchedClubs = [];
 
-  PlayerModel? _aiPlayer;
-  int _aiScore = 0;
-  List<ClubModel> _aiMatchedClubs = [];
+  PlayerModel? _opponentPlayer;
+  int _opponentScore = 0;
+  List<ClubModel> _opponentMatchedClubs = [];
 
   String? _feedback;
   int _totalUserPoints = 0;
+  int _totalOpponentPoints = 0;
   int _roundsPlayed = 0;
 
   FiveClubsChallenge get currentChallenge => _currentChallenge;
@@ -32,16 +39,21 @@ class FiveClubsGameProvider extends ChangeNotifier {
   PlayerModel? get userPlayer => _userPlayer;
   int get userScore => _userScore;
   List<ClubModel> get userMatchedClubs => _userMatchedClubs;
-  PlayerModel? get aiPlayer => _aiPlayer;
-  int get aiScore => _aiScore;
-  List<ClubModel> get aiMatchedClubs => _aiMatchedClubs;
+  PlayerModel? get opponentPlayer => _opponentPlayer;
+  int get opponentScore => _opponentScore;
+  List<ClubModel> get opponentMatchedClubs => _opponentMatchedClubs;
   String? get feedback => _feedback;
   int get totalUserPoints => _totalUserPoints;
+  int get totalOpponentPoints => _totalOpponentPoints;
   int get roundsPlayed => _roundsPlayed;
   PlayerModel get bestPossible => _currentChallenge.bestAnswer;
   int get maxPossible => _currentChallenge.maxMatchCount;
+  bool get isDuelMode => playMode != PlayModeType.solo && opponent != null;
 
-  FiveClubsGameProvider() {
+  FiveClubsGameProvider({
+    this.playMode = PlayModeType.solo,
+    this.opponent,
+  }) {
     startNewRound();
   }
 
@@ -51,9 +63,9 @@ class FiveClubsGameProvider extends ChangeNotifier {
     _userPlayer = null;
     _userScore = 0;
     _userMatchedClubs = [];
-    _aiPlayer = null;
-    _aiScore = 0;
-    _aiMatchedClubs = [];
+    _opponentPlayer = null;
+    _opponentScore = 0;
+    _opponentMatchedClubs = [];
     _feedback = null;
     notifyListeners();
   }
@@ -77,41 +89,70 @@ class FiveClubsGameProvider extends ChangeNotifier {
     _userMatchedClubs = clubs.where((c) => chosen.playedFor(c.id)).toList();
     _userScore = _userMatchedClubs.length;
 
-    _phase = FiveClubsPhase.evaluating;
-    notifyListeners();
-
-    // Trigger AI response after short delay
-    _simulateAiTurn();
-  }
-
-  void _simulateAiTurn() {
-    Timer(const Duration(milliseconds: 900), () {
-      // AI chooses either the optimal answer or a close competitor
-      final allPlayers = _db.getAllPlayers();
-      final scoredPlayers = allPlayers.map((p) {
-        final score = clubs.where((c) => p.playedFor(c.id)).length;
-        return MapEntry(p, score);
-      }).toList();
-
-      scoredPlayers.sort((a, b) => b.value.compareTo(a.value));
-
-      // AI picks best or second best
-      if (scoredPlayers.isNotEmpty) {
-        _aiPlayer = scoredPlayers.first.key;
-        _aiScore = scoredPlayers.first.value;
-        _aiMatchedClubs = clubs.where((c) => _aiPlayer!.playedFor(c.id)).toList();
-      }
-
+    if (!isDuelMode) {
+      // SOLO MODE (Kendini Sına): Immediate evaluation without any AI opponent
       _roundsPlayed++;
       final earned = _userScore * 100;
       _totalUserPoints += earned;
 
-      if (_userScore >= _aiScore) {
+      if (_userScore >= _currentChallenge.maxMatchCount) {
         GameFeedback.success();
-        _feedback = 'Tebrikler! $_userScore kulüp tutturdun. (+$earned Puan)';
+        _feedback = 'MÜKEMMEL! Maksimum kulüp eşleşmesini ($_userScore/5) buldun! (+$earned Puan)';
+      } else if (_userScore >= 2) {
+        GameFeedback.success();
+        _feedback = 'Güzel tahmin! $_userScore kulüp eşleşmesi yakaladın. (+$earned Puan)';
+      } else {
+        GameFeedback.tick();
+        _feedback = '${chosen.name} bu listeden $_userScore kulüpte forma giydi. (+$earned Puan)';
+      }
+
+      _phase = FiveClubsPhase.roundSummary;
+      notifyListeners();
+      return;
+    }
+
+    // DUEL MODE (Online Matchmaking / AI Fallback / Friend Invite)
+    _phase = FiveClubsPhase.evaluatingOpponent;
+    notifyListeners();
+
+    _simulateOpponentTurn();
+  }
+
+  void _simulateOpponentTurn() {
+    Timer(const Duration(milliseconds: 750), () {
+      final allPlayers = _db.getAllPlayers();
+      final scoredPlayers = allPlayers.map((p) {
+        final score = clubs.where((c) => p.playedFor(c.id)).length;
+        return MapEntry(p, score);
+      }).where((entry) => entry.value >= 2).toList();
+
+      scoredPlayers.sort((a, b) => b.value.compareTo(a.value));
+
+      if (scoredPlayers.isNotEmpty) {
+        // Pick among the top 4 valid candidates so the duel feels competitive and realistic
+        final pickIndex = _random.nextInt(scoredPlayers.length.clamp(1, 4));
+        _opponentPlayer = scoredPlayers[pickIndex].key;
+        _opponentScore = scoredPlayers[pickIndex].value;
+        _opponentMatchedClubs = clubs.where((c) => _opponentPlayer!.playedFor(c.id)).toList();
+      }
+
+      _roundsPlayed++;
+      final userEarned = _userScore * 100;
+      final oppEarned = _opponentScore * 100;
+      _totalUserPoints += userEarned;
+      _totalOpponentPoints += oppEarned;
+
+      final oppName = opponent?.name ?? 'Rakip';
+
+      if (_userScore > _opponentScore) {
+        GameFeedback.success();
+        _feedback = 'Tebrikler! $_userScore - $_opponentScore ile $oppName karşısında bu turu kazandın! (+$userEarned Puan)';
+      } else if (_userScore == _opponentScore) {
+        GameFeedback.tick();
+        _feedback = 'Baş başa mücadele! İkiniz de $_userScore kulüp bildiniz. (+$userEarned Puan)';
       } else {
         GameFeedback.explode();
-        _feedback = 'Scout AI $_aiScore kulüp ile bu turu önde tamamladı.';
+        _feedback = '$oppName $_opponentScore kulüp eşleşmesiyle bu turu önde tamamladı.';
       }
 
       _phase = FiveClubsPhase.roundSummary;

@@ -1,21 +1,36 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../data/models/play_mode_model.dart';
 import '../../../../providers/auth_provider.dart';
 import '../../../../providers/common_player_game_provider.dart';
 import '../../widgets/custom_button.dart';
+import '../../widgets/duel_scoreboard_banner.dart';
 import '../../widgets/stadium_background.dart';
 import 'widgets/club_card.dart';
 import 'widgets/search_guess_bar.dart';
 import 'widgets/answer_reveal_sheet.dart';
 
 class CommonPlayerScreen extends StatelessWidget {
-  const CommonPlayerScreen({super.key});
+  final PlayModeType playMode;
+  final OpponentProfile? opponent;
+
+  const CommonPlayerScreen({
+    super.key,
+    this.playMode = PlayModeType.solo,
+    this.opponent,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final auth = context.watch<AuthProvider>();
+    final user = auth.currentUser;
+
     return ChangeNotifierProvider(
-      create: (_) => CommonPlayerGameProvider(),
+      create: (_) => CommonPlayerGameProvider(
+        playMode: playMode,
+        opponent: opponent,
+      ),
       child: Consumer<CommonPlayerGameProvider>(
         builder: (context, game, _) {
           final clubA = game.clubA;
@@ -29,11 +44,11 @@ class CommonPlayerScreen extends StatelessWidget {
               backgroundColor: Colors.transparent,
               elevation: 0,
               iconTheme: const IconThemeData(color: Colors.white),
-              title: const Text(
-                'Ortak Oyuncu Düellosu',
-                style: TextStyle(
+              title: Text(
+                game.isDuelMode ? 'Ortak Oyuncu • 1v1 Düello' : 'Ortak Oyuncu • Kendini Sına',
+                style: const TextStyle(
                   fontWeight: FontWeight.w700,
-                  fontSize: 16,
+                  fontSize: 15,
                   color: Colors.white,
                 ),
               ),
@@ -73,6 +88,18 @@ class CommonPlayerScreen extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
+                          // Live 1v1 Scoreboard if in Duel Mode
+                          if (game.isDuelMode && game.opponent != null) ...[
+                            DuelScoreboardBanner(
+                              userName: user?.username ?? 'Kaptan',
+                              userAvatar: user?.avatar ?? 'KP',
+                              userScore: game.score,
+                              opponent: game.opponent!,
+                              opponentScore: game.opponentScore,
+                            ),
+                            const SizedBox(height: 12),
+                          ],
+
                           // Two Clubs Versus Display
                           if (clubA != null && clubB != null)
                             Row(
@@ -102,7 +129,7 @@ class CommonPlayerScreen extends StatelessWidget {
                               ],
                             ),
 
-                          const SizedBox(height: 16),
+                          const SizedBox(height: 14),
 
                           // Target info card
                           Container(
@@ -162,11 +189,42 @@ class CommonPlayerScreen extends StatelessWidget {
                             ),
                           ),
 
-                          const SizedBox(height: 14),
+                          const SizedBox(height: 12),
+
+                          // Opponent Thinking Indicator in Duel Mode
+                          if (game.isOpponentThinking)
+                            Container(
+                              margin: const EdgeInsets.only(bottom: 12),
+                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                              decoration: BoxDecoration(
+                                color: AppColors.surface,
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(color: AppColors.gold.withValues(alpha: 0.5)),
+                              ),
+                              child: Row(
+                                children: [
+                                  const SizedBox(
+                                    width: 14,
+                                    height: 14,
+                                    child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.gold),
+                                  ),
+                                  const SizedBox(width: 10),
+                                  Text(
+                                    '${game.opponent?.name ?? "Rakip"} ortak oyuncu düşünüyor...',
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      color: AppColors.gold,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
 
                           // Feedback message
                           if (game.lastFeedback != null)
                             Container(
+                              margin: const EdgeInsets.only(bottom: 12),
                               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                               decoration: BoxDecoration(
                                 color: game.isSuccessFeedback
@@ -184,10 +242,10 @@ class CommonPlayerScreen extends StatelessWidget {
                                   Icon(
                                     game.isSuccessFeedback
                                         ? Icons.check_circle_outline
-                                        : Icons.error_outline,
+                                        : Icons.info_outline,
                                     color: game.isSuccessFeedback
                                         ? AppColors.gold
-                                        : AppColors.error,
+                                        : Colors.redAccent,
                                     size: 16,
                                   ),
                                   const SizedBox(width: 8),
@@ -197,7 +255,7 @@ class CommonPlayerScreen extends StatelessWidget {
                                       style: TextStyle(
                                         color: game.isSuccessFeedback
                                             ? AppColors.gold
-                                            : Colors.redAccent,
+                                            : Colors.white,
                                         fontWeight: FontWeight.w600,
                                         fontSize: 12,
                                       ),
@@ -206,8 +264,6 @@ class CommonPlayerScreen extends StatelessWidget {
                                 ],
                               ),
                             ),
-
-                          const SizedBox(height: 14),
 
                           // Search Guess Input
                           SearchGuessBar(
@@ -251,14 +307,17 @@ class CommonPlayerScreen extends StatelessWidget {
                           else
                             ...game.mutualPlayers
                                 .where((p) => game.foundPlayerIds.contains(p.id))
-                                .map(
-                                  (p) => Container(
+                                .map((p) {
+                                  final isByOpponent = game.foundByOpponentIds.contains(p.id);
+                                  return Container(
                                     margin: const EdgeInsets.only(bottom: 6),
                                     padding: const EdgeInsets.all(12),
                                     decoration: BoxDecoration(
                                       color: AppColors.surface.withValues(alpha: 0.90),
                                       borderRadius: BorderRadius.circular(12),
-                                      border: Border.all(color: AppColors.border),
+                                      border: Border.all(
+                                        color: isByOpponent ? AppColors.silver.withValues(alpha: 0.5) : AppColors.border,
+                                      ),
                                     ),
                                     child: Row(
                                       children: [
@@ -266,11 +325,15 @@ class CommonPlayerScreen extends StatelessWidget {
                                           width: 32,
                                           height: 32,
                                           decoration: BoxDecoration(
-                                            color: AppColors.pitchGreen,
+                                            color: isByOpponent ? AppColors.surfaceLight : AppColors.pitchGreen,
                                             borderRadius: BorderRadius.circular(6),
                                           ),
-                                          child: const Center(
-                                            child: Icon(Icons.person, color: AppColors.gold, size: 16),
+                                          child: Center(
+                                            child: Icon(
+                                              isByOpponent ? Icons.smart_toy_outlined : Icons.person,
+                                              color: AppColors.gold,
+                                              size: 16,
+                                            ),
                                           ),
                                         ),
                                         const SizedBox(width: 12),
@@ -296,11 +359,34 @@ class CommonPlayerScreen extends StatelessWidget {
                                             ],
                                           ),
                                         ),
-                                        const Icon(Icons.check_circle_outline, color: AppColors.gold, size: 18),
+                                        if (game.isDuelMode)
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                                            decoration: BoxDecoration(
+                                              color: isByOpponent
+                                                  ? AppColors.surfaceLight
+                                                  : AppColors.pitchGreen.withValues(alpha: 0.25),
+                                              borderRadius: BorderRadius.circular(6),
+                                              border: Border.all(
+                                                color: isByOpponent ? AppColors.silver : AppColors.pitchGreen,
+                                                width: 0.8,
+                                              ),
+                                            ),
+                                            child: Text(
+                                              isByOpponent ? (game.opponent?.name ?? 'Rakip') : 'Sen',
+                                              style: TextStyle(
+                                                fontSize: 10,
+                                                fontWeight: FontWeight.w700,
+                                                color: isByOpponent ? AppColors.silver : AppColors.greenLight,
+                                              ),
+                                            ),
+                                          )
+                                        else
+                                          const Icon(Icons.check_circle_outline, color: AppColors.gold, size: 18),
                                       ],
                                     ),
-                                  ),
-                                ),
+                                  );
+                                }),
 
                           const SizedBox(height: 14),
 

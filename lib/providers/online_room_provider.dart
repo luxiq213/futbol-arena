@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'package:flutter/foundation.dart';
 import '../data/models/game_room_model.dart';
+import '../data/models/play_mode_model.dart';
 import '../data/models/user_model.dart';
 
 class OnlineRoomProvider extends ChangeNotifier {
@@ -21,13 +22,16 @@ class OnlineRoomProvider extends ChangeNotifier {
     return 'F$randomPart';
   }
 
-  /// Create a new lobby
-  Future<void> createRoom(UserModel hostUser) async {
+  /// Create a new lobby for the selected game mode
+  Future<void> createRoom(
+    UserModel hostUser, {
+    GameTargetType targetGame = GameTargetType.commonPlayer,
+  }) async {
     _isCreatingRoom = true;
     _errorMessage = null;
     notifyListeners();
 
-    await Future.delayed(const Duration(milliseconds: 600));
+    await Future.delayed(const Duration(milliseconds: 500));
 
     final code = _generateRoomCode();
     final hostParticipant = RoomParticipant(
@@ -38,8 +42,8 @@ class OnlineRoomProvider extends ChangeNotifier {
       isReady: true,
     );
 
-    // Mock 1 or 2 friends waiting or ready to join
-    final friend1 = const RoomParticipant(
+    // Mock friend joining the invite lobby
+    const friend1 = RoomParticipant(
       id: 'mock_friend_1',
       name: 'Burak',
       avatar: 'BK',
@@ -50,7 +54,8 @@ class OnlineRoomProvider extends ChangeNotifier {
     _activeRoom = GameRoomModel(
       code: code,
       hostId: hostUser.id,
-      gameTitle: 'Ortak Futbolcu Düellosu',
+      gameTitle: targetGame.title,
+      targetGame: targetGame,
       participants: [hostParticipant, friend1],
       status: GameRoomStatus.waiting,
     );
@@ -60,16 +65,20 @@ class OnlineRoomProvider extends ChangeNotifier {
   }
 
   /// Join existing room
-  Future<bool> joinRoom(String code, UserModel user) async {
+  Future<bool> joinRoom(
+    String code,
+    UserModel user, {
+    GameTargetType targetGame = GameTargetType.commonPlayer,
+  }) async {
     _isCreatingRoom = true;
     _errorMessage = null;
     notifyListeners();
 
-    await Future.delayed(const Duration(milliseconds: 600));
+    await Future.delayed(const Duration(milliseconds: 500));
 
     final cleanCode = code.trim().toUpperCase();
     if (cleanCode.length < 4) {
-      _errorMessage = 'Geçersiz oda kodu!';
+      _errorMessage = 'Geçersiz oda kodu! Lütfen en az 4 karakter girin.';
       _isCreatingRoom = false;
       notifyListeners();
       return false;
@@ -80,12 +89,12 @@ class OnlineRoomProvider extends ChangeNotifier {
       name: user.username,
       avatar: user.avatar,
       isHost: false,
-      isReady: false,
+      isReady: true,
     );
 
-    final mockHost = const RoomParticipant(
+    const mockHost = RoomParticipant(
       id: 'mock_host',
-      name: 'Ahmet (Lobi Lideri)',
+      name: 'Ahmet',
       avatar: 'AH',
       isHost: true,
       isReady: true,
@@ -94,7 +103,8 @@ class OnlineRoomProvider extends ChangeNotifier {
     _activeRoom = GameRoomModel(
       code: cleanCode,
       hostId: 'mock_host',
-      gameTitle: '3-2-1 Bomba Online',
+      gameTitle: targetGame.title,
+      targetGame: targetGame,
       participants: [mockHost, newParticipant],
       status: GameRoomStatus.waiting,
     );

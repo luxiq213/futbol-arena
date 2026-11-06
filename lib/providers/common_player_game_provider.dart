@@ -1,20 +1,30 @@
+import 'dart:async';
+import 'dart:math';
 import 'package:flutter/foundation.dart';
 import '../data/models/club_model.dart';
 import '../data/models/player_model.dart';
+import '../data/models/play_mode_model.dart';
 import '../data/repositories/football_database.dart';
 import '../../core/utils/sound_effects.dart';
 
 class CommonPlayerGameProvider extends ChangeNotifier {
   final FootballDatabase _db = FootballDatabase();
+  final Random _random = Random();
+
+  final PlayModeType playMode;
+  final OpponentProfile? opponent;
 
   ClubModel? _clubA;
   ClubModel? _clubB;
   List<PlayerModel> _mutualPlayers = [];
   final Set<String> _foundPlayerIds = {};
+  final Set<String> _foundByOpponentIds = {};
 
   int _score = 0;
+  int _opponentScore = 0;
   int _hintsUsed = 0;
   bool _revealed = false;
+  bool _isOpponentThinking = false;
   String? _lastFeedback;
   bool _isSuccessFeedback = false;
 
@@ -22,17 +32,24 @@ class CommonPlayerGameProvider extends ChangeNotifier {
   ClubModel? get clubB => _clubB;
   List<PlayerModel> get mutualPlayers => _mutualPlayers;
   Set<String> get foundPlayerIds => _foundPlayerIds;
+  Set<String> get foundByOpponentIds => _foundByOpponentIds;
   int get score => _score;
+  int get opponentScore => _opponentScore;
   int get hintsUsed => _hintsUsed;
   bool get revealed => _revealed;
+  bool get isOpponentThinking => _isOpponentThinking;
   String? get lastFeedback => _lastFeedback;
   bool get isSuccessFeedback => _isSuccessFeedback;
+  bool get isDuelMode => playMode != PlayModeType.solo && opponent != null;
 
   int get totalFound => _foundPlayerIds.length;
   int get totalPossible => _mutualPlayers.length;
   bool get isAllFound => totalPossible > 0 && totalFound == totalPossible;
 
-  CommonPlayerGameProvider() {
+  CommonPlayerGameProvider({
+    this.playMode = PlayModeType.solo,
+    this.opponent,
+  }) {
     startNewRound();
   }
 
@@ -42,15 +59,19 @@ class CommonPlayerGameProvider extends ChangeNotifier {
     _clubB = pair.value;
     _mutualPlayers = _db.getMutualPlayers(_clubA!.id, _clubB!.id);
     _foundPlayerIds.clear();
+    _foundByOpponentIds.clear();
     _hintsUsed = 0;
     _revealed = false;
+    _isOpponentThinking = false;
     _lastFeedback = null;
     notifyListeners();
   }
 
   /// Make a guess with a player name
   bool submitGuess(String query) {
-    if (query.trim().isEmpty || _clubA == null || _clubB == null) return false;
+    if (query.trim().isEmpty || _clubA == null || _clubB == null || _isOpponentThinking) {
+      return false;
+    }
 
     // Search within mutual players
     PlayerModel? matched;
@@ -75,6 +96,8 @@ class CommonPlayerGameProvider extends ChangeNotifier {
       }
     }
 
+    bool userSucceeded = false;
+
     if (matched != null) {
       if (_foundPlayerIds.contains(matched.id)) {
         _lastFeedback = '${matched.name} zaten bulundu!';
@@ -86,24 +109,59 @@ class CommonPlayerGameProvider extends ChangeNotifier {
 
       _foundPlayerIds.add(matched.id);
       _score += 100;
-      _lastFeedback = 'Tebrikler! ${matched.name} doğru cevap! (+100 XP)';
+      _lastFeedback = 'Tebrikler! ${matched.name} doğru cevap! (+100 Puan)';
       _isSuccessFeedback = true;
+      userSucceeded = true;
       GameFeedback.success();
 
-      if (isAllFound) {
-        _score += 150; // Bonus for finding all
-        _lastFeedback = 'MÜKEMMEL! İki takımın tüm ortak oyuncularını bildin! (+150 Bonus XP)';
+      if (isAllFound && !isDuelMode) {
+        _score += 150;
+        _lastFeedback = 'MÜKEMMEL! İki takımın tüm ortak oyuncularını bildin! (+150 Bonus Puan)';
       }
-
-      notifyListeners();
-      return true;
     } else {
       _lastFeedback = '"$query" bu iki kulüpte birden oynamadı!';
       _isSuccessFeedback = false;
       GameFeedback.error();
-      notifyListeners();
-      return false;
     }
+
+    notifyListeners();
+
+    // If in Duel Mode and there are still unfound mutual players, let opponent make a move
+    if (isDuelMode && !isAllFound) {
+      _triggerOpponentTurn();
+    }
+
+    return userSucceeded;
+  }
+
+  void _triggerOpponentTurn() {
+    final remaining = _mutualPlayers.where((p) => !_foundPlayerIds.contains(p.id)).toList();
+    if (remaining.isEmpty) return;
+
+    _isOpponentThinking = true;
+    notifyListeners();
+
+    Timer(const Duration(milliseconds: 650), () {
+      _isOpponentThinking = false;
+      final currentRemaining = _mutualPlayers.where((p) => !_foundPlayerIds.contains(p.id)).toList();
+      if (currentRemaining.isEmpty) {
+        notifyListeners();
+        return;
+      }
+
+      final oppName = opponent?.name ?? 'Rakip';
+      // 70% chance opponent finds one of the remaining common players
+      if (_random.nextDouble() < 0.70) {
+        final pick = currentRemaining[_random.nextInt(currentRemaining.length)];
+        _foundPlayerIds.add(pick.id);
+        _foundByOpponentIds.add(pick.id);
+        _opponentScore += 100;
+        _lastFeedback = '$oppName ortak oyuncu buldu: ${pick.name} (+100 Puan)';
+      } else {
+        _lastFeedback = '$oppName bu turda ortak oyuncu bulamadı! Sıra sende.';
+      }
+      notifyListeners();
+    });
   }
 
   void useHint() {

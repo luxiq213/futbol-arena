@@ -1,13 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../data/models/play_mode_model.dart';
 import '../../../../providers/auth_provider.dart';
 import '../../../../providers/online_room_provider.dart';
 import '../../widgets/custom_button.dart';
+import '../../widgets/stadium_background.dart';
 import 'active_room_screen.dart';
+import 'matchmaking_screen.dart';
 
 class LobbyHubScreen extends StatefulWidget {
-  const LobbyHubScreen({super.key});
+  final GameTargetType initialGameTarget;
+
+  const LobbyHubScreen({
+    super.key,
+    this.initialGameTarget = GameTargetType.commonPlayer,
+  });
 
   @override
   State<LobbyHubScreen> createState() => _LobbyHubScreenState();
@@ -15,6 +23,13 @@ class LobbyHubScreen extends StatefulWidget {
 
 class _LobbyHubScreenState extends State<LobbyHubScreen> {
   final TextEditingController _codeController = TextEditingController();
+  late GameTargetType _selectedGame;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedGame = widget.initialGameTarget;
+  }
 
   @override
   void dispose() {
@@ -28,7 +43,7 @@ class _LobbyHubScreenState extends State<LobbyHubScreen> {
     final user = auth.currentUser;
     if (user == null) return;
 
-    await roomProvider.createRoom(user);
+    await roomProvider.createRoom(user, targetGame: _selectedGame);
     if (!mounted) return;
     Navigator.of(context).push(
       MaterialPageRoute(builder: (_) => const ActiveRoomScreen()),
@@ -41,7 +56,11 @@ class _LobbyHubScreenState extends State<LobbyHubScreen> {
     final user = auth.currentUser;
     if (user == null) return;
 
-    final success = await roomProvider.joinRoom(_codeController.text, user);
+    final success = await roomProvider.joinRoom(
+      _codeController.text,
+      user,
+      targetGame: _selectedGame,
+    );
     if (!mounted) return;
 
     if (success) {
@@ -58,72 +77,42 @@ class _LobbyHubScreenState extends State<LobbyHubScreen> {
     }
   }
 
+  void _onStartQuickMatchmaking() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => MatchmakingScreen(targetGame: _selectedGame),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final roomProvider = context.watch<OnlineRoomProvider>();
 
     return Scaffold(
       backgroundColor: AppColors.background,
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
+        toolbarHeight: 46,
         backgroundColor: Colors.transparent,
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.white),
         title: const Text(
-          'Online Meydan Okuma',
-          style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
+          'Arkadaş Daveti & Online Eşleşme',
+          style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15, color: Colors.white),
         ),
       ),
-      body: SafeArea(
+      body: StadiumBackground(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Header Card
+              // 1. Select Which Game Mode to Play in Duel
               Container(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  color: AppColors.surface,
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: AppColors.border),
-                ),
-                child: const Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(Icons.cell_tower_outlined, color: AppColors.gold, size: 22),
-                        SizedBox(width: 10),
-                        Text(
-                          'Online Lobi & Oda Daveti',
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 6),
-                    Text(
-                      'Farklı yerlerdeki arkadaşlarınla 6 haneli oda kodu paylaşarak aynı anda düelloya katılın.',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: AppColors.textSecondary,
-                        height: 1.3,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 20),
-
-              // Create Room Section
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: AppColors.surface,
+                  color: AppColors.surface.withValues(alpha: 0.90),
                   borderRadius: BorderRadius.circular(14),
                   border: Border.all(color: AppColors.border),
                 ),
@@ -131,24 +120,135 @@ class _LobbyHubScreenState extends State<LobbyHubScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text(
-                      'Yeni Lobi Oluştur',
+                      '1. DÜELLO OYUNUNU SEÇ',
                       style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0.8,
+                        color: AppColors.greenLight,
                       ),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: GameTargetType.values.map((type) {
+                        final isSelected = _selectedGame == type;
+                        return Expanded(
+                          child: GestureDetector(
+                            onTap: () => setState(() => _selectedGame = type),
+                            child: Container(
+                              margin: const EdgeInsets.symmetric(horizontal: 3),
+                              padding: const EdgeInsets.symmetric(vertical: 9, horizontal: 6),
+                              decoration: BoxDecoration(
+                                color: isSelected ? AppColors.darkGreen : AppColors.surfaceLight,
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(
+                                  color: isSelected ? AppColors.pitchGreen : AppColors.border,
+                                  width: isSelected ? 1.4 : 0.8,
+                                ),
+                              ),
+                              child: Text(
+                                type.title,
+                                textAlign: TextAlign.center,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontSize: 10.5,
+                                  height: 1.15,
+                                  fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                                  color: isSelected ? Colors.white : AppColors.textSecondary,
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 14),
+
+              // 2. Quick Online Matchmaking (Falls back to AI if no online player found)
+              Container(
+                padding: const EdgeInsets.all(15),
+                decoration: BoxDecoration(
+                  color: AppColors.surface.withValues(alpha: 0.92),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: AppColors.pitchGreen.withValues(alpha: 0.65)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(Icons.public_rounded, color: AppColors.greenLight, size: 20),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'Hızlı Online Eşleşme (${_selectedGame.title})',
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w800,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 4),
                     const Text(
-                      'Oda oluşturulduktan sonra kodu arkadaşına ileterek maçı başlat.',
-                      style: TextStyle(fontSize: 11, color: AppColors.textMuted),
+                      'Online rakip aranır; uygun oyuncu bulunamazsa anında denk seviyede Yapay Zeka rakip ile düello başlar.',
+                      style: TextStyle(fontSize: 11.5, color: AppColors.textSecondary, height: 1.3),
                     ),
-                    const SizedBox(height: 14),
+                    const SizedBox(height: 12),
                     CustomButton(
-                      text: 'Yeni Oda Kur',
-                      icon: Icons.add_circle_outline,
+                      text: 'Online Rakip Bul / Eşleş',
+                      icon: Icons.radar_rounded,
                       backgroundColor: AppColors.pitchGreen,
                       textColor: Colors.white,
+                      onPressed: _onStartQuickMatchmaking,
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 14),
+
+              // 3. Create Room for Friend Invite
+              Container(
+                padding: const EdgeInsets.all(15),
+                decoration: BoxDecoration(
+                  color: AppColors.surface.withValues(alpha: 0.90),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: AppColors.border),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Row(
+                      children: [
+                        Icon(Icons.person_add_alt_1_outlined, color: AppColors.gold, size: 19),
+                        SizedBox(width: 8),
+                        Text(
+                          'Arkadaşınla Oyna • Davet Odası Kur',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w800,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    const Text(
+                      '6 haneli davet kodu oluşturup arkadaşına gönder, aynı anda düelloya başlayın.',
+                      style: TextStyle(fontSize: 11.5, color: AppColors.textMuted),
+                    ),
+                    const SizedBox(height: 12),
+                    CustomButton(
+                      text: 'Davet Kodlu Oda Kur',
+                      icon: Icons.add_circle_outline,
                       isLoading: roomProvider.isCreatingRoom,
                       onPressed: _onCreateRoom,
                     ),
@@ -156,13 +256,13 @@ class _LobbyHubScreenState extends State<LobbyHubScreen> {
                 ),
               ),
 
-              const SizedBox(height: 16),
+              const SizedBox(height: 14),
 
-              // Join Room Section
+              // 4. Join Friend's Room Section
               Container(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(15),
                 decoration: BoxDecoration(
-                  color: AppColors.surface,
+                  color: AppColors.surface.withValues(alpha: 0.90),
                   borderRadius: BorderRadius.circular(14),
                   border: Border.all(color: AppColors.border),
                 ),
@@ -170,19 +270,19 @@ class _LobbyHubScreenState extends State<LobbyHubScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text(
-                      'Odaya Katıl',
+                      'Davet Kodu İle Odaya Katıl',
                       style: TextStyle(
                         fontSize: 14,
-                        fontWeight: FontWeight.w700,
+                        fontWeight: FontWeight.w800,
                         color: Colors.white,
                       ),
                     ),
                     const SizedBox(height: 4),
                     const Text(
-                      'Arkadaşından aldığın 6 haneli kodu buraya gir.',
-                      style: TextStyle(fontSize: 11, color: AppColors.textMuted),
+                      'Arkadaşından aldığın 6 haneli davet kodunu aşağıya gir.',
+                      style: TextStyle(fontSize: 11.5, color: AppColors.textMuted),
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 10),
                     TextField(
                       controller: _codeController,
                       textCapitalization: TextCapitalization.characters,
@@ -201,9 +301,9 @@ class _LobbyHubScreenState extends State<LobbyHubScreen> {
                         ),
                       ),
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 10),
                     CustomButton(
-                      text: 'Odaya Gir',
+                      text: 'Odaya Katıl',
                       isOutlined: true,
                       icon: Icons.login_rounded,
                       isLoading: roomProvider.isCreatingRoom,
@@ -212,6 +312,8 @@ class _LobbyHubScreenState extends State<LobbyHubScreen> {
                   ],
                 ),
               ),
+
+              const SizedBox(height: 20),
             ],
           ),
         ),

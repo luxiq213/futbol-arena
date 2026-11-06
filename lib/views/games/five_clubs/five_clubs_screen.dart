@@ -3,20 +3,35 @@ import 'package:provider/provider.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../data/models/club_model.dart';
 import '../../../../data/models/player_model.dart';
+import '../../../../data/models/play_mode_model.dart';
 import '../../../../providers/auth_provider.dart';
 import '../../../../providers/five_clubs_game_provider.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/club_crest_widget.dart';
+import '../../widgets/duel_scoreboard_banner.dart';
 import '../../widgets/stadium_background.dart';
 import '../common_player/widgets/search_guess_bar.dart';
 
 class FiveClubsScreen extends StatelessWidget {
-  const FiveClubsScreen({super.key});
+  final PlayModeType playMode;
+  final OpponentProfile? opponent;
+
+  const FiveClubsScreen({
+    super.key,
+    this.playMode = PlayModeType.solo,
+    this.opponent,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final auth = context.watch<AuthProvider>();
+    final user = auth.currentUser;
+
     return ChangeNotifierProvider(
-      create: (_) => FiveClubsGameProvider(),
+      create: (_) => FiveClubsGameProvider(
+        playMode: playMode,
+        opponent: opponent,
+      ),
       child: Consumer<FiveClubsGameProvider>(
         builder: (context, game, _) {
           final topRowClubs = game.clubs.take(3).toList();
@@ -30,11 +45,11 @@ class FiveClubsScreen extends StatelessWidget {
               backgroundColor: Colors.transparent,
               elevation: 0,
               iconTheme: const IconThemeData(color: Colors.white),
-              title: const Text(
-                '5 Takım 1 Oyuncu',
-                style: TextStyle(
+              title: Text(
+                game.isDuelMode ? '5 Takım 1 Oyuncu • Düello' : '5 Takım 1 Oyuncu • Kendini Sına',
+                style: const TextStyle(
                   fontWeight: FontWeight.w700,
-                  fontSize: 16,
+                  fontSize: 15,
                   color: Colors.white,
                 ),
               ),
@@ -70,6 +85,19 @@ class FiveClubsScreen extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
+                    // Live 1v1 Scoreboard if in Duel Mode
+                    if (game.isDuelMode && game.opponent != null) ...[
+                      DuelScoreboardBanner(
+                        userName: user?.username ?? 'Kaptan',
+                        userAvatar: user?.avatar ?? 'KP',
+                        userScore: game.totalUserPoints,
+                        opponent: game.opponent!,
+                        opponentScore: game.totalOpponentPoints,
+                        centerSubtitle: 'TUR ${game.roundsPlayed + 1}',
+                      ),
+                      const SizedBox(height: 12),
+                    ],
+
                     // Challenge Objective Card
                     Container(
                       padding: const EdgeInsets.all(14),
@@ -78,16 +106,18 @@ class FiveClubsScreen extends StatelessWidget {
                         borderRadius: BorderRadius.circular(14),
                         border: Border.all(color: AppColors.border),
                       ),
-                      child: const Column(
+                      child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Row(
                             children: [
-                              Icon(Icons.military_tech_outlined, color: AppColors.gold, size: 18),
-                              SizedBox(width: 8),
+                              const Icon(Icons.military_tech_outlined, color: AppColors.gold, size: 18),
+                              const SizedBox(width: 8),
                               Text(
-                                'GÖREV: MAKSİMUM KULÜP EŞLEŞMESİ',
-                                style: TextStyle(
+                                game.isDuelMode
+                                    ? 'DÜELLO GÖREVİ: RAKİPTEN FAZLA KULÜP TUTTUR'
+                                    : 'KENDİNİ SINA: MAKSİMUM KULÜP EŞLEŞMESİ',
+                                style: const TextStyle(
                                   fontSize: 11,
                                   fontWeight: FontWeight.w700,
                                   letterSpacing: 0.8,
@@ -96,8 +126,8 @@ class FiveClubsScreen extends StatelessWidget {
                               ),
                             ],
                           ),
-                          SizedBox(height: 6),
-                          Text(
+                          const SizedBox(height: 6),
+                          const Text(
                             'Aşağıdaki 5 kulübün en çoğunda forma giymiş ortak futbolcuyu tahmin et.',
                             style: TextStyle(
                               fontSize: 13,
@@ -167,8 +197,8 @@ class FiveClubsScreen extends StatelessWidget {
                         },
                       ),
 
-                    // Evaluating / AI Turn Indicator
-                    if (game.phase == FiveClubsPhase.evaluating)
+                    // Opponent Turn Indicator (ONLY in Duel Mode)
+                    if (game.phase == FiveClubsPhase.evaluatingOpponent)
                       Container(
                         padding: const EdgeInsets.symmetric(vertical: 18),
                         decoration: BoxDecoration(
@@ -176,18 +206,18 @@ class FiveClubsScreen extends StatelessWidget {
                           borderRadius: BorderRadius.circular(14),
                           border: Border.all(color: AppColors.border),
                         ),
-                        child: const Row(
+                        child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            SizedBox(
+                            const SizedBox(
                               width: 16,
                               height: 16,
                               child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.gold),
                             ),
-                            SizedBox(width: 12),
+                            const SizedBox(width: 12),
                             Text(
-                              'Scout AI tahmini analiz ediliyor...',
-                              style: TextStyle(
+                              '${game.opponent?.name ?? "Rakip"} tahminini yapıyor...',
+                              style: const TextStyle(
                                 fontSize: 13,
                                 color: AppColors.textSecondary,
                                 fontWeight: FontWeight.w500,
@@ -197,7 +227,7 @@ class FiveClubsScreen extends StatelessWidget {
                         ),
                       ),
 
-                    // Results Comparison Section
+                    // Results Section
                     if (game.phase == FiveClubsPhase.roundSummary) ...[
                       // Feedback banner
                       if (game.feedback != null)
@@ -225,20 +255,23 @@ class FiveClubsScreen extends StatelessWidget {
                         title: 'Senin Tahminin',
                         player: game.userPlayer,
                         matchedCount: game.userScore,
-                        isWinner: game.userScore >= game.aiScore,
+                        isWinner: !game.isDuelMode || game.userScore >= game.opponentScore,
                         icon: Icons.person_outline,
                       ),
 
-                      const SizedBox(height: 10),
-
-                      // Scout AI Result Card
-                      _buildDuelResultCard(
-                        title: 'Scout AI Tahmini',
-                        player: game.aiPlayer,
-                        matchedCount: game.aiScore,
-                        isWinner: game.aiScore > game.userScore,
-                        icon: Icons.smart_toy_outlined,
-                      ),
+                      // Opponent Result Card ONLY if in Duel Mode
+                      if (game.isDuelMode) ...[
+                        const SizedBox(height: 10),
+                        _buildDuelResultCard(
+                          title: '${game.opponent?.name ?? "Rakip"} Tahmini',
+                          player: game.opponentPlayer,
+                          matchedCount: game.opponentScore,
+                          isWinner: game.opponentScore > game.userScore,
+                          icon: game.opponent?.isAiFallback == true
+                              ? Icons.smart_toy_outlined
+                              : Icons.sports_kabaddi_outlined,
+                        ),
+                      ],
 
                       const SizedBox(height: 12),
 
@@ -295,7 +328,7 @@ class FiveClubsScreen extends StatelessWidget {
 
   Widget _buildClubTile(FiveClubsGameProvider game, ClubModel club) {
     final isUserMatch = game.userMatchedClubs.any((c) => c.id == club.id);
-    final isAiMatch = game.aiMatchedClubs.any((c) => c.id == club.id);
+    final isOppMatch = game.opponentMatchedClubs.any((c) => c.id == club.id);
 
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
@@ -348,12 +381,12 @@ class FiveClubsScreen extends StatelessWidget {
                   size: 14,
                   color: isUserMatch ? AppColors.gold : AppColors.textMuted,
                 ),
-                if (game.phase == FiveClubsPhase.roundSummary) ...[
+                if (game.isDuelMode && game.phase == FiveClubsPhase.roundSummary) ...[
                   const SizedBox(width: 4),
                   Icon(
-                    isAiMatch ? Icons.smart_toy : Icons.remove,
-                    size: 12,
-                    color: isAiMatch ? AppColors.silver : AppColors.textMuted,
+                    isOppMatch ? Icons.check_circle_outline : Icons.remove,
+                    size: 13,
+                    color: isOppMatch ? AppColors.silver : AppColors.textMuted,
                   ),
                 ],
               ],
