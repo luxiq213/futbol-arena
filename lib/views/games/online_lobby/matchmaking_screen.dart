@@ -6,8 +6,10 @@ import '../../../../data/models/play_mode_model.dart';
 import '../../../../providers/auth_provider.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/stadium_background.dart';
+import '../auction_duel/auction_duel_screen.dart';
 import '../common_player/common_player_screen.dart';
 import '../five_clubs/five_clubs_screen.dart';
+import '../football_bridge/football_bridge_screen.dart';
 import '../football_grid/football_grid_screen.dart';
 
 class MatchmakingScreen extends StatefulWidget {
@@ -92,6 +94,20 @@ class _MatchmakingScreenState extends State<MatchmakingScreen> {
         break;
       case GameTargetType.footballGrid:
         destination = FootballGridScreen(
+          playMode: PlayModeType.onlineMatchmaking,
+          difficulty: widget.difficulty,
+          opponent: opponent,
+        );
+        break;
+      case GameTargetType.footballBridge:
+        destination = FootballBridgeScreen(
+          playMode: PlayModeType.onlineMatchmaking,
+          difficulty: widget.difficulty,
+          opponent: opponent,
+        );
+        break;
+      case GameTargetType.auctionDuel:
+        destination = AuctionDuelScreen(
           playMode: PlayModeType.onlineMatchmaking,
           difficulty: widget.difficulty,
           opponent: opponent,

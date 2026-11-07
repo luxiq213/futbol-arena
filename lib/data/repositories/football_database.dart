@@ -3353,4 +3353,364 @@ class FootballDatabase {
   List<PlayerModel> getValidPlayersForCell(GridCriterion row, GridCriterion col) {
     return _players.where((p) => validateGridCell(row, col, p)).toList();
   }
+
+  // --- FUTBOL KÖPRÜSÜ (SIX DEGREES OF FOOTBALL) ---
+
+  /// Find all clubs where BOTH player A and player B played
+  List<ClubModel> findAllSharedClubs(PlayerModel a, PlayerModel b) {
+    final shared = <ClubModel>[];
+    for (final cId in a.clubIds) {
+      if (b.clubIds.contains(cId) && _clubs.containsKey(cId)) {
+        shared.add(_clubs[cId]!);
+      }
+    }
+    return shared;
+  }
+
+  /// Find first shared club between two players, or null if none
+  ClubModel? findSharedClub(PlayerModel a, PlayerModel b) {
+    final all = findAllSharedClubs(a, b);
+    return all.isNotEmpty ? all.first : null;
+  }
+
+  /// BFS shortest path of club connections between start and target player
+  List<BridgeLink>? findShortestBridge(PlayerModel start, PlayerModel target) {
+    if (start.id == target.id) return [];
+    final directClub = findSharedClub(start, target);
+    if (directClub != null) {
+      return [
+        BridgeLink(
+          fromPlayer: start,
+          sharedClub: directClub,
+          toPlayer: target,
+        ),
+      ];
+    }
+
+    final visited = <String>{start.id};
+    final queue = <List<BridgeLink>>[];
+
+    // Seed queue with all 1-step neighbors of start
+    for (final p in _players) {
+      if (p.id == start.id) continue;
+      final club = findSharedClub(start, p);
+      if (club != null) {
+        final link = BridgeLink(fromPlayer: start, sharedClub: club, toPlayer: p);
+        if (p.id == target.id) return [link];
+        visited.add(p.id);
+        queue.add([link]);
+      }
+    }
+
+    while (queue.isNotEmpty) {
+      final path = queue.removeAt(0);
+      if (path.length >= 4) continue; // Cap BFS depth at 4 links
+      final lastPlayer = path.last.toPlayer;
+
+      // Check if lastPlayer connects directly to target
+      final clubToTarget = findSharedClub(lastPlayer, target);
+      if (clubToTarget != null) {
+        return [
+          ...path,
+          BridgeLink(
+            fromPlayer: lastPlayer,
+            sharedClub: clubToTarget,
+            toPlayer: target,
+          ),
+        ];
+      }
+
+      for (final nextP in _players) {
+        if (visited.contains(nextP.id)) continue;
+        final shared = findSharedClub(lastPlayer, nextP);
+        if (shared != null) {
+          visited.add(nextP.id);
+          queue.add([
+            ...path,
+            BridgeLink(fromPlayer: lastPlayer, sharedClub: shared, toPlayer: nextP),
+          ]);
+        }
+      }
+    }
+
+    return null;
+  }
+
+  PlayerModel _playerById(String id) {
+    return _players.firstWhere(
+      (p) => p.id == id,
+      orElse: () => _players.first,
+    );
+  }
+
+  List<BridgeChallenge> getBridgeChallenges({GameDifficulty? difficulty}) {
+    final curatedPairs = <Map<String, dynamic>>[
+      // Easy (Many 1-step bridges)
+      {
+        'start': 'lionel_messi',
+        'target': 'cristiano_ronaldo',
+        'title': 'GOAT Köprüsü: Messi ↔ Ronaldo',
+        'diff': GameDifficulty.easy,
+      },
+      {
+        'start': 'arda_guler',
+        'target': 'didier_drogba',
+        'title': 'Real Madrid\'den Galatasaray Efsanesine',
+        'diff': GameDifficulty.easy,
+      },
+      {
+        'start': 'mauro_icardi',
+        'target': 'cristiano_ronaldo',
+        'title': 'Icardi ↔ Cristiano Ronaldo',
+        'diff': GameDifficulty.easy,
+      },
+      {
+        'start': 'erling_haaland',
+        'target': 'lionel_messi',
+        'title': 'Yeni Nesil Dev ↔ Messi',
+        'diff': GameDifficulty.easy,
+      },
+      {
+        'start': 'alex_de_souza',
+        'target': 'ronaldo_nazario',
+        'title': 'Kadıköy Kaptanı ↔ Fenomeno',
+        'diff': GameDifficulty.medium,
+      },
+      {
+        'start': 'hakan_calhanoglu',
+        'target': 'thierry_henry',
+        'title': 'Milli Kaptan ↔ Arsenal Kralı',
+        'diff': GameDifficulty.medium,
+      },
+      {
+        'start': 'arda_turan',
+        'target': 'zinedine_zidane',
+        'title': 'Arda Turan ↔ Zinedine Zidane',
+        'diff': GameDifficulty.medium,
+      },
+      {
+        'start': 'ricardo_quaresma',
+        'target': 'wayne_rooney',
+        'title': 'Trivela Ustası ↔ Old Trafford Efsanesi',
+        'diff': GameDifficulty.medium,
+      },
+      {
+        'start': 'kylian_mbappe',
+        'target': 'gheorghe_hagi',
+        'title': 'Mbappé ↔ Karpatların Maradonası',
+        'diff': GameDifficulty.hard,
+      },
+      {
+        'start': 'ugurcan_cakir',
+        'target': 'zlatan_ibrahimovic',
+        'title': 'Karadeniz Fırtınası ↔ Zlatan',
+        'diff': GameDifficulty.hard,
+      },
+      {
+        'start': 'fernando_muslera',
+        'target': 'erling_haaland',
+        'title': 'Muslera ↔ Erling Haaland',
+        'diff': GameDifficulty.hard,
+      },
+      {
+        'start': 'kenan_yildiz',
+        'target': 'didier_drogba',
+        'title': 'Torino\'nun Genç Yıldızı ↔ Drogba',
+        'diff': GameDifficulty.hard,
+      },
+    ];
+
+    final challenges = <BridgeChallenge>[];
+    for (final item in curatedPairs) {
+      final start = _playerById(item['start'] as String);
+      final target = _playerById(item['target'] as String);
+      final optimal = findShortestBridge(start, target);
+      if (optimal != null && optimal.isNotEmpty) {
+        challenges.add(
+          BridgeChallenge(
+            title: item['title'] as String,
+            startPlayer: start,
+            targetPlayer: target,
+            optimalLinks: optimal,
+            difficulty: item['diff'] as GameDifficulty,
+          ),
+        );
+      }
+    }
+
+    if (difficulty != null) {
+      final filtered = challenges.where((c) => c.difficulty == difficulty).toList();
+      if (filtered.isNotEmpty) return filtered;
+    }
+    return challenges;
+  }
+
+  BridgeChallenge getRandomBridgeChallenge({
+    GameDifficulty difficulty = GameDifficulty.medium,
+  }) {
+    final list = getBridgeChallenges(difficulty: difficulty);
+    return list[_random.nextInt(list.length)];
+  }
+
+  // --- AÇIK ARTIRMA DÜELLOSU (AUCTION / BIDDING DUEL) ---
+
+  List<AuctionCategory> getAuctionCategories() {
+    return [
+      AuctionCategory(
+        id: 'super_lig_brazilians',
+        title: 'Süper Lig\'de Forma Giymiş Brezilyalı Futbolcular',
+        subtitle: 'Galatasaray, Fenerbahçe, Beşiktaş veya Trabzonspor\'da oynamış Sambacılar',
+        badge: 'SÜPER LİG × BREZİLYA',
+        validPlayers: _players
+            .where(
+              (p) =>
+                  p.country == 'Brezilya' &&
+                  (p.playedFor('galatasaray') ||
+                      p.playedFor('fenerbahce') ||
+                      p.playedFor('besiktas') ||
+                      p.playedFor('trabzonspor')),
+            )
+            .toList(),
+      ),
+      AuctionCategory(
+        id: 'ucl_winner_legends',
+        title: 'Şampiyonlar Ligi Kupası Kazanmış Yıldızlar',
+        subtitle: 'Kariyerinde en az 1 kez Devler Ligi zaferi yaşamış futbolcular',
+        badge: 'DEVLER LİGİ ŞAMPİYONLARI',
+        validPlayers: _players
+            .where((p) => _uclWinners.contains(p.id) || p.hint.contains('Şampiyonlar Ligi'))
+            .toList(),
+      ),
+      AuctionCategory(
+        id: 'world_cup_winners',
+        title: 'Dünya Kupası Şampiyonu Futbolcular',
+        subtitle: 'Milli takımıyla Dünya Kupası\'nı kaldırmış efsaneler',
+        badge: 'DÜNYA KUPASI ZAFERİ',
+        validPlayers: _players.where((p) => _worldCupWinners.contains(p.id)).toList(),
+      ),
+      AuctionCategory(
+        id: 'ballon_dor_winners',
+        title: 'Ballon d\'Or (Altın Top) Kazanan Efsaneler',
+        subtitle: 'Yılın en iyi futbolcusu ödülünü kazanmış isimler',
+        badge: 'ALTIN TOP SAHİPLERİ',
+        validPlayers: _players.where((p) => _ballonDorWinners.contains(p.id)).toList(),
+      ),
+      AuctionCategory(
+        id: 'turkish_national_stars',
+        title: 'Türkiye A Milli Takım Yıldızları',
+        subtitle: 'Ay-Yıldızlı formayı terletmiş Türk futbolcular',
+        badge: 'MİLLİ YILDIZLARIMIZ',
+        validPlayers: _players.where((p) => p.country == 'Türkiye').toList(),
+      ),
+      AuctionCategory(
+        id: 'real_madrid_stars',
+        title: 'Real Madrid Forması Giymiş Yıldızlar',
+        subtitle: 'Santiago Bernabéu\'da beyaz formayı terletmiş efsaneler',
+        badge: 'LOS BLANCOS',
+        validPlayers: _players.where((p) => p.playedFor('real_madrid')).toList(),
+      ),
+      AuctionCategory(
+        id: 'galatasaray_legends',
+        title: 'Galatasaray Forması Giymiş Yıldızlar',
+        subtitle: 'Sarı-Kırmızılı parçalı formayı giymiş yerli ve yabancı yıldızlar',
+        badge: 'ASLANLAR',
+        validPlayers: _players.where((p) => p.playedFor('galatasaray')).toList(),
+      ),
+      AuctionCategory(
+        id: 'fenerbahce_legends',
+        title: 'Fenerbahçe Forması Giymiş Yıldızlar',
+        subtitle: 'Kadıköy\'de çubuklu formayı terletmiş yerli ve yabancı yıldızlar',
+        badge: 'SARI KANARYALAR',
+        validPlayers: _players.where((p) => p.playedFor('fenerbahce')).toList(),
+      ),
+      AuctionCategory(
+        id: 'besiktas_legends',
+        title: 'Beşiktaş Forması Giymiş Yıldızlar',
+        subtitle: 'Siyah-Beyazlı formayı giymiş yerli ve yabancı yıldızlar',
+        badge: 'KARA KARTALLAR',
+        validPlayers: _players.where((p) => p.playedFor('besiktas')).toList(),
+      ),
+      AuctionCategory(
+        id: 'premier_league_scorers',
+        title: 'İngiltere Premier League Devlerinde Oynamış Yıldızlar',
+        subtitle: 'Man United, Man City, Arsenal, Chelsea veya Liverpool\'da oynamış isimler',
+        badge: 'PREMIER LEAGUE',
+        validPlayers: _players
+            .where(
+              (p) =>
+                  p.playedFor('man_united') ||
+                  p.playedFor('man_city') ||
+                  p.playedFor('arsenal') ||
+                  p.playedFor('chelsea') ||
+                  p.playedFor('liverpool'),
+            )
+            .toList(),
+      ),
+      AuctionCategory(
+        id: 'serie_a_giants',
+        title: 'İtalya Serie A Devlerinde (Juve, Milan, Inter) Oynamış Yıldızlar',
+        subtitle: 'Çizme\'nin üç büyük kulübünden en az birinde forma giymiş futbolcular',
+        badge: 'SERIE A DEVLERİ',
+        validPlayers: _players
+            .where(
+              (p) =>
+                  p.playedFor('juventus') ||
+                  p.playedFor('milan') ||
+                  p.playedFor('inter'),
+            )
+            .toList(),
+      ),
+    ];
+  }
+
+  AuctionCategory getRandomAuctionCategory() {
+    final cats = getAuctionCategories();
+    return cats[_random.nextInt(cats.length)];
+  }
+}
+
+class BridgeLink {
+  final PlayerModel fromPlayer;
+  final ClubModel sharedClub;
+  final PlayerModel toPlayer;
+
+  const BridgeLink({
+    required this.fromPlayer,
+    required this.sharedClub,
+    required this.toPlayer,
+  });
+}
+
+class BridgeChallenge {
+  final String title;
+  final PlayerModel startPlayer;
+  final PlayerModel targetPlayer;
+  final List<BridgeLink> optimalLinks;
+  final GameDifficulty difficulty;
+
+  const BridgeChallenge({
+    required this.title,
+    required this.startPlayer,
+    required this.targetPlayer,
+    required this.optimalLinks,
+    required this.difficulty,
+  });
+
+  int get optimalIntermediateCount => (optimalLinks.length - 1).clamp(1, 10);
+}
+
+class AuctionCategory {
+  final String id;
+  final String title;
+  final String subtitle;
+  final String badge;
+  final List<PlayerModel> validPlayers;
+
+  const AuctionCategory({
+    required this.id,
+    required this.title,
+    required this.subtitle,
+    required this.badge,
+    required this.validPlayers,
+  });
 }

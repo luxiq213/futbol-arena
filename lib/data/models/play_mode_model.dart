@@ -125,6 +125,8 @@ enum GameTargetType {
   commonPlayer,
   fiveClubs,
   footballGrid,
+  footballBridge,
+  auctionDuel,
 }
 
 extension GameTargetTypeExtension on GameTargetType {
@@ -136,6 +138,10 @@ extension GameTargetTypeExtension on GameTargetType {
         return '5 Takım 1 Oyuncu';
       case GameTargetType.footballGrid:
         return 'Futbol Grid (3x3)';
+      case GameTargetType.footballBridge:
+        return 'Futbol Köprüsü';
+      case GameTargetType.auctionDuel:
+        return 'Açık Artırma Düellosu';
     }
   }
 
@@ -147,6 +153,10 @@ extension GameTargetTypeExtension on GameTargetType {
         return '5 kulübün en çoğunda oynamış ortak futbolcuyu tahmin et.';
       case GameTargetType.footballGrid:
         return '3x3 kulüp, kupa ve milli takım kesişim matrisini doğru oyuncularla doldur.';
+      case GameTargetType.footballBridge:
+        return 'İki yıldız futbolcuyu ortak oynadıkları kulüpler üzerinden en kısa zincirle birbirine bağla.';
+      case GameTargetType.auctionDuel:
+        return 'Kategoriye göre kaç futbolcu sayabileceğine dair iddiayı artır veya rakibin blöfünü yakala!';
     }
   }
 }

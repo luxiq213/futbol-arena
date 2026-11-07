@@ -37,6 +37,10 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
         return Icons.shield_outlined;
       case LeaderboardModeCategory.footballGrid:
         return Icons.grid_3x3_rounded;
+      case LeaderboardModeCategory.footballBridge:
+        return Icons.hub_outlined;
+      case LeaderboardModeCategory.auctionDuel:
+        return Icons.gavel_rounded;
     }
   }
 

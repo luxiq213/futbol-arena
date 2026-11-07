@@ -132,15 +132,16 @@ class _LobbyHubScreenState extends State<LobbyHubScreen> {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    Row(
-                      children: GameTargetType.values.map((type) {
-                        final isSelected = _selectedGame == type;
-                        return Expanded(
-                          child: GestureDetector(
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: GameTargetType.values.map((type) {
+                          final isSelected = _selectedGame == type;
+                          return GestureDetector(
                             onTap: () => setState(() => _selectedGame = type),
                             child: Container(
-                              margin: const EdgeInsets.symmetric(horizontal: 3),
-                              padding: const EdgeInsets.symmetric(vertical: 9, horizontal: 6),
+                              margin: const EdgeInsets.only(right: 8),
+                              padding: const EdgeInsets.symmetric(vertical: 9, horizontal: 12),
                               decoration: BoxDecoration(
                                 color: isSelected ? AppColors.darkGreen : AppColors.surfaceLight,
                                 borderRadius: BorderRadius.circular(10),
@@ -152,19 +153,16 @@ class _LobbyHubScreenState extends State<LobbyHubScreen> {
                               child: Text(
                                 type.title,
                                 textAlign: TextAlign.center,
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
                                 style: TextStyle(
-                                  fontSize: 10.5,
-                                  height: 1.15,
+                                  fontSize: 11,
                                   fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
                                   color: isSelected ? Colors.white : AppColors.textSecondary,
                                 ),
                               ),
                             ),
-                          ),
-                        );
-                      }).toList(),
+                          );
+                        }).toList(),
+                      ),
                     ),
                   ],
                 ),

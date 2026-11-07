@@ -361,7 +361,7 @@ class _HomeScreenState extends State<HomeScreen> {
           const SizedBox(height: 11),
         ],
 
-        // 2. Bölüm: Trivia & Analiz Düelloları (2'li Yan Yana Bento Grid)
+        // 2. Bölüm: Trivia & Analiz Düelloları (2x2 Yan Yana Bento Grid)
         if (showDuel) ...[
           _buildSectionHeader('OYUN MODLARI • TRİVİA & DÜELLO', 'Kendini Sına • Online • Davet'),
           const SizedBox(height: 5),
@@ -396,6 +396,45 @@ class _HomeScreenState extends State<HomeScreen> {
                       showGameModeSelectorSheet(
                         context,
                         targetGame: GameTargetType.fiveClubs,
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 9),
+          IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(
+                  child: BentoGameModeCard(
+                    title: 'Futbol Köprüsü',
+                    subtitle: 'İki yıldızı ortak oynadıkları kulüpler üzerinden en kısa zincirle birbirine bağla.',
+                    icon: Icons.hub_outlined,
+                    tag: 'YILDIZ BAĞLA',
+                    tagColor: AppColors.gold,
+                    onTap: () {
+                      showGameModeSelectorSheet(
+                        context,
+                        targetGame: GameTargetType.footballBridge,
+                      );
+                    },
+                  ),
+                ),
+                const SizedBox(width: 9),
+                Expanded(
+                  child: BentoGameModeCard(
+                    title: 'Açık Artırma Düellosu',
+                    subtitle: 'Kaç futbolcu sayabileceğine dair iddiayı artır veya rakibin blöfünü yakala!',
+                    icon: Icons.gavel_rounded,
+                    tag: 'İDDİA & BLÖF',
+                    tagColor: const Color(0xFFF97316),
+                    onTap: () {
+                      showGameModeSelectorSheet(
+                        context,
+                        targetGame: GameTargetType.auctionDuel,
                       );
                     },
                   ),

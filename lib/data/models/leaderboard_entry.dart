@@ -4,6 +4,8 @@ enum LeaderboardModeCategory {
   commonPlayer,
   fiveClubs,
   footballGrid,
+  footballBridge,
+  auctionDuel,
 }
 
 extension LeaderboardModeCategoryExt on LeaderboardModeCategory {
@@ -19,6 +21,10 @@ extension LeaderboardModeCategoryExt on LeaderboardModeCategory {
         return '5 Takım 1 Oyuncu';
       case LeaderboardModeCategory.footballGrid:
         return 'Futbol Grid 3x3';
+      case LeaderboardModeCategory.footballBridge:
+        return 'Futbol Köprüsü';
+      case LeaderboardModeCategory.auctionDuel:
+        return 'Açık Artırma';
     }
   }
 
@@ -34,6 +40,10 @@ extension LeaderboardModeCategoryExt on LeaderboardModeCategory {
         return '5 Takım 1 Oyuncu modunda 5/5 tam isabet ve analiz puanları';
       case LeaderboardModeCategory.footballGrid:
         return 'Futbol Grid 3x3 kupa, milli takım ve kulüp matrisi puanları';
+      case LeaderboardModeCategory.footballBridge:
+        return 'Futbol Köprüsü modunda en az adımda kurulan transfer zincirleri';
+      case LeaderboardModeCategory.auctionDuel:
+        return 'Açık Artırma Düellosu modunda kanıtlanan iddialar ve blöf zaferleri';
     }
   }
 }

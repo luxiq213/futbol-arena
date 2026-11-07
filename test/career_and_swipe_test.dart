@@ -7,8 +7,10 @@ import 'package:futbol_party/data/models/play_mode_model.dart';
 import 'package:futbol_party/data/repositories/football_database.dart';
 import 'package:futbol_party/data/repositories/leaderboard_repository.dart';
 import 'package:futbol_party/main.dart';
+import 'package:futbol_party/providers/auction_duel_game_provider.dart';
 import 'package:futbol_party/providers/career_game_provider.dart';
 import 'package:futbol_party/providers/common_player_game_provider.dart';
+import 'package:futbol_party/providers/football_bridge_game_provider.dart';
 import 'package:futbol_party/views/profile/profile_screen.dart';
 import 'package:futbol_party/views/widgets/player_avatar_widget.dart';
 
@@ -127,6 +129,50 @@ void main() {
       expect(provider.isCurrentRoundClubVsCountry, isFalse);
       expect(provider.clubB!.isNationalTeam, isFalse);
       expect(provider.mutualPlayers, isNotEmpty);
+    });
+
+    test('Futbol Köprüsü (Six Degrees) builds valid club bridges and completes chain', () {
+      final db = FootballDatabase();
+      final challenges = db.getBridgeChallenges();
+      expect(challenges, isNotEmpty);
+
+      for (final ch in challenges) {
+        expect(ch.optimalLinks, isNotEmpty);
+        expect(ch.optimalLinks.first.fromPlayer.id, ch.startPlayer.id);
+        expect(ch.optimalLinks.last.toPlayer.id, ch.targetPlayer.id);
+      }
+
+      final bridgeProvider = FootballBridgeGameProvider(
+        difficulty: GameDifficulty.easy,
+      );
+      final ch = bridgeProvider.challenge!;
+      expect(bridgeProvider.isBridgeCompleted, isFalse);
+
+      // Walk through the optimal intermediate players
+      for (int i = 0; i < ch.optimalLinks.length - 1; i++) {
+        final stepPlayer = ch.optimalLinks[i].toPlayer;
+        final ok = bridgeProvider.submitStepPlayer(stepPlayer);
+        expect(ok, isTrue);
+      }
+
+      expect(bridgeProvider.isBridgeCompleted, isTrue);
+      expect(bridgeProvider.score, greaterThan(0));
+    });
+
+    test('Açık Artırma Düellosu (Auction Duel) supports bidding and proving categories', () {
+      final db = FootballDatabase();
+      final categories = db.getAuctionCategories();
+      expect(categories.length, greaterThanOrEqualTo(10));
+      for (final cat in categories) {
+        expect(cat.validPlayers.length, greaterThanOrEqualTo(5));
+      }
+
+      final auctionProvider = AuctionDuelGameProvider(
+        difficulty: GameDifficulty.medium,
+      );
+      expect(auctionProvider.phase, AuctionPhase.bidding);
+      expect(auctionProvider.currentBid, 2);
+      expect(auctionProvider.canUserCallProve, isTrue);
     });
   });
 

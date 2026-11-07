@@ -8,8 +8,10 @@ import '../../../../providers/online_room_provider.dart';
 import '../../widgets/app_notification.dart';
 import '../../widgets/stadium_background.dart';
 import '../../widgets/custom_button.dart';
+import '../auction_duel/auction_duel_screen.dart';
 import '../common_player/common_player_screen.dart';
 import '../five_clubs/five_clubs_screen.dart';
+import '../football_bridge/football_bridge_screen.dart';
 import '../football_grid/football_grid_screen.dart';
 
 class ActiveRoomScreen extends StatelessWidget {
@@ -32,6 +34,18 @@ class ActiveRoomScreen extends StatelessWidget {
         break;
       case GameTargetType.footballGrid:
         destination = FootballGridScreen(
+          playMode: PlayModeType.friendInvite,
+          opponent: friendOpponent,
+        );
+        break;
+      case GameTargetType.footballBridge:
+        destination = FootballBridgeScreen(
+          playMode: PlayModeType.friendInvite,
+          opponent: friendOpponent,
+        );
+        break;
+      case GameTargetType.auctionDuel:
+        destination = AuctionDuelScreen(
           playMode: PlayModeType.friendInvite,
           opponent: friendOpponent,
         );

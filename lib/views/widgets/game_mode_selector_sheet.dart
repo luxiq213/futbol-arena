@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
 import '../../data/models/play_mode_model.dart';
+import '../games/auction_duel/auction_duel_screen.dart';
 import '../games/common_player/common_player_screen.dart';
 import '../games/five_clubs/five_clubs_screen.dart';
+import '../games/football_bridge/football_bridge_screen.dart';
 import '../games/football_grid/football_grid_screen.dart';
 import '../games/online_lobby/lobby_hub_screen.dart';
 import '../games/online_lobby/matchmaking_screen.dart';
@@ -55,6 +57,18 @@ class _GameModeSelectorSheetState extends State<GameModeSelectorSheet> {
         break;
       case GameTargetType.footballGrid:
         destination = FootballGridScreen(
+          playMode: PlayModeType.solo,
+          difficulty: _selectedDifficulty,
+        );
+        break;
+      case GameTargetType.footballBridge:
+        destination = FootballBridgeScreen(
+          playMode: PlayModeType.solo,
+          difficulty: _selectedDifficulty,
+        );
+        break;
+      case GameTargetType.auctionDuel:
+        destination = AuctionDuelScreen(
           playMode: PlayModeType.solo,
           difficulty: _selectedDifficulty,
         );

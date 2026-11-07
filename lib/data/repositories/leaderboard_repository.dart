@@ -116,6 +116,36 @@ class LeaderboardRepository {
           secondaryLabel: '$cellsSolved Hücre Çözüldü',
           isCurrentUser: true,
         );
+      case LeaderboardModeCategory.footballBridge:
+        final modePts = (baseXp * 0.34).round() + 400;
+        final bridges = (wins + 5).clamp(5, 42);
+        return LeaderboardEntry(
+          rank: 0,
+          userId: user.id,
+          username: '${user.username} (Sen)',
+          avatar: user.avatar,
+          favoriteTeam: user.favoriteTeam,
+          points: modePts,
+          matchesWon: wins,
+          scoreLabel: '$modePts Puan',
+          secondaryLabel: '$bridges Köprü Kuruldu',
+          isCurrentUser: true,
+        );
+      case LeaderboardModeCategory.auctionDuel:
+        final modePts = (baseXp * 0.40).round() + 420;
+        final maxBid = (5 + (wins ~/ 4)).clamp(5, 12);
+        return LeaderboardEntry(
+          rank: 0,
+          userId: user.id,
+          username: '${user.username} (Sen)',
+          avatar: user.avatar,
+          favoriteTeam: user.favoriteTeam,
+          points: modePts,
+          matchesWon: wins,
+          scoreLabel: '$modePts Puan',
+          secondaryLabel: 'Rekor İddia: $maxBid Oyuncu',
+          isCurrentUser: true,
+        );
     }
   }
 
@@ -446,6 +476,102 @@ class LeaderboardRepository {
             matchesWon: 17,
             scoreLabel: '2840 Puan',
             secondaryLabel: '54 Hücre Çözüldü',
+          ),
+        ];
+
+      case LeaderboardModeCategory.footballBridge:
+        return [
+          const LeaderboardEntry(
+            rank: 1,
+            userId: 'u1',
+            username: 'Hagi10',
+            avatar: 'goat_10',
+            favoriteTeam: 'Galatasaray',
+            points: 3640,
+            matchesWon: 23,
+            scoreLabel: '3640 Puan',
+            secondaryLabel: '23 Köprü • Ort. 1.2 Adım',
+          ),
+          const LeaderboardEntry(
+            rank: 2,
+            userId: 'u4',
+            username: 'SariKanarya_Arda',
+            avatar: 'fener_10',
+            favoriteTeam: 'Fenerbahçe',
+            points: 3310,
+            matchesWon: 20,
+            scoreLabel: '3310 Puan',
+            secondaryLabel: '20 Köprü • Ort. 1.4 Adım',
+          ),
+          const LeaderboardEntry(
+            rank: 3,
+            userId: 'u2',
+            username: 'CR7_Efsane',
+            avatar: 'striker_7',
+            favoriteTeam: 'Real Madrid',
+            points: 2980,
+            matchesWon: 18,
+            scoreLabel: '2980 Puan',
+            secondaryLabel: '18 Köprü • Ort. 1.5 Adım',
+          ),
+          const LeaderboardEntry(
+            rank: 4,
+            userId: 'u3',
+            username: 'Karakartal_99',
+            avatar: 'captain_4',
+            favoriteTeam: 'Beşiktaş',
+            points: 2590,
+            matchesWon: 15,
+            scoreLabel: '2590 Puan',
+            secondaryLabel: '15 Köprü • Ort. 1.6 Adım',
+          ),
+        ];
+
+      case LeaderboardModeCategory.auctionDuel:
+        return [
+          const LeaderboardEntry(
+            rank: 1,
+            userId: 'u2',
+            username: 'CR7_Efsane',
+            avatar: 'striker_7',
+            favoriteTeam: 'Real Madrid',
+            points: 3920,
+            matchesWon: 26,
+            scoreLabel: '3920 Puan',
+            secondaryLabel: 'Rekor İddia: 11 Oyuncu',
+          ),
+          const LeaderboardEntry(
+            rank: 2,
+            userId: 'u3',
+            username: 'Karakartal_99',
+            avatar: 'captain_4',
+            favoriteTeam: 'Beşiktaş',
+            points: 3580,
+            matchesWon: 22,
+            scoreLabel: '3580 Puan',
+            secondaryLabel: 'Rekor İddia: 10 Oyuncu',
+          ),
+          const LeaderboardEntry(
+            rank: 3,
+            userId: 'u1',
+            username: 'Hagi10',
+            avatar: 'goat_10',
+            favoriteTeam: 'Galatasaray',
+            points: 3250,
+            matchesWon: 20,
+            scoreLabel: '3250 Puan',
+            secondaryLabel: 'Rekor İddia: 9 Oyuncu',
+          ),
+          const LeaderboardEntry(
+            rank: 4,
+            userId: 'u5',
+            username: 'Gunner4Ever',
+            avatar: 'wonderkid_19',
+            favoriteTeam: 'Arsenal',
+            points: 2810,
+            matchesWon: 17,
+            scoreLabel: '2810 Puan',
+            secondaryLabel: 'Rekor İddia: 8 Oyuncu',
           ),
         ];
     }
