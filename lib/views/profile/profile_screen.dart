@@ -303,7 +303,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        '${loc.currentLanguage.nativeName} (${loc.currentLanguage.shortCode}) • 10 Dil',
+                        '${loc.currentLanguage.nativeName} (${loc.currentLanguage.shortCode}) • 20 Dil',
                         style: const TextStyle(
                           fontSize: 11,
                           color: AppColors.greenLight,

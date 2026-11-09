@@ -202,8 +202,8 @@ void main() {
       expect(UserModel.fromJson(adFreeUser.toJson()).isAdFree, isTrue);
     });
 
-    test('Multi-language localization system supports 10 football languages', () {
-      expect(AppStrings.supportedLanguages.length, 10);
+    test('Multi-language localization system supports 20 football languages', () {
+      expect(AppStrings.supportedLanguages.length, 20);
       for (final lang in AppStrings.supportedLanguages) {
         expect(AppStrings.tr('app_title', lang.code), isNotEmpty);
         expect(AppStrings.tr('career_card_title', lang.code), isNotEmpty);
