@@ -193,6 +193,70 @@ class _LeagueDraftViewState extends State<_LeagueDraftView> {
               ),
             ],
           ),
+          const SizedBox(height: 14),
+
+          // Pool Selector & Database Browser Button
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'TAKIM & SEZON HAVUZU SEÇİMİ',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 0.7,
+                  color: AppColors.greenLight,
+                ),
+              ),
+              InkWell(
+                borderRadius: BorderRadius.circular(8),
+                onTap: () => _showDatabaseBrowserSheet(context),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: AppColors.pitchGreen.withValues(alpha: 0.18),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: AppColors.pitchGreen.withValues(alpha: 0.6)),
+                  ),
+                  child: Text(
+                    'Veritabanını İncele (${LeagueDraftProvider.allEraClubPacks.length} Takım/Yıl • ${LeagueDraftProvider.allManagers.length} Hoca) ›',
+                    style: const TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.greenLight,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 7,
+            runSpacing: 7,
+            children: [
+              _buildPoolFilterChip(
+                provider: provider,
+                theme: LeaguePoolTheme.allWorldHistory,
+                label: 'Tüm Dünya & Tarih (${LeagueDraftProvider.allEraClubPacks.length} Paket)',
+              ),
+              _buildPoolFilterChip(
+                provider: provider,
+                theme: LeaguePoolTheme.superLigHistory,
+                label: 'Süper Lig Tarihi (14 Paket)',
+              ),
+              _buildPoolFilterChip(
+                provider: provider,
+                theme: LeaguePoolTheme.europeanGiants,
+                label: 'Avrupa Devleri (40 Paket)',
+              ),
+              _buildPoolFilterChip(
+                provider: provider,
+                theme: LeaguePoolTheme.worldCupLegends,
+                label: 'Milli Takım & Süper Lig Efsaneleri',
+              ),
+            ],
+          ),
           const SizedBox(height: 16),
 
           Row(
@@ -752,6 +816,36 @@ class _LeagueDraftViewState extends State<_LeagueDraftView> {
                           color: AppColors.textSecondary,
                         ),
                       ),
+                      if (provider.remainingRerolls > 0) ...[
+                        const SizedBox(height: 8),
+                        InkWell(
+                          borderRadius: BorderRadius.circular(8),
+                          onTap: provider.rerollCurrentClubPack,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                            decoration: BoxDecoration(
+                              color: AppColors.gold.withValues(alpha: 0.16),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: AppColors.gold, width: 0.9),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.refresh_rounded, size: 13, color: AppColors.gold),
+                                const SizedBox(width: 4),
+                                Text(
+                                  'Başka Takım/Yıl Çek (Kalan Hak: ${provider.remainingRerolls})',
+                                  style: const TextStyle(
+                                    fontSize: 10.5,
+                                    fontWeight: FontWeight.w800,
+                                    color: AppColors.gold,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -1575,6 +1669,193 @@ class _LeagueDraftViewState extends State<_LeagueDraftView> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildPoolFilterChip({
+    required LeagueDraftProvider provider,
+    required LeaguePoolTheme theme,
+    required String label,
+  }) {
+    final isSelected = provider.poolTheme == theme;
+    return InkWell(
+      borderRadius: BorderRadius.circular(10),
+      onTap: () => provider.setPoolTheme(theme),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 160),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? AppColors.pitchGreen.withValues(alpha: 0.25)
+              : AppColors.surface.withValues(alpha: 0.85),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: isSelected ? AppColors.gold : AppColors.border,
+            width: isSelected ? 1.3 : 0.8,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              isSelected ? Icons.check_circle_rounded : Icons.public_rounded,
+              size: 13,
+              color: isSelected ? AppColors.gold : AppColors.textSecondary,
+            ),
+            const SizedBox(width: 5),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 10.5,
+                fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                color: isSelected ? Colors.white : AppColors.textSecondary,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showDatabaseBrowserSheet(BuildContext context) {
+    final packs = LeagueDraftProvider.allEraClubPacks;
+    final managers = LeagueDraftProvider.allManagers;
+    final totalPlayers = packs.fold<int>(0, (sum, p) => sum + p.roster.length);
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (ctx) {
+        return Container(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(ctx).size.height * 0.84,
+          ),
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
+          decoration: BoxDecoration(
+            color: const Color(0xFF071B12),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(22)),
+            border: Border.all(color: AppColors.gold.withValues(alpha: 0.55)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Center(
+                child: Container(
+                  width: 38,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.24),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'Kadro & Lig Veritabanı (${packs.length} Tarihi Takım • ${managers.length} Hoca • $totalPlayers Futbolcu)',
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w900,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(height: 4),
+              const Text(
+                'Süper Lig, Premier League, La Liga, Serie A, Bundesliga, Ligue 1, Güney Amerika ve Dünya Kupası efsane dönem kadroları:',
+                style: TextStyle(
+                  fontSize: 11,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+              const SizedBox(height: 10),
+              Expanded(
+                child: ListView.builder(
+                  itemCount: packs.length,
+                  itemBuilder: (_, idx) {
+                    final pack = packs[idx];
+                    final club = FootballDatabase().getClub(pack.clubId) ??
+                        FootballDatabase().getAllClubs().first;
+                    final starNames = pack.roster.map((e) => e.name).join(' • ');
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 7),
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.05),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
+                      ),
+                      child: Row(
+                        children: [
+                          ClubCrestWidget(club: club, size: 36),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+                                      decoration: BoxDecoration(
+                                        color: AppColors.gold.withValues(alpha: 0.22),
+                                        borderRadius: BorderRadius.circular(4),
+                                      ),
+                                      child: Text(
+                                        pack.seasonLabel,
+                                        style: const TextStyle(
+                                          fontSize: 9.5,
+                                          fontWeight: FontWeight.w900,
+                                          color: AppColors.gold,
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Expanded(
+                                      child: Text(
+                                        pack.clubName,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(
+                                          fontSize: 12.5,
+                                          fontWeight: FontWeight.w900,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  pack.eraTitle,
+                                  style: const TextStyle(
+                                    fontSize: 10.5,
+                                    fontWeight: FontWeight.w700,
+                                    color: AppColors.greenLight,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  starNames,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    fontSize: 10,
+                                    color: AppColors.textSecondary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

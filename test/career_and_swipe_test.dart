@@ -215,6 +215,11 @@ void main() {
     });
 
     test('Kadro Kur & Lig Simüle Et supports 3-manager pick, 3-formation pick, 11-player Era+Club draft, and multi-friend league simulation', () {
+      expect(LeagueDraftProvider.allManagers.length, greaterThanOrEqualTo(30));
+      expect(LeagueDraftProvider.allFormations.length, greaterThanOrEqualTo(10));
+      expect(LeagueDraftProvider.allEraClubPacks.length, greaterThanOrEqualTo(60));
+      expect(FootballDatabase().getAllClubs().length, greaterThanOrEqualTo(50));
+
       final draftProvider = LeagueDraftProvider();
       draftProvider.startDraft(
         playerNames: ['Mehmet', 'Ali', 'Burak'],
