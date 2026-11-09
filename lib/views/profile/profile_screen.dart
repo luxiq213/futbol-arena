@@ -250,7 +250,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     Text(
                       user.isAdFree
                           ? 'Uygulamadaki tüm reklamlar kalıcı olarak kapatıldı.'
-                          : 'Oyun içi paket satışı yoktur; tek seferlik ödeme ile tüm reklamları kaldır.',
+                          : user.isGuest
+                              ? 'Reklamsız Modu satın almak için önce ücretsiz kalıcı hesap oluşturmalısınız.'
+                              : 'Oyun içi paket satışı yoktur; tek seferlik ödeme ile tüm reklamları kaldır.',
                       style: const TextStyle(
                         fontSize: 10.5,
                         color: AppColors.textSecondary,
@@ -273,7 +275,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     borderRadius: BorderRadius.circular(9),
                   ),
                   child: Text(
-                    user.isAdFree ? 'Yönet' : '₺49,99',
+                    user.isAdFree
+                        ? 'Yönet'
+                        : user.isGuest
+                            ? 'Hesap Aç'
+                            : '₺49,99',
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w900,

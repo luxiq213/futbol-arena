@@ -104,12 +104,16 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> setAdFreeMode(bool isAdFree) async {
-    if (_currentUser == null) return;
+  Future<bool> setAdFreeMode(bool isAdFree) async {
+    if (_currentUser == null) return false;
+    if (isAdFree && _currentUser!.isGuest) {
+      return false;
+    }
     final updated = _currentUser!.copyWith(isAdFree: isAdFree);
     _currentUser = updated;
     await _repo.saveUser(updated);
     notifyListeners();
+    return true;
   }
 
   Future<void> logout() async {

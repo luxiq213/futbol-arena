@@ -45,7 +45,7 @@ class AuthRepository {
     return guest;
   }
 
-  /// Register new user
+  /// Register new user (preserving any earned guest XP/stats)
   Future<UserModel> register({
     required String username,
     required String email,
@@ -53,17 +53,19 @@ class AuthRepository {
     required String favoriteTeam,
     required String avatar,
   }) async {
+    final existing = await getSavedUser();
     final user = UserModel(
-      id: _uuid.v4(),
+      id: existing?.id ?? _uuid.v4(),
       username: username.trim(),
       email: email.trim(),
       avatar: avatar,
       favoriteTeam: favoriteTeam,
-      points: 500,
-      matchesPlayed: 0,
-      matchesWon: 0,
-      currentStreak: 0,
+      points: (existing != null && existing.points > 500) ? existing.points : 500,
+      matchesPlayed: existing?.matchesPlayed ?? 0,
+      matchesWon: existing?.matchesWon ?? 0,
+      currentStreak: existing?.currentStreak ?? 0,
       isGuest: false,
+      isAdFree: existing?.isAdFree ?? false,
     );
     await saveUser(user);
     return user;
@@ -77,7 +79,9 @@ class AuthRepository {
     // In local / prototype mode, check saved or create session
     final saved = await getSavedUser();
     if (saved != null && (saved.email == email || saved.username == email)) {
-      return saved;
+      final upgraded = saved.copyWith(isGuest: false);
+      await saveUser(upgraded);
+      return upgraded;
     }
 
     final name = email.split('@').first;

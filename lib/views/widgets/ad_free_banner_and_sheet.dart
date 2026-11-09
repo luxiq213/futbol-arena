@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
 import '../../providers/auth_provider.dart';
+import '../auth/login_screen.dart';
+import '../auth/register_screen.dart';
 import 'app_notification.dart';
 
 /// Displays a sleek sponsor/ad banner for free-tier users.
@@ -129,7 +131,9 @@ class _AdFreePurchaseSheetContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
-    final isAdFree = auth.currentUser?.isAdFree ?? false;
+    final user = auth.currentUser;
+    final isGuest = user == null || user.isGuest;
+    final isAdFree = user?.isAdFree ?? false;
 
     return Container(
       padding: EdgeInsets.fromLTRB(
@@ -251,10 +255,125 @@ class _AdFreePurchaseSheetContent extends StatelessWidget {
           _buildFeatureItem(
             Icons.all_inclusive_rounded,
             'Tek Seferlik Ödeme (Abonelik Yok)',
-            'Aylık yenileme olmadan tek seferde hesabınıza kalıcı olarak tanımlanır.',
+            'Aylık yenileme olmadan tek seferde kalıcı hesabınıza tanımlanır.',
           ),
-          const SizedBox(height: 16),
-          if (!isAdFree)
+          const SizedBox(height: 14),
+
+          if (isGuest) ...[
+            Container(
+              padding: const EdgeInsets.all(11),
+              decoration: BoxDecoration(
+                color: AppColors.gold.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: AppColors.gold.withValues(alpha: 0.55),
+                  width: 0.9,
+                ),
+              ),
+              child: const Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(Icons.lock_person_outlined, color: AppColors.gold, size: 18),
+                  SizedBox(width: 9),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Satın Alım İçin Kalıcı Hesap Gerekli',
+                          style: TextStyle(
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.w800,
+                            color: AppColors.gold,
+                          ),
+                        ),
+                        SizedBox(height: 2),
+                        Text(
+                          'Şu anda Misafir Hesap ile oynuyorsunuz. Reklamsız Mod hakkınızın cihaz değiştirdiğinizde kaybolmaması için önce ücretsiz hesap oluşturun veya giriş yapın.',
+                          style: TextStyle(
+                            fontSize: 10.5,
+                            color: Colors.white,
+                            height: 1.25,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+            ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.pitchGreen,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 13),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              onPressed: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const RegisterScreen()),
+                );
+              },
+              icon: const Icon(Icons.person_add_alt_1_rounded, size: 18),
+              label: const Text(
+                'Önce Ücretsiz Hesap Oluştur',
+                style: TextStyle(
+                  fontSize: 13.5,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ),
+            const SizedBox(height: 6),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const LoginScreen()),
+                );
+              },
+              child: const Text(
+                'Zaten hesabım var, Giriş Yap',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.gold,
+                ),
+              ),
+            ),
+          ] else if (!isAdFree) ...[
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 8),
+              decoration: BoxDecoration(
+                color: AppColors.pitchGreen.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: AppColors.pitchGreen.withValues(alpha: 0.45)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.verified_user_outlined, color: AppColors.greenLight, size: 16),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Kalıcı Hesap Bağlı: ${user.username} (${user.email})',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.greenLight,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
             ElevatedButton.icon(
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.gold,
@@ -265,13 +384,13 @@ class _AdFreePurchaseSheetContent extends StatelessWidget {
                 ),
               ),
               onPressed: () async {
-                await auth.setAdFreeMode(true);
-                if (context.mounted) {
+                final ok = await auth.setAdFreeMode(true);
+                if (ok && context.mounted) {
                   Navigator.pop(context);
                   AppNotification.show(
                     context,
                     title: 'Reklamsız Mod Etkinleştirildi',
-                    subtitle: 'Tüm reklamlar kalıcı olarak kaldırıldı. İyi oyunlar!',
+                    subtitle: 'Tüm reklamlar ${user.username} hesabınız için kalıcı olarak kaldırıldı.',
                     type: AppNotificationType.success,
                     icon: Icons.verified_rounded,
                   );
@@ -285,59 +404,59 @@ class _AdFreePurchaseSheetContent extends StatelessWidget {
                   fontWeight: FontWeight.w900,
                 ),
               ),
-            )
-          else
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                  decoration: BoxDecoration(
-                    color: AppColors.pitchGreen.withValues(alpha: 0.16),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppColors.pitchGreen),
-                  ),
-                  child: const Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.check_circle_rounded, color: AppColors.greenLight, size: 18),
-                      SizedBox(width: 8),
-                      Text(
-                        'Reklamsız Mod Hesabınızda Aktif',
-                        style: TextStyle(
-                          fontSize: 12.5,
-                          fontWeight: FontWeight.w800,
-                          color: Colors.white,
-                        ),
+            ),
+          ] else ...[
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                color: AppColors.pitchGreen.withValues(alpha: 0.16),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppColors.pitchGreen),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.check_circle_rounded, color: AppColors.greenLight, size: 18),
+                  const SizedBox(width: 8),
+                  Flexible(
+                    child: Text(
+                      'Reklamsız Mod Aktif (${user.username})',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white,
                       ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 8),
-                TextButton(
-                  onPressed: () async {
-                    await auth.setAdFreeMode(false);
-                    if (context.mounted) {
-                      Navigator.pop(context);
-                      AppNotification.show(
-                        context,
-                        title: 'Reklamlı Görünüme Dönüldü (Test)',
-                        subtitle: 'Reklam alanları tekrar görünür hale getirildi.',
-                        type: AppNotificationType.highlight,
-                        icon: Icons.visibility_outlined,
-                      );
-                    }
-                  },
-                  child: const Text(
-                    'Test İçin Reklamlı Görünüme Geri Dön',
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: AppColors.textMuted,
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
+            const SizedBox(height: 8),
+            TextButton(
+              onPressed: () async {
+                await auth.setAdFreeMode(false);
+                if (context.mounted) {
+                  Navigator.pop(context);
+                  AppNotification.show(
+                    context,
+                    title: 'Reklamlı Görünüme Dönüldü (Test)',
+                    subtitle: 'Reklam alanları tekrar görünür hale getirildi.',
+                    type: AppNotificationType.highlight,
+                    icon: Icons.visibility_outlined,
+                  );
+                }
+              },
+              child: const Text(
+                'Test İçin Reklamlı Görünüme Geri Dön',
+                style: TextStyle(
+                  fontSize: 11,
+                  color: AppColors.textMuted,
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );

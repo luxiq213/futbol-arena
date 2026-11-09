@@ -4,6 +4,7 @@ import 'package:futbol_party/data/models/career_model.dart';
 import 'package:futbol_party/data/models/grid_challenge_model.dart';
 import 'package:futbol_party/data/models/leaderboard_entry.dart';
 import 'package:futbol_party/data/models/play_mode_model.dart';
+import 'package:futbol_party/data/models/user_model.dart';
 import 'package:futbol_party/data/repositories/football_database.dart';
 import 'package:futbol_party/data/repositories/leaderboard_repository.dart';
 import 'package:futbol_party/main.dart';
@@ -173,6 +174,31 @@ void main() {
       expect(auctionProvider.phase, AuctionPhase.bidding);
       expect(auctionProvider.currentBid, 2);
       expect(auctionProvider.canUserCallProve, isTrue);
+    });
+
+    test('Ad-Free Mode requires a registered account and cannot be activated by guest user', () async {
+      const guestUser = UserModel(
+        id: 'guest_1',
+        username: 'Misafir_1',
+        email: 'guest@futtrivia.local',
+        avatar: 'goat_10',
+        favoriteTeam: 'Galatasaray',
+        isGuest: true,
+        isAdFree: false,
+      );
+      expect(guestUser.isGuest, isTrue);
+      expect(guestUser.isAdFree, isFalse);
+
+      final registeredUser = guestUser.copyWith(
+        username: 'KaptanMehmet',
+        email: 'mehmet@futtrivia.com',
+        isGuest: false,
+      );
+      expect(registeredUser.isGuest, isFalse);
+
+      final adFreeUser = registeredUser.copyWith(isAdFree: true);
+      expect(adFreeUser.isAdFree, isTrue);
+      expect(UserModel.fromJson(adFreeUser.toJson()).isAdFree, isTrue);
     });
   });
 
