@@ -207,25 +207,15 @@ void main() {
       expect(find.text('Genel Sıralama'), findsOneWidget);
     });
 
-    testWidgets('Tapping category filter updates visible game modes', (WidgetTester tester) async {
+    testWidgets('Home screen displays all game modes directly without category filter pills', (WidgetTester tester) async {
       await tester.pumpWidget(const FutbolPartyApp());
       await tester.pump(const Duration(milliseconds: 200));
 
-      // Tap "Kariyer" filter
-      await tester.tap(find.text('Kariyer'));
-      await tester.pump(const Duration(milliseconds: 300));
-
-      // Career hero card is present
       expect(find.text('Futbolcu Kariyeri Yap'), findsOneWidget);
-
-      // Common player duel is filtered out in career view
-      expect(find.text('Ortak Oyuncu (3-2-1)'), findsNothing);
-
-      // Tap "Tümü" to restore
-      await tester.tap(find.text('Tümü'));
-      await tester.pump(const Duration(milliseconds: 300));
-
       expect(find.text('Ortak Oyuncu (3-2-1)'), findsOneWidget);
+      expect(find.text('5 Takım 1 Oyuncu'), findsOneWidget);
+      expect(find.text('Futbol Köprüsü'), findsOneWidget);
+      expect(find.text('Açık Artırma Düellosu'), findsOneWidget);
     });
   });
 }

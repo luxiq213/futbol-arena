@@ -25,9 +25,6 @@ class _HomeScreenState extends State<HomeScreen> {
   int _activeTab = 0; // 0: Oyunlar, 1: Sıralama, 2: Profil
   late final PageController _pageController;
 
-  // Game category filter
-  String _selectedCategory = 'all';
-
   static const List<String> _tabTitles = [
     'Futbol Trivia',
     'Sıralama & Lig',
@@ -89,14 +86,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         // Page 0: Oyunlar (Games Hub)
                         SingleChildScrollView(
                           padding: EdgeInsets.fromLTRB(14, 2, 14, bottomInset + 80),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              _buildCategoryFilterRow(),
-                              const SizedBox(height: 10),
-                              _buildGamesSection(context),
-                            ],
-                          ),
+                          child: _buildGamesSection(context),
                         ),
 
                         // Page 1: Sıralama (Leaderboard)
@@ -252,224 +242,134 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildCategoryFilterRow() {
-    final categories = [
-      {'id': 'all', 'label': 'Tümü'},
-      {'id': 'career', 'label': 'Kariyer'},
-      {'id': 'duel', 'label': 'Düello'},
-      {'id': 'tactics', 'label': 'Taktik'},
-    ];
-
-    return Row(
+  Widget _buildGamesSection(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Expanded(
-          child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: categories.map((cat) {
-                final isSelected = _selectedCategory == cat['id'];
-                return Padding(
-                  padding: const EdgeInsets.only(right: 6),
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(20),
-                    onTap: () {
-                      setState(() => _selectedCategory = cat['id']!);
-                    },
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
-                      padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 5.5),
-                      decoration: BoxDecoration(
-                        color: isSelected
-                            ? AppColors.pitchGreen.withValues(alpha: 0.25)
-                            : AppColors.surface.withValues(alpha: 0.78),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: isSelected ? AppColors.pitchGreen : AppColors.border,
-                          width: isSelected ? 1.2 : 0.8,
-                        ),
-                      ),
-                      child: Text(
-                        cat['label']!,
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-                          color: isSelected ? Colors.white : AppColors.textSecondary,
-                        ),
-                      ),
-                    ),
-                  ),
-                );
-              }).toList(),
-            ),
-          ),
-        ),
-        const SizedBox(width: 6),
-        // Compact "Koda Katıl" shortcut pill so users with a 6-digit code don't need a full card
-        InkWell(
-          borderRadius: BorderRadius.circular(20),
-          onTap: () {
+        // 1. Vitrin: Futbolcu Kariyeri Hero Banner
+        _buildSectionHeader('KARİYER SİMÜLASYONU', 'TikTok Filtre Modu'),
+        const SizedBox(height: 5),
+        _buildCareerHeroCard(context),
+        const SizedBox(height: 11),
+
+        // 2. Bölüm: Trivia & Analiz Düelloları (2x2 Yan Yana Bento Grid)
+        _buildSectionHeader(
+          'OYUN MODLARI • TRİVİA & DÜELLO',
+          'Oda Kodun mu Var? Katıl ›',
+          onRightTap: () {
             Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const LobbyHubScreen()),
             );
           },
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5.5),
-            decoration: BoxDecoration(
-              color: AppColors.gold.withValues(alpha: 0.14),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: AppColors.gold.withValues(alpha: 0.50),
-                width: 0.9,
-              ),
-            ),
-            child: const Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.vpn_key_outlined, size: 12, color: AppColors.gold),
-                SizedBox(width: 4),
-                Text(
-                  'Koda Katıl',
-                  style: TextStyle(
-                    fontSize: 10.5,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.gold,
-                  ),
+        ),
+        const SizedBox(height: 5),
+        IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(
+                child: BentoGameModeCard(
+                  title: 'Ortak Oyuncu (3-2-1)',
+                  subtitle: 'Takım × Takım veya Takım × Ülke kesişimlerinde ortak yıldızları bul.',
+                  icon: Icons.compare_arrows_rounded,
+                  tag: 'TAKIM×TAKIM • ÜLKE',
+                  tagColor: AppColors.pitchGreen,
+                  onTap: () {
+                    showGameModeSelectorSheet(
+                      context,
+                      targetGame: GameTargetType.commonPlayer,
+                    );
+                  },
                 ),
-              ],
-            ),
+              ),
+              const SizedBox(width: 9),
+              Expanded(
+                child: BentoGameModeCard(
+                  title: '5 Takım 1 Oyuncu',
+                  subtitle: '5 kulübün en çoğunda oynamış yıldızı tek başına veya düelloda bul.',
+                  icon: Icons.shield_outlined,
+                  tag: 'KARİYER İZİ',
+                  tagColor: AppColors.greenLight,
+                  onTap: () {
+                    showGameModeSelectorSheet(
+                      context,
+                      targetGame: GameTargetType.fiveClubs,
+                    );
+                  },
+                ),
+              ),
+            ],
           ),
         ),
-      ],
-    );
-  }
-
-  Widget _buildGamesSection(BuildContext context) {
-    final showAll = _selectedCategory == 'all';
-    final showCareer = showAll || _selectedCategory == 'career';
-    final showDuel = showAll || _selectedCategory == 'duel';
-    final showTactics = showAll || _selectedCategory == 'tactics';
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        // 1. Vitrin: Futbolcu Kariyeri Hero Banner
-        if (showCareer) ...[
-          _buildSectionHeader('KARİYER SİMÜLASYONU', 'TikTok Filtre Modu'),
-          const SizedBox(height: 5),
-          _buildCareerHeroCard(context),
-          const SizedBox(height: 11),
-        ],
-
-        // 2. Bölüm: Trivia & Analiz Düelloları (2x2 Yan Yana Bento Grid)
-        if (showDuel) ...[
-          _buildSectionHeader('OYUN MODLARI • TRİVİA & DÜELLO', 'Kendini Sına • Online • Davet'),
-          const SizedBox(height: 5),
-          IntrinsicHeight(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Expanded(
-                  child: BentoGameModeCard(
-                    title: 'Ortak Oyuncu (3-2-1)',
-                    subtitle: 'Takım × Takım veya Takım × Ülke kesişimlerinde ortak yıldızları bul.',
-                    icon: Icons.compare_arrows_rounded,
-                    tag: 'TAKIM×TAKIM • ÜLKE',
-                    tagColor: AppColors.pitchGreen,
-                    onTap: () {
-                      showGameModeSelectorSheet(
-                        context,
-                        targetGame: GameTargetType.commonPlayer,
-                      );
-                    },
-                  ),
+        const SizedBox(height: 9),
+        IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(
+                child: BentoGameModeCard(
+                  title: 'Futbol Köprüsü',
+                  subtitle: 'İki yıldızı ortak oynadıkları kulüpler üzerinden en kısa zincirle birbirine bağla.',
+                  icon: Icons.hub_outlined,
+                  tag: 'YILDIZ BAĞLA',
+                  tagColor: AppColors.gold,
+                  onTap: () {
+                    showGameModeSelectorSheet(
+                      context,
+                      targetGame: GameTargetType.footballBridge,
+                    );
+                  },
                 ),
-                const SizedBox(width: 9),
-                Expanded(
-                  child: BentoGameModeCard(
-                    title: '5 Takım 1 Oyuncu',
-                    subtitle: '5 kulübün en çoğunda oynamış yıldızı tek başına veya düelloda bul.',
-                    icon: Icons.shield_outlined,
-                    tag: 'KARİYER İZİ',
-                    tagColor: AppColors.greenLight,
-                    onTap: () {
-                      showGameModeSelectorSheet(
-                        context,
-                        targetGame: GameTargetType.fiveClubs,
-                      );
-                    },
-                  ),
+              ),
+              const SizedBox(width: 9),
+              Expanded(
+                child: BentoGameModeCard(
+                  title: 'Açık Artırma Düellosu',
+                  subtitle: 'Kaç futbolcu sayabileceğine dair iddiayı artır veya rakibin blöfünü yakala!',
+                  icon: Icons.gavel_rounded,
+                  tag: 'İDDİA & BLÖF',
+                  tagColor: const Color(0xFFF97316),
+                  onTap: () {
+                    showGameModeSelectorSheet(
+                      context,
+                      targetGame: GameTargetType.auctionDuel,
+                    );
+                  },
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-          const SizedBox(height: 9),
-          IntrinsicHeight(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Expanded(
-                  child: BentoGameModeCard(
-                    title: 'Futbol Köprüsü',
-                    subtitle: 'İki yıldızı ortak oynadıkları kulüpler üzerinden en kısa zincirle birbirine bağla.',
-                    icon: Icons.hub_outlined,
-                    tag: 'YILDIZ BAĞLA',
-                    tagColor: AppColors.gold,
-                    onTap: () {
-                      showGameModeSelectorSheet(
-                        context,
-                        targetGame: GameTargetType.footballBridge,
-                      );
-                    },
-                  ),
-                ),
-                const SizedBox(width: 9),
-                Expanded(
-                  child: BentoGameModeCard(
-                    title: 'Açık Artırma Düellosu',
-                    subtitle: 'Kaç futbolcu sayabileceğine dair iddiayı artır veya rakibin blöfünü yakala!',
-                    icon: Icons.gavel_rounded,
-                    tag: 'İDDİA & BLÖF',
-                    tagColor: const Color(0xFFF97316),
-                    onTap: () {
-                      showGameModeSelectorSheet(
-                        context,
-                        targetGame: GameTargetType.auctionDuel,
-                      );
-                    },
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 11),
-        ],
+        ),
+        const SizedBox(height: 11),
 
         // 3. Bölüm: Taktik Tahtası (Futbol Grid 3x3)
-        if (showTactics) ...[
-          _buildSectionHeader('TAKTİK & KUPA MATRİSİ', 'Kulüp • Kupa • Milli Takım'),
-          const SizedBox(height: 5),
-          GameModeCard(
-            title: 'Futbol Grid 3x3',
-            subtitle: 'Kulüpler, Şampiyonlar Ligi, Dünya Kupası ve Milli Takım kesişimlerini çöz.',
-            icon: Icons.grid_3x3_outlined,
-            tag: 'GENİŞ YELPAZE',
-            tagColor: AppColors.gold,
-            trailingPreview: _buildMiniTacticalGridPreview(),
-            onTap: () {
-              showGameModeSelectorSheet(
-                context,
-                targetGame: GameTargetType.footballGrid,
-              );
-            },
-          ),
-          const SizedBox(height: 11),
-        ],
+        _buildSectionHeader('TAKTİK & KUPA MATRİSİ', 'Kulüp • Kupa • Milli Takım'),
+        const SizedBox(height: 5),
+        GameModeCard(
+          title: 'Futbol Grid 3x3',
+          subtitle: 'Kulüpler, Şampiyonlar Ligi, Dünya Kupası ve Milli Takım kesişimlerini çöz.',
+          icon: Icons.grid_3x3_outlined,
+          tag: 'GENİŞ YELPAZE',
+          tagColor: AppColors.gold,
+          trailingPreview: _buildMiniTacticalGridPreview(),
+          onTap: () {
+            showGameModeSelectorSheet(
+              context,
+              targetGame: GameTargetType.footballGrid,
+            );
+          },
+        ),
+        const SizedBox(height: 11),
       ],
     );
   }
 
-  Widget _buildSectionHeader(String title, String rightSubtitle) {
+  Widget _buildSectionHeader(
+    String title,
+    String rightSubtitle, {
+    VoidCallback? onRightTap,
+  }) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -495,12 +395,17 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ],
         ),
-        Text(
-          rightSubtitle,
-          style: TextStyle(
-            fontSize: 9.5,
-            fontWeight: FontWeight.w600,
-            color: AppColors.textMuted.withValues(alpha: 0.9),
+        GestureDetector(
+          onTap: onRightTap,
+          child: Text(
+            rightSubtitle,
+            style: TextStyle(
+              fontSize: 9.5,
+              fontWeight: onRightTap != null ? FontWeight.w800 : FontWeight.w600,
+              color: onRightTap != null
+                  ? AppColors.gold
+                  : AppColors.textMuted.withValues(alpha: 0.9),
+            ),
           ),
         ),
       ],
