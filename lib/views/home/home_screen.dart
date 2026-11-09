@@ -12,6 +12,7 @@ import '../widgets/language_selector_sheet.dart';
 import '../widgets/player_avatar_widget.dart';
 import '../widgets/stadium_background.dart';
 import '../games/career/career_setup_screen.dart';
+import '../games/league_draft/league_draft_screen.dart';
 import '../games/online_lobby/lobby_hub_screen.dart';
 import '../leaderboard/leaderboard_screen.dart';
 import '../profile/profile_screen.dart';
@@ -323,10 +324,24 @@ class _HomeScreenState extends State<HomeScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // 1. Vitrin: Futbolcu Kariyeri Hero Banner
+        // 1. Vitrin: Futbolcu Kariyeri Hero Banner & Kadro Kur Lig Simülasyonu
         _buildSectionHeader(loc.t('career_section_title'), loc.t('career_section_sub')),
         const SizedBox(height: 5),
         _buildCareerHeroCard(context, loc),
+        const SizedBox(height: 8),
+        GameModeCard(
+          title: loc.t('league_sim_title'),
+          subtitle: loc.t('league_sim_sub'),
+          icon: Icons.emoji_events_rounded,
+          tag: loc.t('league_sim_tag'),
+          tagColor: AppColors.gold,
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const LeagueDraftScreen()),
+            );
+          },
+        ),
         const SizedBox(height: 11),
 
         // 2. Bölüm: Trivia & Analiz Düelloları (2x2 Yan Yana Bento Grid)

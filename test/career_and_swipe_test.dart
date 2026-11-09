@@ -13,6 +13,7 @@ import 'package:futbol_party/providers/auction_duel_game_provider.dart';
 import 'package:futbol_party/providers/career_game_provider.dart';
 import 'package:futbol_party/providers/common_player_game_provider.dart';
 import 'package:futbol_party/providers/football_bridge_game_provider.dart';
+import 'package:futbol_party/providers/league_draft_provider.dart';
 import 'package:futbol_party/views/profile/profile_screen.dart';
 import 'package:futbol_party/views/widgets/player_avatar_widget.dart';
 
@@ -211,6 +212,52 @@ void main() {
         expect(AppStrings.tr('ad_free_title', lang.code), isNotEmpty);
         expect(AppStrings.tr('delete_account_btn', lang.code), isNotEmpty);
       }
+    });
+
+    test('Kadro Kur & Lig Simüle Et supports 3-manager pick, 3-formation pick, 11-player Era+Club draft, and multi-friend league simulation', () {
+      final draftProvider = LeagueDraftProvider();
+      draftProvider.startDraft(
+        playerNames: ['Mehmet', 'Ali', 'Burak'],
+        isSoloMode: false,
+      );
+
+      // Should have 3 human participants and be on pickManager phase for player 0
+      expect(draftProvider.participants.length, 3);
+      expect(draftProvider.phase, LeagueDraftPhase.pickManager);
+      expect(draftProvider.currentManagerChoices.length, 3);
+
+      for (int p = 0; p < 3; p++) {
+        if (draftProvider.phase == LeagueDraftPhase.nextPlayerHandoff) {
+          draftProvider.beginNextHumanTurn();
+        }
+        expect(draftProvider.phase, LeagueDraftPhase.pickManager);
+        expect(draftProvider.currentManagerChoices.length, 3);
+        draftProvider.selectManager(draftProvider.currentManagerChoices.first);
+
+        expect(draftProvider.phase, LeagueDraftPhase.pickFormation);
+        expect(draftProvider.currentFormationChoices.length, 3);
+        draftProvider.selectFormation(draftProvider.currentFormationChoices.first);
+
+        expect(draftProvider.phase, LeagueDraftPhase.pickPlayers);
+        for (int slot = 0; slot < 11; slot++) {
+          expect(draftProvider.currentSpunClubPack, isNotNull);
+          expect(draftProvider.currentPlayerChoices.length, 3);
+          draftProvider.selectPlayerForSquad(
+            draftProvider.currentPlayerChoices.first,
+          );
+        }
+        expect(draftProvider.participants[p].squad.length, 11);
+      }
+
+      // After all 3 friends finish drafting, phase should be leagueSimulation with double round-robin fixtures
+      expect(draftProvider.phase, LeagueDraftPhase.leagueSimulation);
+      expect(draftProvider.totalMatchdays, greaterThan(0));
+      expect(draftProvider.fixtures, isNotEmpty);
+
+      // Simulate entire season
+      draftProvider.simulateAllRemainingMatchdays();
+      expect(draftProvider.isAllFixturesPlayed, isTrue);
+      expect(draftProvider.standings.first.played, greaterThan(0));
     });
   });
 
