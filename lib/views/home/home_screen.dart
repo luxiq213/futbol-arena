@@ -4,6 +4,7 @@ import '../../core/constants/app_colors.dart';
 import '../../data/models/play_mode_model.dart';
 import '../../data/models/user_model.dart';
 import '../../providers/auth_provider.dart';
+import '../widgets/ad_free_banner_and_sheet.dart';
 import '../widgets/app_floating_glass_footer.dart';
 import '../widgets/game_mode_selector_sheet.dart';
 import '../widgets/player_avatar_widget.dart';
@@ -209,7 +210,46 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 6),
+          // Ad-Free Single Purchase Badge
+          GestureDetector(
+            onTap: () => showAdFreePurchaseSheet(context),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
+              decoration: BoxDecoration(
+                color: (user?.isAdFree ?? false)
+                    ? AppColors.pitchGreen.withValues(alpha: 0.18)
+                    : Colors.white.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: (user?.isAdFree ?? false)
+                      ? AppColors.pitchGreen.withValues(alpha: 0.55)
+                      : Colors.white.withValues(alpha: 0.22),
+                  width: 0.8,
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    (user?.isAdFree ?? false) ? Icons.verified_rounded : Icons.block_flipped,
+                    size: 11,
+                    color: (user?.isAdFree ?? false) ? AppColors.greenLight : AppColors.textSecondary,
+                  ),
+                  const SizedBox(width: 3),
+                  Text(
+                    (user?.isAdFree ?? false) ? 'PRO' : 'Reklamsız',
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w800,
+                      color: (user?.isAdFree ?? false) ? AppColors.greenLight : Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(width: 6),
           // Right: Gold XP Badge
           GestureDetector(
             onTap: () => _onFooterTabTapped(1),
@@ -360,7 +400,8 @@ class _HomeScreenState extends State<HomeScreen> {
             );
           },
         ),
-        const SizedBox(height: 11),
+        const AdBannerWidget(),
+        const SizedBox(height: 6),
       ],
     );
   }
@@ -448,13 +489,13 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildCareerHeroCard(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
+        gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            Color(0xFF12402A),
-            Color(0xFF0A2619),
-            Color(0xFF06160F),
+            const Color(0xFF12402A).withValues(alpha: 0.78),
+            const Color(0xFF0A2619).withValues(alpha: 0.80),
+            const Color(0xFF06160F).withValues(alpha: 0.84),
           ],
         ),
         borderRadius: BorderRadius.circular(14),

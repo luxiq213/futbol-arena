@@ -1,0 +1,387 @@
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../core/constants/app_colors.dart';
+import '../../providers/auth_provider.dart';
+import 'app_notification.dart';
+
+/// Displays a sleek sponsor/ad banner for free-tier users.
+/// Automatically hides itself completely when [user.isAdFree] is true.
+class AdBannerWidget extends StatelessWidget {
+  final EdgeInsetsGeometry margin;
+
+  const AdBannerWidget({
+    super.key,
+    this.margin = const EdgeInsets.only(top: 2, bottom: 8),
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final user = context.watch<AuthProvider>().currentUser;
+    if (user != null && user.isAdFree) {
+      return const SizedBox.shrink();
+    }
+
+    return Container(
+      margin: margin,
+      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 8),
+      decoration: BoxDecoration(
+        color: const Color(0xFF071B13).withValues(alpha: 0.86),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: AppColors.border.withValues(alpha: 0.85),
+          width: 0.9,
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.10),
+              borderRadius: BorderRadius.circular(4),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.22), width: 0.7),
+            ),
+            child: const Text(
+              'REKLAM',
+              style: TextStyle(
+                fontSize: 8,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 0.5,
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ),
+          const SizedBox(width: 9),
+          const Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Kesintisiz Futbol Deneyimi İster misin?',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white,
+                  ),
+                ),
+                Text(
+                  'Tek seferlik Reklamsız Mod ile tüm reklamları kalıcı kapat.',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 9.5,
+                    color: AppColors.textMuted,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          InkWell(
+            borderRadius: BorderRadius.circular(8),
+            onTap: () => showAdFreePurchaseSheet(context),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+              decoration: BoxDecoration(
+                color: AppColors.gold.withValues(alpha: 0.16),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: AppColors.gold.withValues(alpha: 0.55), width: 0.8),
+              ),
+              child: const Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.block_flipped, size: 11, color: AppColors.gold),
+                  SizedBox(width: 4),
+                  Text(
+                    'Kaldır',
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.gold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Shows the app's ONLY monetization option: One-time Ad-Free Mode purchase.
+void showAdFreePurchaseSheet(BuildContext context) {
+  showModalBottomSheet(
+    context: context,
+    backgroundColor: Colors.transparent,
+    isScrollControlled: true,
+    builder: (ctx) => const _AdFreePurchaseSheetContent(),
+  );
+}
+
+class _AdFreePurchaseSheetContent extends StatelessWidget {
+  const _AdFreePurchaseSheetContent();
+
+  @override
+  Widget build(BuildContext context) {
+    final auth = context.watch<AuthProvider>();
+    final isAdFree = auth.currentUser?.isAdFree ?? false;
+
+    return Container(
+      padding: EdgeInsets.fromLTRB(
+        18,
+        12,
+        18,
+        MediaQuery.of(context).padding.bottom + 18,
+      ),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Color(0xFF0E2D20),
+            Color(0xFF06160F),
+          ],
+        ),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        border: Border.all(
+          color: AppColors.gold.withValues(alpha: 0.45),
+          width: 1.1,
+        ),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Center(
+            child: Container(
+              width: 38,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.22),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: AppColors.gold.withValues(alpha: 0.16),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppColors.gold, width: 1.1),
+                ),
+                child: Icon(
+                  isAdFree ? Icons.verified_rounded : Icons.workspace_premium_rounded,
+                  color: AppColors.gold,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Text(
+                          'Reklamsız Mod',
+                          style: TextStyle(
+                            fontSize: 17,
+                            fontWeight: FontWeight.w900,
+                            color: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: (isAdFree ? AppColors.pitchGreen : AppColors.gold)
+                                .withValues(alpha: 0.18),
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(
+                              color: isAdFree ? AppColors.pitchGreen : AppColors.gold,
+                              width: 0.8,
+                            ),
+                          ),
+                          child: Text(
+                            isAdFree ? 'AKTİF' : 'TEK SATIŞ',
+                            style: TextStyle(
+                              fontSize: 9,
+                              fontWeight: FontWeight.w800,
+                              color: isAdFree ? AppColors.greenLight : AppColors.gold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 2),
+                    const Text(
+                      'Uygulamadaki tek satın alım seçeneği • Ömür boyu geçerli',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          _buildFeatureItem(
+            Icons.block_rounded,
+            'Tüm Reklamları Kalıcı Kaldırır',
+            'Sayfa altındaki reklam alanları ve maç sonu geçiş reklamları tamamen kapanır.',
+          ),
+          const SizedBox(height: 8),
+          _buildFeatureItem(
+            Icons.balance_rounded,
+            'Pay-to-Win veya Paket Satışı Yok',
+            'Tüm oyun modları, kulüpler ve özellikler herkes için ücretsizdir; yalnızca reklamlar kaldırılır.',
+          ),
+          const SizedBox(height: 8),
+          _buildFeatureItem(
+            Icons.all_inclusive_rounded,
+            'Tek Seferlik Ödeme (Abonelik Yok)',
+            'Aylık yenileme olmadan tek seferde hesabınıza kalıcı olarak tanımlanır.',
+          ),
+          const SizedBox(height: 16),
+          if (!isAdFree)
+            ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.gold,
+                foregroundColor: const Color(0xFF071A12),
+                padding: const EdgeInsets.symmetric(vertical: 13),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              onPressed: () async {
+                await auth.setAdFreeMode(true);
+                if (context.mounted) {
+                  Navigator.pop(context);
+                  AppNotification.show(
+                    context,
+                    title: 'Reklamsız Mod Etkinleştirildi',
+                    subtitle: 'Tüm reklamlar kalıcı olarak kaldırıldı. İyi oyunlar!',
+                    type: AppNotificationType.success,
+                    icon: Icons.verified_rounded,
+                  );
+                }
+              },
+              icon: const Icon(Icons.workspace_premium_rounded, size: 18),
+              label: const Text(
+                'Reklamsız Modu Satın Al • ₺49,99',
+                style: TextStyle(
+                  fontSize: 13.5,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            )
+          else
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: AppColors.pitchGreen.withValues(alpha: 0.16),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: AppColors.pitchGreen),
+                  ),
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.check_circle_rounded, color: AppColors.greenLight, size: 18),
+                      SizedBox(width: 8),
+                      Text(
+                        'Reklamsız Mod Hesabınızda Aktif',
+                        style: TextStyle(
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 8),
+                TextButton(
+                  onPressed: () async {
+                    await auth.setAdFreeMode(false);
+                    if (context.mounted) {
+                      Navigator.pop(context);
+                      AppNotification.show(
+                        context,
+                        title: 'Reklamlı Görünüme Dönüldü (Test)',
+                        subtitle: 'Reklam alanları tekrar görünür hale getirildi.',
+                        type: AppNotificationType.highlight,
+                        icon: Icons.visibility_outlined,
+                      );
+                    }
+                  },
+                  child: const Text(
+                    'Test İçin Reklamlı Görünüme Geri Dön',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: AppColors.textMuted,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFeatureItem(IconData icon, String title, String subtitle) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 9),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.28),
+        borderRadius: BorderRadius.circular(11),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, color: AppColors.gold, size: 17),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  subtitle,
+                  style: const TextStyle(
+                    fontSize: 10.5,
+                    color: AppColors.textSecondary,
+                    height: 1.25,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}

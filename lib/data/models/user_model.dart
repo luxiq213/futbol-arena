@@ -9,6 +9,7 @@ class UserModel {
   final int matchesWon;
   final int currentStreak;
   final bool isGuest;
+  final bool isAdFree;
 
   const UserModel({
     required this.id,
@@ -21,6 +22,7 @@ class UserModel {
     this.matchesWon = 0,
     this.currentStreak = 0,
     this.isGuest = false,
+    this.isAdFree = false,
   });
 
   UserModel copyWith({
@@ -33,6 +35,7 @@ class UserModel {
     int? matchesWon,
     int? currentStreak,
     bool? isGuest,
+    bool? isAdFree,
   }) {
     return UserModel(
       id: id,
@@ -45,6 +48,7 @@ class UserModel {
       matchesWon: matchesWon ?? this.matchesWon,
       currentStreak: currentStreak ?? this.currentStreak,
       isGuest: isGuest ?? this.isGuest,
+      isAdFree: isAdFree ?? this.isAdFree,
     );
   }
 
@@ -67,6 +71,7 @@ class UserModel {
     'matchesWon': matchesWon,
     'currentStreak': currentStreak,
     'isGuest': isGuest,
+    'isAdFree': isAdFree,
   };
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
@@ -81,6 +86,7 @@ class UserModel {
       matchesWon: json['matchesWon'] ?? 0,
       currentStreak: json['currentStreak'] ?? 0,
       isGuest: json['isGuest'] ?? false,
+      isAdFree: json['isAdFree'] ?? false,
     );
   }
 }

@@ -32,8 +32,8 @@ class GameModeCard extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            const Color(0xFF0E2A1F).withValues(alpha: 0.88),
-            const Color(0xFF081A13).withValues(alpha: 0.92),
+            const Color(0xFF0E2A1F).withValues(alpha: 0.78),
+            const Color(0xFF081A13).withValues(alpha: 0.82),
           ],
         ),
         borderRadius: BorderRadius.circular(14),
@@ -144,8 +144,8 @@ class BentoGameModeCard extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            const Color(0xFF0F2D21).withValues(alpha: 0.90),
-            const Color(0xFF071912).withValues(alpha: 0.94),
+            const Color(0xFF0F2D21).withValues(alpha: 0.78),
+            const Color(0xFF071912).withValues(alpha: 0.82),
           ],
         ),
         borderRadius: BorderRadius.circular(14),
