@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/locale_provider.dart';
 import '../auth/login_screen.dart';
 import '../auth/register_screen.dart';
 import 'app_notification.dart';
@@ -19,6 +20,7 @@ class AdBannerWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final user = context.watch<AuthProvider>().currentUser;
+    final loc = context.watch<LocaleProvider>();
     if (user != null && user.isAdFree) {
       return const SizedBox.shrink();
     }
@@ -43,9 +45,9 @@ class AdBannerWidget extends StatelessWidget {
               borderRadius: BorderRadius.circular(4),
               border: Border.all(color: Colors.white.withValues(alpha: 0.22), width: 0.7),
             ),
-            child: const Text(
-              'REKLAM',
-              style: TextStyle(
+            child: Text(
+              loc.t('ad_label'),
+              style: const TextStyle(
                 fontSize: 8,
                 fontWeight: FontWeight.w900,
                 letterSpacing: 0.5,
@@ -54,26 +56,26 @@ class AdBannerWidget extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 9),
-          const Expanded(
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  'Kesintisiz Futbol Deneyimi İster misin?',
+                  loc.t('ad_banner_title'),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w800,
                     color: Colors.white,
                   ),
                 ),
                 Text(
-                  'Tek seferlik Reklamsız Mod ile tüm reklamları kalıcı kapat.',
+                  loc.t('ad_banner_sub'),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 9.5,
                     color: AppColors.textMuted,
                   ),
@@ -92,14 +94,14 @@ class AdBannerWidget extends StatelessWidget {
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(color: AppColors.gold.withValues(alpha: 0.55), width: 0.8),
               ),
-              child: const Row(
+              child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.block_flipped, size: 11, color: AppColors.gold),
-                  SizedBox(width: 4),
+                  const Icon(Icons.block_flipped, size: 11, color: AppColors.gold),
+                  const SizedBox(width: 4),
                   Text(
-                    'Kaldır',
-                    style: TextStyle(
+                    loc.t('remove_ads_short'),
+                    style: const TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.w800,
                       color: AppColors.gold,
@@ -131,6 +133,7 @@ class _AdFreePurchaseSheetContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
+    final loc = context.watch<LocaleProvider>();
     final user = auth.currentUser;
     final isGuest = user == null || user.isGuest;
     final isAdFree = user?.isAdFree ?? false;
@@ -195,12 +198,16 @@ class _AdFreePurchaseSheetContent extends StatelessWidget {
                   children: [
                     Row(
                       children: [
-                        const Text(
-                          'Reklamsız Mod',
-                          style: TextStyle(
-                            fontSize: 17,
-                            fontWeight: FontWeight.w900,
-                            color: Colors.white,
+                        Flexible(
+                          child: Text(
+                            loc.t('ad_free_title'),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 17,
+                              fontWeight: FontWeight.w900,
+                              color: Colors.white,
+                            ),
                           ),
                         ),
                         const SizedBox(width: 8),
@@ -216,7 +223,7 @@ class _AdFreePurchaseSheetContent extends StatelessWidget {
                             ),
                           ),
                           child: Text(
-                            isAdFree ? 'AKTİF' : 'TEK SATIŞ',
+                            isAdFree ? loc.t('ad_free_active') : loc.t('ad_free_single_sale'),
                             style: TextStyle(
                               fontSize: 9,
                               fontWeight: FontWeight.w800,
@@ -227,9 +234,9 @@ class _AdFreePurchaseSheetContent extends StatelessWidget {
                       ],
                     ),
                     const SizedBox(height: 2),
-                    const Text(
-                      'Uygulamadaki tek satın alım seçeneği • Ömür boyu geçerli',
-                      style: TextStyle(
+                    Text(
+                      loc.t('ad_free_subtitle'),
+                      style: const TextStyle(
                         fontSize: 11,
                         color: AppColors.textSecondary,
                       ),
@@ -242,20 +249,20 @@ class _AdFreePurchaseSheetContent extends StatelessWidget {
           const SizedBox(height: 14),
           _buildFeatureItem(
             Icons.block_rounded,
-            'Tüm Reklamları Kalıcı Kaldırır',
-            'Sayfa altındaki reklam alanları ve maç sonu geçiş reklamları tamamen kapanır.',
+            loc.t('ad_free_feat1_title'),
+            loc.t('ad_free_feat1_sub'),
           ),
           const SizedBox(height: 8),
           _buildFeatureItem(
             Icons.balance_rounded,
-            'Pay-to-Win veya Paket Satışı Yok',
-            'Tüm oyun modları, kulüpler ve özellikler herkes için ücretsizdir; yalnızca reklamlar kaldırılır.',
+            loc.t('ad_free_feat2_title'),
+            loc.t('ad_free_feat2_sub'),
           ),
           const SizedBox(height: 8),
           _buildFeatureItem(
             Icons.all_inclusive_rounded,
-            'Tek Seferlik Ödeme (Abonelik Yok)',
-            'Aylık yenileme olmadan tek seferde kalıcı hesabınıza tanımlanır.',
+            loc.t('ad_free_feat3_title'),
+            loc.t('ad_free_feat3_sub'),
           ),
           const SizedBox(height: 14),
 
@@ -270,27 +277,27 @@ class _AdFreePurchaseSheetContent extends StatelessWidget {
                   width: 0.9,
                 ),
               ),
-              child: const Row(
+              child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(Icons.lock_person_outlined, color: AppColors.gold, size: 18),
-                  SizedBox(width: 9),
+                  const Icon(Icons.lock_person_outlined, color: AppColors.gold, size: 18),
+                  const SizedBox(width: 9),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Satın Alım İçin Kalıcı Hesap Gerekli',
-                          style: TextStyle(
+                          loc.t('account_req_title'),
+                          style: const TextStyle(
                             fontSize: 11.5,
                             fontWeight: FontWeight.w800,
                             color: AppColors.gold,
                           ),
                         ),
-                        SizedBox(height: 2),
+                        const SizedBox(height: 2),
                         Text(
-                          'Şu anda Misafir Hesap ile oynuyorsunuz. Reklamsız Mod hakkınızın cihaz değiştirdiğinizde kaybolmaması için önce ücretsiz hesap oluşturun veya giriş yapın.',
-                          style: TextStyle(
+                          loc.t('account_req_sub'),
+                          style: const TextStyle(
                             fontSize: 10.5,
                             color: Colors.white,
                             height: 1.25,
@@ -320,9 +327,9 @@ class _AdFreePurchaseSheetContent extends StatelessWidget {
                 );
               },
               icon: const Icon(Icons.person_add_alt_1_rounded, size: 18),
-              label: const Text(
-                'Önce Ücretsiz Hesap Oluştur',
-                style: TextStyle(
+              label: Text(
+                loc.t('create_account_btn'),
+                style: const TextStyle(
                   fontSize: 13.5,
                   fontWeight: FontWeight.w900,
                 ),
@@ -337,9 +344,9 @@ class _AdFreePurchaseSheetContent extends StatelessWidget {
                   MaterialPageRoute(builder: (_) => const LoginScreen()),
                 );
               },
-              child: const Text(
-                'Zaten hesabım var, Giriş Yap',
-                style: TextStyle(
+              child: Text(
+                loc.t('login_existing_btn'),
+                style: const TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w700,
                   color: AppColors.gold,
@@ -360,7 +367,7 @@ class _AdFreePurchaseSheetContent extends StatelessWidget {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'Kalıcı Hesap Bağlı: ${user.username} (${user.email})',
+                      '${user.username} (${user.email})',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
@@ -389,19 +396,44 @@ class _AdFreePurchaseSheetContent extends StatelessWidget {
                   Navigator.pop(context);
                   AppNotification.show(
                     context,
-                    title: 'Reklamsız Mod Etkinleştirildi',
-                    subtitle: 'Tüm reklamlar ${user.username} hesabınız için kalıcı olarak kaldırıldı.',
+                    title: loc.t('ad_free_title'),
+                    subtitle: '${user.username} • ${loc.t("ad_free_active")}',
                     type: AppNotificationType.success,
                     icon: Icons.verified_rounded,
                   );
                 }
               },
               icon: const Icon(Icons.workspace_premium_rounded, size: 18),
-              label: const Text(
-                'Reklamsız Modu Satın Al • ₺49,99',
-                style: TextStyle(
+              label: Text(
+                loc.t('buy_ad_free_btn'),
+                style: const TextStyle(
                   fontSize: 13.5,
                   fontWeight: FontWeight.w900,
+                ),
+              ),
+            ),
+            const SizedBox(height: 4),
+            TextButton.icon(
+              onPressed: () async {
+                final ok = await auth.restorePurchases();
+                if (ok && context.mounted) {
+                  Navigator.pop(context);
+                  AppNotification.show(
+                    context,
+                    title: loc.t('restore_purchases_btn'),
+                    subtitle: '${user.username} • ${loc.t("ad_free_active")}',
+                    type: AppNotificationType.success,
+                    icon: Icons.restore_rounded,
+                  );
+                }
+              },
+              icon: const Icon(Icons.restore_rounded, size: 15, color: AppColors.textSecondary),
+              label: Text(
+                loc.t('restore_purchases_btn'),
+                style: const TextStyle(
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textSecondary,
                 ),
               ),
             ),
@@ -420,7 +452,7 @@ class _AdFreePurchaseSheetContent extends StatelessWidget {
                   const SizedBox(width: 8),
                   Flexible(
                     child: Text(
-                      'Reklamsız Mod Aktif (${user.username})',
+                      '${loc.t("ad_free_title")} • ${loc.t("ad_free_active")} (${user.username})',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(

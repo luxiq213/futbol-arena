@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'core/theme/app_theme.dart';
 import 'providers/auth_provider.dart';
 import 'providers/career_game_provider.dart';
+import 'providers/locale_provider.dart';
 import 'providers/online_room_provider.dart';
 import 'providers/leaderboard_provider.dart';
 import 'views/home/home_screen.dart';
@@ -32,6 +33,7 @@ class FutbolPartyApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
+        ChangeNotifierProvider(create: (_) => LocaleProvider()),
         ChangeNotifierProvider(create: (_) => CareerGameProvider()),
         ChangeNotifierProvider(create: (_) => OnlineRoomProvider()),
         ChangeNotifierProvider(create: (_) => LeaderboardProvider()),

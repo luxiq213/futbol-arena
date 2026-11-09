@@ -4,9 +4,11 @@ import '../../core/constants/app_colors.dart';
 import '../../data/models/play_mode_model.dart';
 import '../../data/models/user_model.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/locale_provider.dart';
 import '../widgets/ad_free_banner_and_sheet.dart';
 import '../widgets/app_floating_glass_footer.dart';
 import '../widgets/game_mode_selector_sheet.dart';
+import '../widgets/language_selector_sheet.dart';
 import '../widgets/player_avatar_widget.dart';
 import '../widgets/stadium_background.dart';
 import '../games/career/career_setup_screen.dart';
@@ -25,12 +27,6 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _activeTab = 0; // 0: Oyunlar, 1: Sıralama, 2: Profil
   late final PageController _pageController;
-
-  static const List<String> _tabTitles = [
-    'Futbol Trivia',
-    'Sıralama & Lig',
-    'Oyuncu Profili',
-  ];
 
   @override
   void initState() {
@@ -57,6 +53,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
+    final loc = context.watch<LocaleProvider>();
     final user = auth.currentUser;
     final bottomInset = MediaQuery.of(context).padding.bottom;
 
@@ -70,7 +67,7 @@ class _HomeScreenState extends State<HomeScreen> {
             // Compact Top Header sitting directly under the phone status bar
             Padding(
               padding: const EdgeInsets.fromLTRB(14, 4, 14, 6),
-              child: _buildCompactTopBar(user),
+              child: _buildCompactTopBar(user, loc),
             ),
 
             // Main Swipeable Content Area + Floating Glass Footer
@@ -87,7 +84,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         // Page 0: Oyunlar (Games Hub)
                         SingleChildScrollView(
                           padding: EdgeInsets.fromLTRB(14, 2, 14, bottomInset + 80),
-                          child: _buildGamesSection(context),
+                          child: _buildGamesSection(context, loc),
                         ),
 
                         // Page 1: Sıralama (Leaderboard)
@@ -124,16 +121,21 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildCompactTopBar(UserModel? user) {
-    final currentTitle = _tabTitles[_activeTab.clamp(0, _tabTitles.length - 1)];
+  Widget _buildCompactTopBar(UserModel? user, LocaleProvider loc) {
+    final tabTitles = [
+      loc.t('app_title'),
+      loc.t('header_leaderboard'),
+      loc.t('header_profile'),
+    ];
+    final currentTitle = tabTitles[_activeTab.clamp(0, tabTitles.length - 1)];
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 7),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            const Color(0xFF0E2B1F).withValues(alpha: 0.92),
-            const Color(0xFF071A12).withValues(alpha: 0.92),
+            const Color(0xFF0E2B1F).withValues(alpha: 0.90),
+            const Color(0xFF071A12).withValues(alpha: 0.90),
           ],
         ),
         borderRadius: BorderRadius.circular(13),
@@ -149,12 +151,12 @@ class _HomeScreenState extends State<HomeScreen> {
             onTap: () => _onFooterTabTapped(2),
             child: PlayerAvatarWidget(
               avatarKey: user?.avatar ?? 'goat_10',
-              size: 36,
+              size: 35,
               borderColor: AppColors.pitchGreen,
               borderWidth: 1.2,
             ),
           ),
-          const SizedBox(width: 10),
+          const SizedBox(width: 9),
           Expanded(
             child: GestureDetector(
               onTap: () => _onFooterTabTapped(2),
@@ -164,16 +166,20 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   Row(
                     children: [
-                      Text(
-                        currentTitle,
-                        style: const TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w800,
-                          color: Colors.white,
-                          letterSpacing: -0.3,
+                      Flexible(
+                        child: Text(
+                          currentTitle,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 14.5,
+                            fontWeight: FontWeight.w800,
+                            color: Colors.white,
+                            letterSpacing: -0.3,
+                          ),
                         ),
                       ),
-                      const SizedBox(width: 6),
+                      const SizedBox(width: 5),
                       Container(
                         width: 4,
                         height: 4,
@@ -182,14 +188,14 @@ class _HomeScreenState extends State<HomeScreen> {
                           shape: BoxShape.circle,
                         ),
                       ),
-                      const SizedBox(width: 6),
+                      const SizedBox(width: 5),
                       Flexible(
                         child: Text(
                           user?.username ?? 'Kaptan',
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
-                            fontSize: 12,
+                            fontSize: 11.5,
                             fontWeight: FontWeight.w700,
                             color: AppColors.greenLight,
                           ),
@@ -210,12 +216,43 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
           ),
-          const SizedBox(width: 6),
+          const SizedBox(width: 5),
+          // Language Switcher Pill
+          GestureDetector(
+            onTap: () => showLanguageSelectorSheet(context),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.22),
+                  width: 0.8,
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.language_rounded, size: 11, color: AppColors.greenLight),
+                  const SizedBox(width: 3),
+                  Text(
+                    loc.currentLanguage.shortCode,
+                    style: const TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w900,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(width: 5),
           // Ad-Free Single Purchase Badge
           GestureDetector(
             onTap: () => showAdFreePurchaseSheet(context),
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
               decoration: BoxDecoration(
                 color: (user?.isAdFree ?? false)
                     ? AppColors.pitchGreen.withValues(alpha: 0.18)
@@ -238,9 +275,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   const SizedBox(width: 3),
                   Text(
-                    (user?.isAdFree ?? false) ? 'PRO' : 'Reklamsız',
+                    (user?.isAdFree ?? false) ? loc.t('pro_badge') : loc.t('ad_free_badge'),
                     style: TextStyle(
-                      fontSize: 10,
+                      fontSize: 9.5,
                       fontWeight: FontWeight.w800,
                       color: (user?.isAdFree ?? false) ? AppColors.greenLight : Colors.white,
                     ),
@@ -249,12 +286,12 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
           ),
-          const SizedBox(width: 6),
+          const SizedBox(width: 5),
           // Right: Gold XP Badge
           GestureDetector(
             onTap: () => _onFooterTabTapped(1),
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
               decoration: BoxDecoration(
                 color: AppColors.gold.withValues(alpha: 0.14),
                 borderRadius: BorderRadius.circular(8),
@@ -263,12 +300,12 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.star_rounded, size: 13, color: AppColors.gold),
-                  const SizedBox(width: 3),
+                  const Icon(Icons.star_rounded, size: 12, color: AppColors.gold),
+                  const SizedBox(width: 2),
                   Text(
                     '${user?.points ?? 0} XP',
                     style: const TextStyle(
-                      fontSize: 11,
+                      fontSize: 10.5,
                       fontWeight: FontWeight.w800,
                       color: AppColors.gold,
                     ),
@@ -282,20 +319,20 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildGamesSection(BuildContext context) {
+  Widget _buildGamesSection(BuildContext context, LocaleProvider loc) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         // 1. Vitrin: Futbolcu Kariyeri Hero Banner
-        _buildSectionHeader('KARİYER SİMÜLASYONU', 'TikTok Filtre Modu'),
+        _buildSectionHeader(loc.t('career_section_title'), loc.t('career_section_sub')),
         const SizedBox(height: 5),
-        _buildCareerHeroCard(context),
+        _buildCareerHeroCard(context, loc),
         const SizedBox(height: 11),
 
         // 2. Bölüm: Trivia & Analiz Düelloları (2x2 Yan Yana Bento Grid)
         _buildSectionHeader(
-          'OYUN MODLARI • TRİVİA & DÜELLO',
-          'Oda Kodun mu Var? Katıl ›',
+          loc.t('duel_section_title'),
+          loc.t('join_code_link'),
           onRightTap: () {
             Navigator.push(
               context,
@@ -310,10 +347,10 @@ class _HomeScreenState extends State<HomeScreen> {
             children: [
               Expanded(
                 child: BentoGameModeCard(
-                  title: 'Ortak Oyuncu (3-2-1)',
-                  subtitle: 'Takım × Takım veya Takım × Ülke kesişimlerinde ortak yıldızları bul.',
+                  title: loc.t('mode_321_title'),
+                  subtitle: loc.t('mode_321_sub'),
                   icon: Icons.compare_arrows_rounded,
-                  tag: 'TAKIM×TAKIM • ÜLKE',
+                  tag: loc.t('mode_321_tag'),
                   tagColor: AppColors.pitchGreen,
                   onTap: () {
                     showGameModeSelectorSheet(
@@ -326,10 +363,10 @@ class _HomeScreenState extends State<HomeScreen> {
               const SizedBox(width: 9),
               Expanded(
                 child: BentoGameModeCard(
-                  title: '5 Takım 1 Oyuncu',
-                  subtitle: '5 kulübün en çoğunda oynamış yıldızı tek başına veya düelloda bul.',
+                  title: loc.t('mode_5clubs_title'),
+                  subtitle: loc.t('mode_5clubs_sub'),
                   icon: Icons.shield_outlined,
-                  tag: 'KARİYER İZİ',
+                  tag: loc.t('mode_5clubs_tag'),
                   tagColor: AppColors.greenLight,
                   onTap: () {
                     showGameModeSelectorSheet(
@@ -349,10 +386,10 @@ class _HomeScreenState extends State<HomeScreen> {
             children: [
               Expanded(
                 child: BentoGameModeCard(
-                  title: 'Futbol Köprüsü',
-                  subtitle: 'İki yıldızı ortak oynadıkları kulüpler üzerinden en kısa zincirle birbirine bağla.',
+                  title: loc.t('mode_bridge_title'),
+                  subtitle: loc.t('mode_bridge_sub'),
                   icon: Icons.hub_outlined,
-                  tag: 'YILDIZ BAĞLA',
+                  tag: loc.t('mode_bridge_tag'),
                   tagColor: AppColors.gold,
                   onTap: () {
                     showGameModeSelectorSheet(
@@ -365,10 +402,10 @@ class _HomeScreenState extends State<HomeScreen> {
               const SizedBox(width: 9),
               Expanded(
                 child: BentoGameModeCard(
-                  title: 'Açık Artırma Düellosu',
-                  subtitle: 'Kaç futbolcu sayabileceğine dair iddiayı artır veya rakibin blöfünü yakala!',
+                  title: loc.t('mode_auction_title'),
+                  subtitle: loc.t('mode_auction_sub'),
                   icon: Icons.gavel_rounded,
-                  tag: 'İDDİA & BLÖF',
+                  tag: loc.t('mode_auction_tag'),
                   tagColor: const Color(0xFFF97316),
                   onTap: () {
                     showGameModeSelectorSheet(
@@ -384,13 +421,13 @@ class _HomeScreenState extends State<HomeScreen> {
         const SizedBox(height: 11),
 
         // 3. Bölüm: Taktik Tahtası (Futbol Grid 3x3)
-        _buildSectionHeader('TAKTİK & KUPA MATRİSİ', 'Kulüp • Kupa • Milli Takım'),
+        _buildSectionHeader(loc.t('tactics_section_title'), loc.t('tactics_section_sub')),
         const SizedBox(height: 5),
         GameModeCard(
-          title: 'Futbol Grid 3x3',
-          subtitle: 'Kulüpler, Şampiyonlar Ligi, Dünya Kupası ve Milli Takım kesişimlerini çöz.',
+          title: loc.t('mode_grid_title'),
+          subtitle: loc.t('mode_grid_sub'),
           icon: Icons.grid_3x3_outlined,
-          tag: 'GENİŞ YELPAZE',
+          tag: loc.t('mode_grid_tag'),
           tagColor: AppColors.gold,
           trailingPreview: _buildMiniTacticalGridPreview(),
           onTap: () {
@@ -414,28 +451,35 @@ class _HomeScreenState extends State<HomeScreen> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Row(
-          children: [
-            Container(
-              width: 3,
-              height: 12,
-              decoration: BoxDecoration(
-                color: AppColors.pitchGreen,
-                borderRadius: BorderRadius.circular(2),
+        Flexible(
+          child: Row(
+            children: [
+              Container(
+                width: 3,
+                height: 12,
+                decoration: BoxDecoration(
+                  color: AppColors.pitchGreen,
+                  borderRadius: BorderRadius.circular(2),
+                ),
               ),
-            ),
-            const SizedBox(width: 6),
-            Text(
-              title,
-              style: const TextStyle(
-                fontSize: 10.5,
-                fontWeight: FontWeight.w800,
-                letterSpacing: 0.7,
-                color: AppColors.greenLight,
+              const SizedBox(width: 6),
+              Flexible(
+                child: Text(
+                  title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 0.7,
+                    color: AppColors.greenLight,
+                  ),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
+        const SizedBox(width: 6),
         GestureDetector(
           onTap: onRightTap,
           child: Text(
@@ -486,7 +530,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildCareerHeroCard(BuildContext context) {
+  Widget _buildCareerHeroCard(BuildContext context, LocaleProvider loc) {
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -567,14 +611,14 @@ class _HomeScreenState extends State<HomeScreen> {
                                   borderRadius: BorderRadius.circular(5),
                                   border: Border.all(color: AppColors.gold, width: 0.8),
                                 ),
-                                child: const Row(
+                                child: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    Icon(Icons.star_rounded, size: 10, color: AppColors.gold),
-                                    SizedBox(width: 3),
+                                    const Icon(Icons.star_rounded, size: 10, color: AppColors.gold),
+                                    const SizedBox(width: 3),
                                     Text(
-                                      'YENİ TİKTOK MODU',
-                                      style: TextStyle(
+                                      loc.t('career_new_tag'),
+                                      style: const TextStyle(
                                         fontSize: 8.5,
                                         fontWeight: FontWeight.w800,
                                         color: AppColors.gold,
@@ -590,19 +634,19 @@ class _HomeScreenState extends State<HomeScreen> {
                                   color: AppColors.pitchGreen.withValues(alpha: 0.22),
                                   borderRadius: BorderRadius.circular(6),
                                 ),
-                                child: const Row(
+                                child: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
                                     Text(
-                                      'Başla',
-                                      style: TextStyle(
+                                      loc.t('start_btn'),
+                                      style: const TextStyle(
                                         fontSize: 10,
                                         fontWeight: FontWeight.w800,
                                         color: AppColors.greenLight,
                                       ),
                                     ),
-                                    SizedBox(width: 3),
-                                    Icon(
+                                    const SizedBox(width: 3),
+                                    const Icon(
                                       Icons.arrow_forward_ios_rounded,
                                       size: 9,
                                       color: AppColors.greenLight,
@@ -613,18 +657,18 @@ class _HomeScreenState extends State<HomeScreen> {
                             ],
                           ),
                           const SizedBox(height: 4),
-                          const Text(
-                            'Futbolcu Kariyeri Yap',
-                            style: TextStyle(
+                          Text(
+                            loc.t('career_card_title'),
+                            style: const TextStyle(
                               fontSize: 15,
                               fontWeight: FontWeight.w800,
                               color: Colors.white,
                             ),
                           ),
                           const SizedBox(height: 2),
-                          const Text(
-                            'Mevkini ve bölgeni seç, kulüp tekliflerini değerlendir, kupalar kazan ve paylaşılabilir efsane jübile kartını çıkar!',
-                            style: TextStyle(
+                          Text(
+                            loc.t('career_card_sub'),
+                            style: const TextStyle(
                               fontSize: 10.5,
                               color: AppColors.textSecondary,
                               height: 1.25,
@@ -641,10 +685,10 @@ class _HomeScreenState extends State<HomeScreen> {
                   spacing: 6,
                   runSpacing: 6,
                   children: [
-                    _buildHeroBadge(Icons.hourglass_top_outlined, '10 Dönem Simülasyon'),
-                    _buildHeroBadge(Icons.sports_soccer_rounded, 'Penaltı Kader Anları'),
-                    _buildHeroBadge(Icons.swap_horiz_rounded, 'Transfer Masası'),
-                    _buildHeroBadge(Icons.workspace_premium_outlined, 'Paylaşılabilir Jübile Kartı'),
+                    _buildHeroBadge(Icons.hourglass_top_outlined, loc.t('career_badge_1')),
+                    _buildHeroBadge(Icons.sports_soccer_rounded, loc.t('career_badge_2')),
+                    _buildHeroBadge(Icons.swap_horiz_rounded, loc.t('career_badge_3')),
+                    _buildHeroBadge(Icons.workspace_premium_outlined, loc.t('career_badge_4')),
                   ],
                 ),
               ],

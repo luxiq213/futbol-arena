@@ -116,6 +116,23 @@ class AuthProvider extends ChangeNotifier {
     return true;
   }
 
+  Future<bool> restorePurchases() async {
+    if (_currentUser == null || _currentUser!.isGuest) {
+      return false;
+    }
+    final updated = _currentUser!.copyWith(isAdFree: true);
+    _currentUser = updated;
+    await _repo.saveUser(updated);
+    notifyListeners();
+    return true;
+  }
+
+  Future<void> deleteAccount() async {
+    await _repo.logout();
+    _currentUser = await _repo.loginAsGuest();
+    notifyListeners();
+  }
+
   Future<void> logout() async {
     await _repo.logout();
     _currentUser = null;

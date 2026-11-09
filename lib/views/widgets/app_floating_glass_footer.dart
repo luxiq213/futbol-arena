@@ -1,7 +1,9 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/utils/sound_effects.dart';
+import '../../providers/locale_provider.dart';
 
 class AppFloatingGlassFooter extends StatelessWidget {
   final int activeIndex;
@@ -15,6 +17,7 @@ class AppFloatingGlassFooter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final loc = context.watch<LocaleProvider>();
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 0, 16, 10),
       decoration: BoxDecoration(
@@ -49,7 +52,7 @@ class AppFloatingGlassFooter extends StatelessWidget {
                   child: _buildGlassTabItem(
                     index: 0,
                     icon: Icons.sports_soccer,
-                    label: 'Oyunlar',
+                    label: loc.t('tab_games'),
                     isActive: activeIndex == 0,
                   ),
                 ),
@@ -59,7 +62,7 @@ class AppFloatingGlassFooter extends StatelessWidget {
                   child: _buildGlassTabItem(
                     index: 1,
                     icon: Icons.military_tech_outlined,
-                    label: 'Sıralama',
+                    label: loc.t('tab_leaderboard'),
                     isActive: activeIndex == 1,
                   ),
                 ),
@@ -69,7 +72,7 @@ class AppFloatingGlassFooter extends StatelessWidget {
                   child: _buildGlassTabItem(
                     index: 2,
                     icon: Icons.person_outline,
-                    label: 'Profil',
+                    label: loc.t('tab_profile'),
                     isActive: activeIndex == 2,
                   ),
                 ),

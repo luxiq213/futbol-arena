@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/locale_provider.dart';
+import '../legal/privacy_and_terms_screen.dart';
 import '../widgets/ad_free_banner_and_sheet.dart';
 import '../widgets/app_notification.dart';
 import '../widgets/custom_button.dart';
+import '../widgets/language_selector_sheet.dart';
 import '../widgets/player_avatar_widget.dart';
 import '../auth/login_screen.dart';
 
@@ -72,9 +75,71 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  void _confirmDeleteAccount(BuildContext context, LocaleProvider loc) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF0A2419),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(color: Colors.redAccent.withValues(alpha: 0.55)),
+        ),
+        title: Text(
+          loc.t('delete_account_confirm_title'),
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w800,
+            color: Colors.white,
+          ),
+        ),
+        content: Text(
+          loc.t('delete_account_confirm_sub'),
+          style: const TextStyle(
+            fontSize: 12.5,
+            color: AppColors.textSecondary,
+            height: 1.35,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(
+              loc.t('cancel'),
+              style: const TextStyle(color: AppColors.textSecondary),
+            ),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.redAccent,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () async {
+              Navigator.pop(ctx);
+              await context.read<AuthProvider>().deleteAccount();
+              if (context.mounted) {
+                AppNotification.show(
+                  context,
+                  title: loc.t('delete_account_btn'),
+                  subtitle: 'Hesabınız ve ilişkili tüm verileriniz kalıcı olarak silindi.',
+                  type: AppNotificationType.warning,
+                  icon: Icons.delete_forever_outlined,
+                );
+              }
+            },
+            child: Text(
+              loc.t('confirm_delete'),
+              style: const TextStyle(fontWeight: FontWeight.w800),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
+    final loc = context.watch<LocaleProvider>();
     final user = auth.currentUser;
 
     if (user == null) {
@@ -170,11 +235,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
         Row(
           children: [
             Expanded(
-              child: _buildStatCard('Toplam XP', '${user.points}', Icons.star_outline, AppColors.gold),
+              child: _buildStatCard(loc.t('stat_total_xp'), '${user.points}', Icons.star_outline, AppColors.gold),
             ),
             const SizedBox(width: 8),
             Expanded(
-              child: _buildStatCard('Galibiyet Oranı', '%$winRate', Icons.trending_up, AppColors.greenLight),
+              child: _buildStatCard(loc.t('stat_win_rate'), '%$winRate', Icons.trending_up, AppColors.greenLight),
             ),
           ],
         ),
@@ -182,16 +247,83 @@ class _ProfileScreenState extends State<ProfileScreen> {
         Row(
           children: [
             Expanded(
-              child: _buildStatCard('Oynanan Maç', '${user.matchesPlayed}', Icons.sports_soccer_outlined, AppColors.silver),
+              child: _buildStatCard(loc.t('stat_matches'), '${user.matchesPlayed}', Icons.sports_soccer_outlined, AppColors.silver),
             ),
             const SizedBox(width: 8),
             Expanded(
-              child: _buildStatCard('Kazanma Serisi', '${user.currentStreak}', Icons.local_fire_department_outlined, AppColors.gold),
+              child: _buildStatCard(loc.t('stat_streak'), '${user.currentStreak}', Icons.local_fire_department_outlined, AppColors.gold),
             ),
           ],
         ),
 
         const SizedBox(height: 14),
+
+        // App Language Selector Card (10 Languages)
+        InkWell(
+          borderRadius: BorderRadius.circular(14),
+          onTap: () => showLanguageSelectorSheet(context),
+          child: Container(
+            padding: const EdgeInsets.all(13),
+            decoration: BoxDecoration(
+              color: AppColors.surface.withValues(alpha: 0.90),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: AppColors.borderGreen.withValues(alpha: 0.55),
+                width: 1.0,
+              ),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: AppColors.pitchGreen.withValues(alpha: 0.16),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: AppColors.pitchGreen, width: 0.9),
+                  ),
+                  child: const Icon(
+                    Icons.language_rounded,
+                    color: AppColors.greenLight,
+                    size: 21,
+                  ),
+                ),
+                const SizedBox(width: 11),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        loc.t('language_label'),
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        '${loc.currentLanguage.nativeName} (${loc.currentLanguage.shortCode}) • 10 Dil',
+                        style: const TextStyle(
+                          fontSize: 11,
+                          color: AppColors.greenLight,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const Icon(
+                  Icons.chevron_right_rounded,
+                  color: AppColors.gold,
+                  size: 20,
+                ),
+              ],
+            ),
+          ),
+        ),
+
+        const SizedBox(height: 10),
 
         // Single Monetization Option: Ad-Free Mode Card
         Container(
@@ -440,7 +572,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         const SizedBox(height: 16),
 
         CustomButton(
-          text: 'Değişiklikleri Kaydet',
+          text: loc.t('save_changes'),
           icon: Icons.check_circle_outline,
           backgroundColor: AppColors.pitchGreen,
           textColor: Colors.white,
@@ -450,7 +582,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         const SizedBox(height: 10),
 
         CustomButton(
-          text: user.isGuest ? 'Kalıcı Hesap Aç / Giriş Yap' : 'Çıkış Yap',
+          text: user.isGuest ? loc.t('open_perm_account') : loc.t('logout_btn'),
           isOutlined: true,
           onPressed: () {
             Navigator.push(
@@ -458,6 +590,60 @@ class _ProfileScreenState extends State<ProfileScreen> {
               MaterialPageRoute(builder: (_) => const LoginScreen()),
             );
           },
+        ),
+
+        const SizedBox(height: 14),
+
+        // Privacy Policy & Terms Link (App Store & Google Play Mandatory)
+        InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const PrivacyAndTermsScreen()),
+            );
+          },
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+            decoration: BoxDecoration(
+              color: Colors.black.withValues(alpha: 0.25),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.policy_outlined, size: 17, color: AppColors.gold),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    loc.t('privacy_and_terms'),
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+                const Icon(Icons.chevron_right_rounded, size: 18, color: AppColors.textMuted),
+              ],
+            ),
+          ),
+        ),
+
+        const SizedBox(height: 10),
+
+        // Delete Account Button (App Store Guideline 5.1.1(v) & Google Play Mandatory)
+        TextButton.icon(
+          onPressed: () => _confirmDeleteAccount(context, loc),
+          icon: const Icon(Icons.delete_forever_outlined, size: 16, color: Colors.redAccent),
+          label: Text(
+            loc.t('delete_account_btn'),
+            style: const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: Colors.redAccent,
+            ),
+          ),
         ),
       ],
     );

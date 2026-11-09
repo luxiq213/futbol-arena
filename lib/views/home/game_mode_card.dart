@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
+import '../../providers/locale_provider.dart';
 
 class GameModeCard extends StatelessWidget {
   final String title;
@@ -138,6 +140,7 @@ class BentoGameModeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final loc = context.watch<LocaleProvider>();
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -214,7 +217,7 @@ class BentoGameModeCard extends StatelessWidget {
                 Row(
                   children: [
                     Text(
-                      'Sahaya Çık',
+                      loc.t('play_now'),
                       style: TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.w700,

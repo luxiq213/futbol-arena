@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:futbol_party/core/l10n/app_strings.dart';
 import 'package:futbol_party/data/models/career_model.dart';
 import 'package:futbol_party/data/models/grid_challenge_model.dart';
 import 'package:futbol_party/data/models/leaderboard_entry.dart';
@@ -199,6 +200,17 @@ void main() {
       final adFreeUser = registeredUser.copyWith(isAdFree: true);
       expect(adFreeUser.isAdFree, isTrue);
       expect(UserModel.fromJson(adFreeUser.toJson()).isAdFree, isTrue);
+    });
+
+    test('Multi-language localization system supports 10 football languages', () {
+      expect(AppStrings.supportedLanguages.length, 10);
+      for (final lang in AppStrings.supportedLanguages) {
+        expect(AppStrings.tr('app_title', lang.code), isNotEmpty);
+        expect(AppStrings.tr('career_card_title', lang.code), isNotEmpty);
+        expect(AppStrings.tr('mode_321_title', lang.code), isNotEmpty);
+        expect(AppStrings.tr('ad_free_title', lang.code), isNotEmpty);
+        expect(AppStrings.tr('delete_account_btn', lang.code), isNotEmpty);
+      }
     });
   });
 
