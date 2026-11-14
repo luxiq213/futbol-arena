@@ -1,9 +1,12 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../data/models/league_draft_model.dart';
 import '../../../data/repositories/football_database.dart';
 import '../../../providers/league_draft_provider.dart';
+import '../../widgets/app_notification.dart';
 import '../../widgets/club_crest_widget.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/stadium_background.dart';
@@ -28,43 +31,267 @@ class _LeagueDraftView extends StatefulWidget {
 }
 
 class _LeagueDraftViewState extends State<_LeagueDraftView> {
-  bool _isSoloMode = false;
-  final List<TextEditingController> _controllers = [
-    TextEditingController(text: '1. Menajer'),
-    TextEditingController(text: '2. Menajer'),
-  ];
+  Timer? _liveStreamTimer;
+  bool _isFastStream = false;
 
   @override
   void dispose() {
-    for (final c in _controllers) {
-      c.dispose();
-    }
+    _stopLiveStream();
     super.dispose();
   }
 
-  void _addFriendField() {
+  void _stopLiveStream() {
+    _liveStreamTimer?.cancel();
+    _liveStreamTimer = null;
+  }
+
+  void _toggleLiveMatchStream(LeagueDraftProvider provider, {bool? fastMode}) {
+    if (fastMode != null) {
+      _isFastStream = fastMode;
+    }
+    if (_liveStreamTimer != null && fastMode == null) {
+      setState(_stopLiveStream);
+      return;
+    }
+    _stopLiveStream();
+    if (provider.isAllFixturesPlayed) return;
+
+    // Immediately simulate 1 match so the user sees instant response
+    provider.simulateNextSingleFixture();
+    if (provider.isAllFixturesPlayed) {
+      setState(() {});
+      return;
+    }
+
+    final intervalMs = _isFastStream ? 360 : 800;
     setState(() {
-      _controllers.add(
-        TextEditingController(text: '${_controllers.length + 1}. Menajer'),
+      _liveStreamTimer = Timer.periodic(Duration(milliseconds: intervalMs), (timer) {
+        if (!mounted || provider.phase != LeagueDraftPhase.leagueSimulation || provider.isAllFixturesPlayed) {
+          _stopLiveStream();
+          if (mounted) setState(() {});
+          return;
+        }
+        provider.simulateNextSingleFixture();
+        if (provider.isAllFixturesPlayed) {
+          _stopLiveStream();
+          if (mounted) setState(() {});
+        }
+      });
+    });
+  }
+
+  void _showInviteFriendDialog(
+    BuildContext context,
+    LeagueDraftProvider provider, {
+    int? targetSlotIndex,
+  }) {
+    if (!provider.canInviteMoreFriends) {
+      AppNotification.show(
+        context,
+        title: 'Lobi Kapasitesi Dolu',
+        message: 'Tüm koltuklar dolu! Daha fazla arkadaş davet etmek için lig takım sayısını artırabilirsin.',
+        type: AppNotificationType.warning,
+        icon: Icons.groups_rounded,
       );
-    });
+      return;
+    }
+
+    final controller = TextEditingController(
+      text: '${provider.invitedHumanCount + 1}. Menajer',
+    );
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFF0A2419),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(18),
+            side: const BorderSide(color: AppColors.gold, width: 1.2),
+          ),
+          title: Text(
+            'Lobiye Arkadaş Davet Et (#${provider.lobbyRoomCode})',
+            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w900, color: Colors.white),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Davet ettiğin arkadaşın lobi koltuğuna yerleşir; kalan boş koltuklar otomatik olarak Yapay Zeka (AI Bot) kalır.',
+                style: TextStyle(fontSize: 11.5, color: AppColors.textSecondary, height: 1.35),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: controller,
+                autofocus: true,
+                style: const TextStyle(color: Colors.white, fontSize: 13.5),
+                decoration: const InputDecoration(
+                  labelText: 'Arkadaşının Adı / Takım Adı',
+                  prefixIcon: Icon(Icons.person_add_alt_1_rounded, color: AppColors.gold, size: 18),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Vazgeç', style: TextStyle(color: AppColors.textSecondary)),
+            ),
+            ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.pitchGreen,
+                foregroundColor: Colors.white,
+              ),
+              onPressed: () {
+                provider.inviteFriendToLobby(
+                  controller.text,
+                  targetSlotIndex: targetSlotIndex,
+                );
+                Navigator.pop(ctx);
+                AppNotification.show(
+                  context,
+                  title: 'Arkadaş Lobiye Katıldı',
+                  message: '${controller.text.trim().isEmpty ? "Yeni Menajer" : controller.text.trim()} lobiye eklendi! Kalan ${provider.botFillCount} koltuk AI Bot.',
+                  type: AppNotificationType.success,
+                  icon: Icons.check_circle_outline_rounded,
+                );
+              },
+              icon: const Icon(Icons.add_rounded, size: 16),
+              label: const Text('Lobiye Ekle'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
-  void _removeFriendField(int index) {
-    if (_controllers.length <= 2) return;
-    setState(() {
-      final removed = _controllers.removeAt(index);
-      removed.dispose();
-    });
+  void _showRenameSlotDialog(
+    BuildContext context,
+    LeagueDraftProvider provider,
+    int slotIndex,
+    String currentName,
+  ) {
+    final controller = TextEditingController(text: currentName);
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFF0A2419),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(18),
+            side: const BorderSide(color: AppColors.pitchGreen, width: 1.2),
+          ),
+          title: const Text(
+            'Menajer / Takım Adını Düzenle',
+            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w900, color: Colors.white),
+          ),
+          content: TextField(
+            controller: controller,
+            autofocus: true,
+            style: const TextStyle(color: Colors.white, fontSize: 13.5),
+            decoration: const InputDecoration(
+              labelText: 'Yeni Menajer / Takım Adı',
+              prefixIcon: Icon(Icons.edit_rounded, color: AppColors.greenLight, size: 18),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Vazgeç', style: TextStyle(color: AppColors.textSecondary)),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.pitchGreen,
+                foregroundColor: Colors.white,
+              ),
+              onPressed: () {
+                provider.updateLobbySlotName(slotIndex, controller.text);
+                Navigator.pop(ctx);
+              },
+              child: const Text('Kaydet'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
-  void _startDraft(LeagueDraftProvider provider) {
-    final names = _isSoloMode
-        ? [_controllers.first.text]
-        : _controllers.map((c) => c.text).toList();
-    provider.startDraft(
-      playerNames: names,
-      isSoloMode: _isSoloMode,
+  void _showJoinLobbyByCodeDialog(BuildContext context, LeagueDraftProvider provider) {
+    final codeCtrl = TextEditingController();
+    final nameCtrl = TextEditingController(text: 'Misafir Kaptan');
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFF0A2419),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(18),
+            side: const BorderSide(color: AppColors.gold, width: 1.2),
+          ),
+          title: const Text(
+            '6 Haneli Lobi Koduna Katıl',
+            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w900, color: Colors.white),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: codeCtrl,
+                autofocus: true,
+                style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w800),
+                decoration: const InputDecoration(
+                  labelText: 'Oda / Lobi Kodu (Örn: 482915)',
+                  prefixIcon: Icon(Icons.tag_rounded, color: AppColors.gold, size: 18),
+                ),
+              ),
+              const SizedBox(height: 10),
+              TextField(
+                controller: nameCtrl,
+                style: const TextStyle(color: Colors.white, fontSize: 13.5),
+                decoration: const InputDecoration(
+                  labelText: 'Senin Takım / Menajer Adın',
+                  prefixIcon: Icon(Icons.shield_outlined, color: AppColors.greenLight, size: 18),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Vazgeç', style: TextStyle(color: AppColors.textSecondary)),
+            ),
+            ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.pitchGreen,
+                foregroundColor: Colors.white,
+              ),
+              onPressed: () {
+                final ok = provider.joinLobbyByCode(codeCtrl.text, nameCtrl.text);
+                Navigator.pop(ctx);
+                if (ok) {
+                  AppNotification.show(
+                    context,
+                    title: 'Lobiye Bağlandın!',
+                    message: '#${provider.lobbyRoomCode} numaralı lig lobisine katıldın.',
+                    type: AppNotificationType.success,
+                    icon: Icons.wifi_tethering_rounded,
+                  );
+                } else {
+                  AppNotification.show(
+                    context,
+                    title: 'Geçersiz Kod',
+                    message: 'Lütfen en az 4-6 haneli geçerli bir lobi kodu gir.',
+                    type: AppNotificationType.error,
+                    icon: Icons.error_outline_rounded,
+                  );
+                }
+              },
+              icon: const Icon(Icons.login_rounded, size: 16),
+              label: const Text('Lobiye Katıl'),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -78,10 +305,36 @@ class _LeagueDraftViewState extends State<_LeagueDraftView> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.white),
-        title: const Text(
-          'Kadro Kur & Lig Simüle Et',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
+        title: Text(
+          'Lig Draft & Simülasyon • Sezon #${provider.seasonNumber}',
+          style: const TextStyle(fontSize: 15.5, fontWeight: FontWeight.w800),
         ),
+        actions: [
+          Container(
+            margin: const EdgeInsets.only(right: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+            decoration: BoxDecoration(
+              color: AppColors.gold.withValues(alpha: 0.16),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: AppColors.gold.withValues(alpha: 0.55)),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.wifi_tethering_rounded, size: 13, color: AppColors.gold),
+                const SizedBox(width: 4),
+                Text(
+                  'Lobi #${provider.lobbyRoomCode}',
+                  style: const TextStyle(
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w900,
+                    color: AppColors.gold,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
       body: StadiumBackground(
         showLiveMatch: false,
@@ -113,94 +366,221 @@ class _LeagueDraftViewState extends State<_LeagueDraftView> {
   }
 
   // ===========================================================================
-  // PHASE 0: SETUP (SOLO OR UNLIMITED FRIENDS)
+  // PHASE 0: ONLINE LEAGUE LOBBY (INVITE UP TO LEAGUE SIZE, REST ARE AI BOTS)
   // ===========================================================================
   Widget _buildSetupPhase(BuildContext context, LeagueDraftProvider provider) {
+    const capacities = [4, 6, 8, 10, 12];
+
     return SingleChildScrollView(
       key: const ValueKey('setup'),
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 28),
+      padding: const EdgeInsets.fromLTRB(16, 6, 16, 28),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          // 1. Online Lobby Room Header Card (Room Code + Invite + Join by Code)
           Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  const Color(0xFF123C29).withValues(alpha: 0.92),
-                  const Color(0xFF071B12).withValues(alpha: 0.92),
+                  const Color(0xFF14422D).withValues(alpha: 0.94),
+                  const Color(0xFF071B12).withValues(alpha: 0.95),
                 ],
               ),
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppColors.pitchGreen.withValues(alpha: 0.6)),
+              border: Border.all(color: AppColors.gold.withValues(alpha: 0.75), width: 1.2),
             ),
-            child: const Column(
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
                   children: [
-                    Icon(Icons.emoji_events_rounded, color: AppColors.gold, size: 22),
-                    SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: AppColors.gold.withValues(alpha: 0.18),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(Icons.hub_rounded, color: AppColors.gold, size: 22),
+                    ),
+                    const SizedBox(width: 10),
                     Expanded(
-                      child: Text(
-                        'Efsane Kadronu Kur ve Ligi Simüle Et',
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w900,
-                          color: Colors.white,
-                        ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: AppColors.pitchGreen.withValues(alpha: 0.25),
+                                  borderRadius: BorderRadius.circular(5),
+                                ),
+                                child: Text(
+                                  'ONLINE LİG LOBİSİ • SEZON #${provider.seasonNumber}',
+                                  style: const TextStyle(
+                                    fontSize: 9.5,
+                                    fontWeight: FontWeight.w900,
+                                    color: AppColors.greenLight,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 3),
+                          Text(
+                            'Oda Davet Kodu: #${provider.lobbyRoomCode}',
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w900,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
                 ),
-                SizedBox(height: 6),
-                Text(
-                  '1. Rastgele gelen 3 efsane hocadan 1\'ini seç.\n'
-                  '2. Rastgele gelen 3 dizilişten 1\'ini seç.\n'
-                  '3. Her mevkide rastgele gelen Yıl + Takım paketinden (Örn: 2004-05 Milan, 1999-00 Galatasaray) 1 oyuncu seçerek 11\'ini tamamla ve çift devreli ligi simüle et!',
+                const SizedBox(height: 8),
+                const Text(
+                  'Seçtiğin lig takım sayısı kadar arkadaş davet edebilirsin; davet edilmeyen tüm boş koltuklar otomatik olarak Yapay Zeka (AI Bot) menajerlerle tamamlanır! Sezon bitince "Devam Et" diyerek aynı lobide yeni sezona devam edebilirsin.',
                   style: TextStyle(
-                    fontSize: 11.5,
+                    fontSize: 11.2,
                     color: AppColors.textSecondary,
                     height: 1.35,
                   ),
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: AppColors.gold,
+                          side: const BorderSide(color: AppColors.gold),
+                          padding: const EdgeInsets.symmetric(vertical: 9),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        ),
+                        onPressed: () {
+                          Clipboard.setData(ClipboardData(text: provider.lobbyRoomCode));
+                          AppNotification.show(
+                            context,
+                            title: 'Davet Kodu Kopyalandı (#${provider.lobbyRoomCode})',
+                            message: 'Kodu arkadaşlarına gönder veya "+ Arkadaş Davet Et" ile lobiye ekle!',
+                            type: AppNotificationType.highlight,
+                            icon: Icons.copy_rounded,
+                          );
+                        },
+                        icon: const Icon(Icons.share_rounded, size: 15),
+                        label: const Text(
+                          'Davet Kodu Paylaş',
+                          style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w800),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: AppColors.greenLight,
+                          side: BorderSide(color: AppColors.pitchGreen.withValues(alpha: 0.7)),
+                          padding: const EdgeInsets.symmetric(vertical: 9),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        ),
+                        onPressed: () => _showJoinLobbyByCodeDialog(context, provider),
+                        icon: const Icon(Icons.login_rounded, size: 15),
+                        label: const Text(
+                          'Başka Lobiye Katıl',
+                          style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w800),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
           ),
           const SizedBox(height: 14),
 
-          // Mode Selector: Arkadaşlarla vs Tek Başına
-          Row(
-            children: [
-              Expanded(
-                child: _buildModeToggleCard(
-                  title: 'Arkadaşlarla Lig',
-                  subtitle: 'İstediğin kadar arkadaş ekle',
-                  icon: Icons.groups_rounded,
-                  isSelected: !_isSoloMode,
-                  onTap: () => setState(() => _isSoloMode = false),
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: _buildModeToggleCard(
-                  title: 'Tek Başına (AI Lig)',
-                  subtitle: '3 Bot Menajere karşı',
-                  icon: Icons.smart_toy_outlined,
-                  isSelected: _isSoloMode,
-                  onTap: () => setState(() => _isSoloMode = true),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 14),
-
-          // Pool Selector & Database Browser Button
+          // 2. League Capacity Selector (4, 6, 8, 10, 12 Teams)
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const Text(
-                'TAKIM & SEZON HAVUZU SEÇİMİ',
+                '1. LİG TAKIM SAYISI (KAPASİTE)',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 0.7,
+                  color: AppColors.greenLight,
+                ),
+              ),
+              Text(
+                '${provider.invitedHumanCount} Oyuncu + ${provider.botFillCount} AI Bot',
+                style: const TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w900,
+                  color: AppColors.gold,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 7),
+          Row(
+            children: capacities.map((cap) {
+              final isSelected = provider.leagueCapacity == cap;
+              return Expanded(
+                child: Padding(
+                  padding: EdgeInsets.only(right: cap == capacities.last ? 0 : 6),
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(10),
+                    onTap: () => provider.setLeagueCapacity(cap),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 160),
+                      padding: const EdgeInsets.symmetric(vertical: 9),
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? AppColors.pitchGreen.withValues(alpha: 0.28)
+                            : AppColors.surface.withValues(alpha: 0.85),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color: isSelected ? AppColors.gold : AppColors.border,
+                          width: isSelected ? 1.4 : 0.8,
+                        ),
+                      ),
+                      child: Column(
+                        children: [
+                          Text(
+                            '$cap Takım',
+                            style: TextStyle(
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.w900,
+                              color: isSelected ? Colors.white : AppColors.textSecondary,
+                            ),
+                          ),
+                          Text(
+                            '${(cap - 1) * 2} Hafta',
+                            style: TextStyle(
+                              fontSize: 9,
+                              color: isSelected ? AppColors.gold : AppColors.textMuted,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+          const SizedBox(height: 14),
+
+          // 3. Pool Selector & Database Browser Button
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                '2. TAKIM & SEZON HAVUZU SEÇİMİ',
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w800,
@@ -257,15 +637,14 @@ class _LeagueDraftViewState extends State<_LeagueDraftView> {
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 15),
 
+          // 4. Lobby Slots (Invited Friends + Auto AI Bot Fillers)
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                _isSoloMode
-                    ? 'TAKIM / MENAJER ADIN'
-                    : 'KATILAN ARKADAŞLAR (${_controllers.length} KİŞİ)',
+                '3. LOBİ KOLTUKLARI (${provider.invitedHumanCount} DAVETLİ • ${provider.botFillCount} BOT)',
                 style: const TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w800,
@@ -273,16 +652,16 @@ class _LeagueDraftViewState extends State<_LeagueDraftView> {
                   color: AppColors.greenLight,
                 ),
               ),
-              if (!_isSoloMode)
+              if (provider.canInviteMoreFriends)
                 InkWell(
                   borderRadius: BorderRadius.circular(8),
-                  onTap: _addFriendField,
+                  onTap: () => _showInviteFriendDialog(context, provider),
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                     decoration: BoxDecoration(
-                      color: AppColors.gold.withValues(alpha: 0.16),
+                      color: AppColors.gold.withValues(alpha: 0.18),
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: AppColors.gold.withValues(alpha: 0.6)),
+                      border: Border.all(color: AppColors.gold.withValues(alpha: 0.75)),
                     ),
                     child: const Row(
                       mainAxisSize: MainAxisSize.min,
@@ -290,7 +669,7 @@ class _LeagueDraftViewState extends State<_LeagueDraftView> {
                         Icon(Icons.person_add_alt_1_rounded, size: 13, color: AppColors.gold),
                         SizedBox(width: 4),
                         Text(
-                          '+ Arkadaş Ekle',
+                          '+ Arkadaş Davet Et',
                           style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w800,
@@ -305,115 +684,167 @@ class _LeagueDraftViewState extends State<_LeagueDraftView> {
           ),
           const SizedBox(height: 8),
 
-          if (_isSoloMode)
-            TextField(
-              controller: _controllers.first,
-              style: const TextStyle(fontSize: 13.5, color: Colors.white),
-              decoration: const InputDecoration(
-                labelText: 'Kulüp veya Menajer Adın',
-                prefixIcon: Icon(Icons.shield_outlined, color: AppColors.gold, size: 18),
+          ...List.generate(provider.lobbySlots.length, (index) {
+            final slot = provider.lobbySlots[index];
+            final isHuman = !slot.isBot;
+            return Container(
+              margin: const EdgeInsets.only(bottom: 7),
+              padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 9),
+              decoration: BoxDecoration(
+                color: isHuman
+                    ? const Color(0xFF103826).withValues(alpha: 0.92)
+                    : AppColors.surface.withValues(alpha: 0.75),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: isHuman
+                      ? (slot.isHost ? AppColors.gold : AppColors.pitchGreen)
+                      : AppColors.border,
+                  width: isHuman ? 1.2 : 0.8,
+                ),
               ),
-            )
-          else
-            ...List.generate(_controllers.length, (index) {
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        controller: _controllers[index],
-                        style: const TextStyle(fontSize: 13, color: Colors.white),
-                        decoration: InputDecoration(
-                          labelText: '${index + 1}. Arkadaş / Takım Adı',
-                          prefixIcon: const Icon(
-                            Icons.person_outline_rounded,
-                            color: AppColors.greenLight,
-                            size: 18,
+              child: Row(
+                children: [
+                  Container(
+                    width: 30,
+                    height: 30,
+                    decoration: BoxDecoration(
+                      color: isHuman
+                          ? AppColors.pitchGreen.withValues(alpha: 0.25)
+                          : Colors.white.withValues(alpha: 0.07),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(
+                      isHuman
+                          ? (slot.isHost ? Icons.stars_rounded : Icons.person_rounded)
+                          : Icons.smart_toy_outlined,
+                      size: 17,
+                      color: isHuman
+                          ? (slot.isHost ? AppColors.gold : AppColors.greenLight)
+                          : AppColors.textSecondary,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
+                              decoration: BoxDecoration(
+                                color: isHuman
+                                    ? (slot.isHost
+                                        ? AppColors.gold.withValues(alpha: 0.22)
+                                        : AppColors.pitchGreen.withValues(alpha: 0.24))
+                                    : Colors.white.withValues(alpha: 0.08),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(
+                                slot.isHost
+                                    ? 'ODA KURUCU (SEN)'
+                                    : (isHuman ? 'DAVETLİ ARKADAŞ' : 'AI BOT (OTOMATİK)'),
+                                style: TextStyle(
+                                  fontSize: 8.5,
+                                  fontWeight: FontWeight.w900,
+                                  color: isHuman
+                                      ? (slot.isHost ? AppColors.gold : AppColors.greenLight)
+                                      : AppColors.textSecondary,
+                                ),
+                              ),
+                            ),
+                            if (slot.championshipsWon > 0) ...[
+                              const SizedBox(width: 6),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
+                                decoration: BoxDecoration(
+                                  color: AppColors.gold,
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: Text(
+                                  '${slot.championshipsWon} Şampiyonluk',
+                                  style: const TextStyle(
+                                    fontSize: 8.5,
+                                    fontWeight: FontWeight.w900,
+                                    color: Color(0xFF06160F),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          '${index + 1}. ${slot.name}',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w800,
+                            color: isHuman ? Colors.white : AppColors.textSecondary,
                           ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (isHuman) ...[
+                    IconButton(
+                      visualDensity: VisualDensity.compact,
+                      tooltip: 'İsmi Düzenle',
+                      onPressed: () => _showRenameSlotDialog(context, provider, index, slot.name),
+                      icon: const Icon(Icons.edit_outlined, size: 17, color: AppColors.greenLight),
+                    ),
+                    if (!slot.isHost)
+                      IconButton(
+                        visualDensity: VisualDensity.compact,
+                        tooltip: 'Koltuğu AI Bot Yap',
+                        onPressed: () => provider.convertSlotToBot(index),
+                        icon: const Icon(Icons.person_remove_outlined, size: 17, color: Colors.redAccent),
+                      ),
+                  ] else ...[
+                    InkWell(
+                      borderRadius: BorderRadius.circular(8),
+                      onTap: () => _showInviteFriendDialog(context, provider, targetSlotIndex: index),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.06),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: AppColors.gold.withValues(alpha: 0.45)),
+                        ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.person_add_alt_rounded, size: 12, color: AppColors.gold),
+                            SizedBox(width: 4),
+                            Text(
+                              'Davet Et',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w800,
+                                color: AppColors.gold,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
-                    if (_controllers.length > 2) ...[
-                      const SizedBox(width: 6),
-                      IconButton(
-                        onPressed: () => _removeFriendField(index),
-                        icon: const Icon(
-                          Icons.remove_circle_outline_rounded,
-                          color: Colors.redAccent,
-                          size: 20,
-                        ),
-                      ),
-                    ],
                   ],
-                ),
-              );
-            }),
+                ],
+              ),
+            );
+          }),
 
-          const SizedBox(height: 16),
+          const SizedBox(height: 14),
 
           CustomButton(
-            text: 'Kadro Seçimine Başla (Hoca • Diziliş • 11)',
+            text: '${provider.seasonNumber}. Sezon Kadro Seçimini Başlat (${provider.leagueCapacity} Takım)',
             icon: Icons.play_arrow_rounded,
             backgroundColor: AppColors.pitchGreen,
             textColor: Colors.white,
-            onPressed: () => _startDraft(provider),
+            onPressed: provider.startDraftFromLobby,
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildModeToggleCard({
-    required String title,
-    required String subtitle,
-    required IconData icon,
-    required bool isSelected,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(14),
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? AppColors.pitchGreen.withValues(alpha: 0.24)
-              : AppColors.surface.withValues(alpha: 0.85),
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-            color: isSelected ? AppColors.gold : AppColors.border,
-            width: isSelected ? 1.4 : 0.9,
-          ),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Icon(
-              icon,
-              color: isSelected ? AppColors.gold : AppColors.textSecondary,
-              size: 22,
-            ),
-            const SizedBox(height: 6),
-            Text(
-              title,
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w800,
-                color: isSelected ? Colors.white : AppColors.textSecondary,
-              ),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              subtitle,
-              style: const TextStyle(
-                fontSize: 10.5,
-                color: AppColors.textMuted,
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }
@@ -1103,11 +1534,17 @@ class _LeagueDraftViewState extends State<_LeagueDraftView> {
   }
 
   // ===========================================================================
-  // PHASE 4: FULL LEAGUE SIMULATION (STANDINGS, FIXTURES & TOP SCORERS)
+  // PHASE 4: LIVE FLOWING LEAGUE SIMULATION & RETURN TO LOBBY FOR NEXT SEASON
   // ===========================================================================
   Widget _buildLeagueSimulationPhase(BuildContext context, LeagueDraftProvider provider) {
     final table = provider.standings;
-    final champion = provider.isAllFixturesPlayed && table.isNotEmpty ? table.first : null;
+    final champion = provider.champion;
+    final latestMatch = provider.latestSimulatedFixture;
+    final isStreaming = _liveStreamTimer != null;
+    final totalMatches = provider.fixtures.isEmpty ? 1 : provider.fixtures.length;
+    final playedCount = provider.playedFixturesCount;
+    final progress = (playedCount / totalMatches).clamp(0.0, 1.0);
+    final recentPlayed = provider.playedFixturesReverse.take(6).toList();
 
     // Show matches of the latest played matchday (or matchday 1 if none played yet)
     final playedDays = provider.fixtures.where((f) => f.isPlayed).map((f) => f.matchday).toList();
@@ -1122,150 +1559,384 @@ class _LeagueDraftViewState extends State<_LeagueDraftView> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Champion Banner when season finishes
-          if (champion != null)
+          // 1. LIVE MATCH STREAM TICKER (ÖNÜNDEN AKARAK GEÇEN MAÇ SONUÇLARI EKRANI)
+          if (!provider.isAllFixturesPlayed)
             Container(
               margin: const EdgeInsets.only(bottom: 12),
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
                   colors: [
-                    AppColors.gold.withValues(alpha: 0.25),
-                    const Color(0xFF0E2D20).withValues(alpha: 0.95),
+                    const Color(0xFF14452F).withValues(alpha: 0.95),
+                    const Color(0xFF071B12).withValues(alpha: 0.96),
                   ],
                 ),
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: AppColors.gold, width: 1.5),
+                border: Border.all(
+                  color: isStreaming ? AppColors.gold : AppColors.pitchGreen,
+                  width: 1.4,
+                ),
               ),
-              child: Row(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const Icon(Icons.emoji_events_rounded, color: AppColors.gold, size: 36),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'SEZON TAMAMLANDI • LİG ŞAMPİYONU!',
-                          style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: 0.8,
-                            color: AppColors.gold,
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            width: 8,
+                            height: 8,
+                            decoration: BoxDecoration(
+                              color: isStreaming ? AppColors.gold : AppColors.pitchGreen,
+                              shape: BoxShape.circle,
+                            ),
                           ),
-                        ),
-                        Text(
-                          champion.name,
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w900,
-                            color: Colors.white,
+                          const SizedBox(width: 6),
+                          Text(
+                            isStreaming
+                                ? 'CANLI MAÇ AKIŞI • HAFTA ${latestMatch?.matchday ?? provider.currentMatchday}/${provider.totalMatchdays}'
+                                : 'SİMÜLASYON MERKEZİ • HAFTA ${provider.currentMatchday}/${provider.totalMatchdays}',
+                            style: const TextStyle(
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 0.6,
+                              color: AppColors.gold,
+                            ),
                           ),
+                        ],
+                      ),
+                      Text(
+                        '$playedCount / $totalMatches Maç',
+                        style: const TextStyle(
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.greenLight,
                         ),
-                        Text(
-                          'Hoca: ${champion.manager?.name ?? ""} (${champion.formation?.code ?? ""}) • ${champion.points} Puan (${champion.goalsFor} Gol)',
-                          style: const TextStyle(
-                            fontSize: 11.5,
-                            color: AppColors.greenLight,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ],
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(6),
+                    child: LinearProgressIndicator(
+                      value: progress,
+                      minHeight: 6,
+                      backgroundColor: Colors.black.withValues(alpha: 0.35),
+                      valueColor: const AlwaysStoppedAnimation<Color>(AppColors.gold),
                     ),
+                  ),
+                  const SizedBox(height: 12),
+
+                  // Animated Live Match Scoreboard Passing in Front of the User
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 240),
+                    child: latestMatch == null
+                        ? Container(
+                            key: const ValueKey('waiting_kickoff'),
+                            padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
+                            decoration: BoxDecoration(
+                              color: Colors.black.withValues(alpha: 0.28),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+                            ),
+                            child: const Column(
+                              children: [
+                                Icon(Icons.play_circle_fill_rounded, color: AppColors.gold, size: 32),
+                                SizedBox(height: 6),
+                                Text(
+                                  'Kadrolar ve Fikstür Hazır! Başlat\'a dokun, maçların sonuçları önünden canlı akarak geçsin!',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontSize: 11.5,
+                                    color: AppColors.textSecondary,
+                                    height: 1.35,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          )
+                        : _buildFlowingMatchHighlightCard(provider, latestMatch),
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  // Stream Controls: Canlı Akışı Başlat / Duraklat / Hız / Tek Hafta / Tümünü Bitir
+                  Row(
+                    children: [
+                      Expanded(
+                        flex: 4,
+                        child: ElevatedButton.icon(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: isStreaming ? AppColors.gold : AppColors.pitchGreen,
+                            foregroundColor: isStreaming ? const Color(0xFF06160F) : Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 11),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(11),
+                            ),
+                          ),
+                          onPressed: () => _toggleLiveMatchStream(provider),
+                          icon: Icon(
+                            isStreaming ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                            size: 18,
+                          ),
+                          label: Text(
+                            isStreaming
+                                ? 'Akışı Duraklat'
+                                : (playedCount == 0 ? 'Maçları Canlı Akıt' : 'Akışa Devam Et'),
+                            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w900),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      InkWell(
+                        borderRadius: BorderRadius.circular(11),
+                        onTap: () => _toggleLiveMatchStream(provider, fastMode: !_isFastStream),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 11),
+                          decoration: BoxDecoration(
+                            color: _isFastStream
+                                ? AppColors.gold.withValues(alpha: 0.22)
+                                : Colors.white.withValues(alpha: 0.08),
+                            borderRadius: BorderRadius.circular(11),
+                            border: Border.all(
+                              color: _isFastStream ? AppColors.gold : AppColors.border,
+                            ),
+                          ),
+                          child: Text(
+                            _isFastStream ? '2x Hız' : '1x Hız',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w900,
+                              color: _isFastStream ? AppColors.gold : Colors.white,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        flex: 3,
+                        child: OutlinedButton.icon(
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: AppColors.gold,
+                            side: const BorderSide(color: AppColors.gold),
+                            padding: const EdgeInsets.symmetric(vertical: 11),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(11),
+                            ),
+                          ),
+                          onPressed: () {
+                            _stopLiveStream();
+                            provider.simulateAllRemainingMatchdays();
+                          },
+                          icon: const Icon(Icons.fast_forward_rounded, size: 16),
+                          label: const Text(
+                            'Sonuca Geç',
+                            style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w800),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
             ),
 
-          // Simulation Action Buttons
-          if (!provider.isAllFixturesPlayed)
-            Row(
-              children: [
-                Expanded(
-                  flex: 3,
-                  child: ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.pitchGreen,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    onPressed: provider.simulateNextMatchday,
-                    icon: const Icon(Icons.play_arrow_rounded, size: 18),
-                    label: Text(
-                      '${provider.currentMatchday}. Haftayı Simüle Et',
-                      style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w900),
-                    ),
-                  ),
+          // 2. SEASON CHAMPION & CONTINUE TO LOBBY CARD (WHEN ALL MATCHES FINISH)
+          if (champion != null)
+            Container(
+              margin: const EdgeInsets.only(bottom: 12),
+              padding: const EdgeInsets.all(15),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    AppColors.gold.withValues(alpha: 0.28),
+                    const Color(0xFF0E2D20).withValues(alpha: 0.96),
+                  ],
                 ),
-                const SizedBox(width: 8),
-                Expanded(
-                  flex: 2,
-                  child: OutlinedButton.icon(
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: AppColors.gold,
-                      side: const BorderSide(color: AppColors.gold),
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(color: AppColors.gold, width: 1.6),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: AppColors.gold.withValues(alpha: 0.20),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(Icons.emoji_events_rounded, color: AppColors.gold, size: 36),
                       ),
-                    ),
-                    onPressed: provider.simulateAllRemainingMatchdays,
-                    icon: const Icon(Icons.fast_forward_rounded, size: 16),
-                    label: const Text(
-                      'Tüm Sezon',
-                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800),
-                    ),
-                  ),
-                ),
-              ],
-            )
-          else
-            Row(
-              children: [
-                Expanded(
-                  child: ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.pitchGreen,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '${provider.seasonNumber}. SEZON SONUCU • LİG ŞAMPİYONU!',
+                              style: const TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 0.8,
+                                color: AppColors.gold,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              champion.name,
+                              style: const TextStyle(
+                                fontSize: 19,
+                                fontWeight: FontWeight.w900,
+                                color: Colors.white,
+                              ),
+                            ),
+                            Text(
+                              'Hoca: ${champion.manager?.name ?? ""} (${champion.formation?.code ?? ""}) • ${champion.points} Puan (${champion.goalsFor} Gol)',
+                              style: const TextStyle(
+                                fontSize: 11.5,
+                                color: AppColors.greenLight,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            if (provider.topScorers.isNotEmpty)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 2),
+                                child: Text(
+                                  'Gol Kralı: ${provider.topScorers.first.key} (${provider.topScorers.first.value} Gol)',
+                                  style: const TextStyle(
+                                    fontSize: 11,
+                                    color: AppColors.gold,
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
                       ),
-                    ),
-                    onPressed: provider.replaySeasonWithSameSquads,
-                    icon: const Icon(Icons.replay_rounded, size: 17),
-                    label: const Text(
-                      'Aynı Kadrolarla Rövanş',
-                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800),
-                    ),
+                    ],
                   ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: OutlinedButton.icon(
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: AppColors.gold,
-                      side: const BorderSide(color: AppColors.gold),
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                  const SizedBox(height: 14),
+                  CustomButton(
+                    text: 'Devam Et • Lobiye Dön (${provider.seasonNumber + 1}. Sezonu Oyna)',
+                    icon: Icons.meeting_room_rounded,
+                    backgroundColor: AppColors.pitchGreen,
+                    textColor: Colors.white,
+                    onPressed: () {
+                      _stopLiveStream();
+                      provider.continueToLobbyForNextSeason();
+                    },
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: AppColors.gold,
+                            side: const BorderSide(color: AppColors.gold),
+                            padding: const EdgeInsets.symmetric(vertical: 10),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(11),
+                            ),
+                          ),
+                          onPressed: () {
+                            _stopLiveStream();
+                            provider.replaySeasonWithSameSquads();
+                            _toggleLiveMatchStream(provider);
+                          },
+                          icon: const Icon(Icons.replay_rounded, size: 16),
+                          label: const Text(
+                            'Aynı Kadrolarla Tekrar Akıt',
+                            style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w800),
+                          ),
+                        ),
                       ),
-                    ),
-                    onPressed: () => _startDraft(provider),
-                    icon: const Icon(Icons.shuffle_rounded, size: 17),
-                    label: const Text(
-                      'Yeni Kadrolar Kur',
-                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800),
-                    ),
+                    ],
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
 
-          const SizedBox(height: 12),
+          // 3. RECENT FLOWING RESULTS RIBBON (ÖNÜNDEN GEÇEN SON MAÇLAR ŞERİDİ)
+          if (recentPlayed.isNotEmpty) ...[
+            Container(
+              margin: const EdgeInsets.only(bottom: 12),
+              padding: const EdgeInsets.all(11),
+              decoration: BoxDecoration(
+                color: Colors.black.withValues(alpha: 0.34),
+                borderRadius: BorderRadius.circular(13),
+                border: Border.all(color: AppColors.gold.withValues(alpha: 0.35)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Row(
+                    children: [
+                      Icon(Icons.bolt_rounded, size: 14, color: AppColors.gold),
+                      SizedBox(width: 4),
+                      Text(
+                        'ÖNÜNDEN GEÇEN SON MAÇ SONUÇLARI (CANLI AKIŞ)',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w900,
+                          color: AppColors.gold,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 7),
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: recentPlayed.map((m) {
+                        final h = provider.participants[m.homeIndex];
+                        final a = provider.participants[m.awayIndex];
+                        return Container(
+                          margin: const EdgeInsets.only(right: 8),
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: AppColors.surface.withValues(alpha: 0.92),
+                            borderRadius: BorderRadius.circular(9),
+                            border: Border.all(color: AppColors.borderGreen.withValues(alpha: 0.45)),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                'H${m.matchday}: ',
+                                style: const TextStyle(
+                                  fontSize: 9.5,
+                                  fontWeight: FontWeight.w900,
+                                  color: AppColors.gold,
+                                ),
+                              ),
+                              Text(
+                                '${h.name} ${m.homeGoals}-${m.awayGoals} ${a.name}',
+                                style: const TextStyle(
+                                  fontSize: 10.5,
+                                  fontWeight: FontWeight.w800,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
 
           // Live Standings Table
           Container(
@@ -1544,6 +2215,129 @@ class _LeagueDraftViewState extends State<_LeagueDraftView> {
                   }),
                 ],
               ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFlowingMatchHighlightCard(
+    LeagueDraftProvider provider,
+    LeagueMatchFixture match,
+  ) {
+    final home = provider.participants[match.homeIndex];
+    final away = provider.participants[match.awayIndex];
+
+    return Container(
+      key: ValueKey('flow_${match.matchday}_${match.homeIndex}_${match.awayIndex}'),
+      padding: const EdgeInsets.all(13),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.42),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.gold.withValues(alpha: 0.65), width: 1.1),
+      ),
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+            decoration: BoxDecoration(
+              color: AppColors.gold.withValues(alpha: 0.20),
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Text(
+              '${match.matchday}. HAFTA MAÇ SONUCU (90\' BİTTİ)',
+              style: const TextStyle(
+                fontSize: 9.5,
+                fontWeight: FontWeight.w900,
+                color: AppColors.gold,
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      home.name,
+                      textAlign: TextAlign.right,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.w900,
+                        color: Colors.white,
+                      ),
+                    ),
+                    Text(
+                      '${home.manager?.name ?? ""} (${home.overallTeamPower} OVR)',
+                      textAlign: TextAlign.right,
+                      style: const TextStyle(fontSize: 9.5, color: AppColors.textMuted),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                margin: const EdgeInsets.symmetric(horizontal: 12),
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                decoration: BoxDecoration(
+                  color: AppColors.pitchGreen.withValues(alpha: 0.30),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: AppColors.gold, width: 1.1),
+                ),
+                child: Text(
+                  '${match.homeGoals} - ${match.awayGoals}',
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w900,
+                    color: AppColors.gold,
+                  ),
+                ),
+              ),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      away.name,
+                      textAlign: TextAlign.left,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.w900,
+                        color: Colors.white,
+                      ),
+                    ),
+                    Text(
+                      '${away.manager?.name ?? ""} (${away.overallTeamPower} OVR)',
+                      textAlign: TextAlign.left,
+                      style: const TextStyle(fontSize: 9.5, color: AppColors.textMuted),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          if (match.events.isNotEmpty) ...[
+            const Divider(height: 14, color: AppColors.border),
+            Wrap(
+              spacing: 8,
+              runSpacing: 4,
+              alignment: WrapAlignment.center,
+              children: match.events.map((ev) {
+                return Text(
+                  '${ev.minute}\' ${ev.scorerName} (${ev.clubEraTag})',
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    color: ev.isHomeGoal ? AppColors.greenLight : AppColors.gold,
+                  ),
+                );
+              }).toList(),
             ),
           ],
         ],

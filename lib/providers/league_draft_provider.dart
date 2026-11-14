@@ -21,8 +21,30 @@ enum LeaguePoolTheme {
 class LeagueDraftProvider extends ChangeNotifier {
   final Random _rng = Random();
 
+  static const List<String> _defaultBotNames = [
+    'Taktik Dehası AI',
+    'Galaktikos Bot',
+    'Kuzey Fırtınası AI',
+    'Anadolu Kartalı Bot',
+    'Sambacılar AI',
+    'Panzerler Bot',
+    'Boğazın Efendisi AI',
+    'Total Futbol Bot',
+    'Catenaccio AI',
+    'Kralın Takımı Bot',
+    'Altın Jenerasyon AI',
+  ];
+
   LeagueDraftPhase _phase = LeagueDraftPhase.setup;
   LeaguePoolTheme _poolTheme = LeaguePoolTheme.allWorldHistory;
+
+  // Online Lobby State (Room Code, Capacity, Invited Friends + AI Bots, Multi-Season Tracker)
+  String _lobbyRoomCode = '482915';
+  int _leagueCapacity = 4;
+  int _seasonNumber = 1;
+  bool _championshipAwardedForCurrentSeason = false;
+  final List<LeagueLobbySlot> _lobbySlots = [];
+
   final List<LeagueParticipant> _participants = [];
   int _activeParticipantIndex = 0;
 
@@ -34,15 +56,29 @@ class LeagueDraftProvider extends ChangeNotifier {
   final Set<String> _usedPackIdsInCurrentTurn = {};
   int _remainingRerolls = 3;
 
-  // League Fixtures & Scorer Leaderboard
+  // League Fixtures & Live Ticker State
   final List<LeagueMatchFixture> _fixtures = [];
+  LeagueMatchFixture? _latestSimulatedFixture;
   int _currentMatchday = 1;
   int _totalMatchdays = 1;
   final Map<String, int> _goalScorerCounts = {};
   final Map<String, String> _goalScorerClubTags = {};
 
+  LeagueDraftProvider() {
+    _lobbyRoomCode = (100000 + _rng.nextInt(900000)).toString();
+    _rebuildLobbySlotsForCapacity(4);
+  }
+
   LeagueDraftPhase get phase => _phase;
   LeaguePoolTheme get poolTheme => _poolTheme;
+  String get lobbyRoomCode => _lobbyRoomCode;
+  int get leagueCapacity => _leagueCapacity;
+  int get seasonNumber => _seasonNumber;
+  List<LeagueLobbySlot> get lobbySlots => List.unmodifiable(_lobbySlots);
+  int get invitedHumanCount => _lobbySlots.where((s) => !s.isBot).length;
+  int get botFillCount => _lobbySlots.where((s) => s.isBot).length;
+  bool get canInviteMoreFriends => invitedHumanCount < _leagueCapacity;
+
   int get remainingRerolls => _remainingRerolls;
   List<LeagueParticipant> get participants => List.unmodifiable(_participants);
   int get activeParticipantIndex => _activeParticipantIndex;
@@ -54,8 +90,120 @@ class LeagueDraftProvider extends ChangeNotifier {
   List<EraPlayerCandidate> get currentPlayerChoices => _currentPlayerChoices;
 
   List<LeagueMatchFixture> get fixtures => List.unmodifiable(_fixtures);
+  LeagueMatchFixture? get latestSimulatedFixture => _latestSimulatedFixture;
+  List<LeagueMatchFixture> get playedFixturesReverse =>
+      _fixtures.where((f) => f.isPlayed).toList().reversed.toList();
+  int get playedFixturesCount => _fixtures.where((f) => f.isPlayed).length;
   int get currentMatchday => _currentMatchday;
   int get totalMatchdays => _totalMatchdays;
+  LeagueParticipant? get champion =>
+      isAllFixturesPlayed && standings.isNotEmpty ? standings.first : null;
+
+  void _rebuildLobbySlotsForCapacity(int newCapacity) {
+    _leagueCapacity = newCapacity.clamp(2, 12);
+    final existingHumans = _lobbySlots.where((s) => !s.isBot).toList();
+    final existingTrophies = <String, int>{
+      for (final s in _lobbySlots) s.name: s.championshipsWon,
+    };
+
+    _lobbySlots.clear();
+    if (existingHumans.isEmpty) {
+      _lobbySlots.add(
+        LeagueLobbySlot(
+          slotIndex: 0,
+          name: 'Kaptan FC (Ev Sahibi)',
+          isBot: false,
+          isHost: true,
+        ),
+      );
+    } else {
+      for (int i = 0; i < existingHumans.length && i < _leagueCapacity; i++) {
+        _lobbySlots.add(
+          LeagueLobbySlot(
+            slotIndex: i,
+            name: existingHumans[i].name,
+            isBot: false,
+            isHost: i == 0,
+            championshipsWon: existingHumans[i].championshipsWon,
+          ),
+        );
+      }
+    }
+
+    int botNameCursor = 0;
+    while (_lobbySlots.length < _leagueCapacity) {
+      final slotIdx = _lobbySlots.length;
+      final bName = _defaultBotNames[botNameCursor % _defaultBotNames.length];
+      botNameCursor++;
+      _lobbySlots.add(
+        LeagueLobbySlot(
+          slotIndex: slotIdx,
+          name: bName,
+          isBot: true,
+          isHost: false,
+          championshipsWon: existingTrophies[bName] ?? 0,
+        ),
+      );
+    }
+  }
+
+  /// Sets the total number of teams in the league; empty slots are automatically AI Bots
+  void setLeagueCapacity(int capacity) {
+    _rebuildLobbySlotsForCapacity(capacity);
+    notifyListeners();
+  }
+
+  /// Invites a friend into an available AI Bot slot (up to leagueCapacity)
+  bool inviteFriendToLobby(String friendName, {int? targetSlotIndex}) {
+    int slotIdx = targetSlotIndex ?? -1;
+    if (slotIdx < 0 || slotIdx >= _lobbySlots.length || !_lobbySlots[slotIdx].isBot) {
+      slotIdx = _lobbySlots.indexWhere((s) => s.isBot);
+    }
+    if (slotIdx == -1) return false; // All slots up to leagueCapacity are already human players
+
+    final cleanName = friendName.trim().isEmpty
+        ? '${invitedHumanCount + 1}. Davetli Menajer'
+        : friendName.trim();
+
+    _lobbySlots[slotIdx].name = cleanName;
+    _lobbySlots[slotIdx].isBot = false;
+    _lobbySlots[slotIdx].isReady = true;
+    notifyListeners();
+    return true;
+  }
+
+  /// Removes an invited friend slot and turns it back into an AI Bot slot
+  void convertSlotToBot(int slotIndex) {
+    if (slotIndex <= 0 || slotIndex >= _lobbySlots.length) return;
+    final bName = _defaultBotNames[slotIndex % _defaultBotNames.length];
+    _lobbySlots[slotIndex].name = bName;
+    _lobbySlots[slotIndex].isBot = true;
+    notifyListeners();
+  }
+
+  void updateLobbySlotName(int slotIndex, String newName) {
+    if (slotIndex < 0 || slotIndex >= _lobbySlots.length) return;
+    if (newName.trim().isEmpty) return;
+    _lobbySlots[slotIndex].name = newName.trim();
+    notifyListeners();
+  }
+
+  void regenerateRoomCode() {
+    _lobbyRoomCode = (100000 + _rng.nextInt(900000)).toString();
+    notifyListeners();
+  }
+
+  bool joinLobbyByCode(String code, String playerName) {
+    final trimmed = code.trim();
+    if (trimmed.length < 4) return false;
+    _lobbyRoomCode = trimmed.toUpperCase();
+    if (_lobbySlots.isNotEmpty) {
+      _lobbySlots[0].name = 'Oda Kurucu (#$_lobbyRoomCode)';
+    }
+    inviteFriendToLobby(playerName.trim().isEmpty ? 'Misafir Menajer' : playerName.trim());
+    notifyListeners();
+    return true;
+  }
 
   void setPoolTheme(LeaguePoolTheme theme) {
     _poolTheme = theme;
@@ -141,25 +289,73 @@ class LeagueDraftProvider extends ChangeNotifier {
 
   String scorerClubTag(String playerName) => _goalScorerClubTags[playerName] ?? '';
 
-  /// Start a Solo League (User + 3 AI Managers = 4-team League) or Friends League (N friends)
+  /// Starts the draft directly from the current Online/Invite Lobby slots (Friends + AI Bots)
+  void startDraftFromLobby() {
+    _participants.clear();
+    _fixtures.clear();
+    _latestSimulatedFixture = null;
+    _goalScorerCounts.clear();
+    _goalScorerClubTags.clear();
+    _championshipAwardedForCurrentSeason = false;
+
+    for (int i = 0; i < _lobbySlots.length; i++) {
+      final slot = _lobbySlots[i];
+      _participants.add(
+        LeagueParticipant(
+          id: slot.isBot ? 'bot_$i' : 'p_$i',
+          name: slot.name,
+          isBot: slot.isBot,
+          championshipsWon: slot.championshipsWon,
+        ),
+      );
+    }
+
+    _activeParticipantIndex = 0;
+    while (_activeParticipantIndex < _participants.length &&
+        _participants[_activeParticipantIndex].isBot) {
+      _autoDraftBotParticipant(_participants[_activeParticipantIndex]);
+      _activeParticipantIndex++;
+    }
+
+    if (_activeParticipantIndex >= _participants.length) {
+      _activeParticipantIndex = 0;
+    }
+
+    _remainingRerolls = 3;
+    _usedPackIdsInCurrentTurn.clear();
+    _prepareManagerChoicesForActive();
+    _phase = LeagueDraftPhase.pickManager;
+    notifyListeners();
+  }
+
+  /// Start a Solo League (User + AI Managers) or Friends + AI Bots League up to leagueCapacity
   void startDraft({
     required List<String> playerNames,
     required bool isSoloMode,
+    int? leagueCapacity,
   }) {
     _participants.clear();
     _fixtures.clear();
+    _latestSimulatedFixture = null;
     _goalScorerCounts.clear();
     _goalScorerClubTags.clear();
+    _championshipAwardedForCurrentSeason = false;
+
+    final targetCap = leagueCapacity ?? (isSoloMode ? 4 : max(_leagueCapacity, playerNames.length));
+    _leagueCapacity = targetCap.clamp(2, 12);
+    _lobbySlots.clear();
 
     if (isSoloMode) {
       final humanName = playerNames.isNotEmpty && playerNames.first.trim().isNotEmpty
           ? playerNames.first.trim()
           : 'Kaptan FC';
-      _participants.add(LeagueParticipant(id: 'p_0', name: humanName, isBot: false));
-      const botNames = [' Taktik Dehası AI', 'Galaktikos Bot', 'Kuzey Yıldızı AI'];
-      for (int i = 0; i < botNames.length; i++) {
-        _participants.add(
-          LeagueParticipant(id: 'bot_$i', name: botNames[i].trim(), isBot: true),
+      _lobbySlots.add(
+        LeagueLobbySlot(slotIndex: 0, name: humanName, isBot: false, isHost: true),
+      );
+      for (int i = 1; i < _leagueCapacity; i++) {
+        final bName = _defaultBotNames[(i - 1) % _defaultBotNames.length];
+        _lobbySlots.add(
+          LeagueLobbySlot(slotIndex: i, name: bName, isBot: true, isHost: false),
         );
       }
     } else {
@@ -167,16 +363,31 @@ class LeagueDraftProvider extends ChangeNotifier {
         final clean = playerNames[i].trim().isEmpty
             ? 'Oyuncu ${i + 1}'
             : playerNames[i].trim();
-        _participants.add(LeagueParticipant(id: 'p_$i', name: clean, isBot: false));
+        _lobbySlots.add(
+          LeagueLobbySlot(slotIndex: i, name: clean, isBot: false, isHost: i == 0),
+        );
+      }
+      // If leagueCapacity is larger than invited human count, fill the rest with AI Bots!
+      if (leagueCapacity != null && _lobbySlots.length < _leagueCapacity) {
+        int botIdx = 0;
+        while (_lobbySlots.length < _leagueCapacity) {
+          final bName = _defaultBotNames[botIdx % _defaultBotNames.length];
+          botIdx++;
+          _lobbySlots.add(
+            LeagueLobbySlot(
+              slotIndex: _lobbySlots.length,
+              name: bName,
+              isBot: true,
+              isHost: false,
+            ),
+          );
+        }
+      } else {
+        _leagueCapacity = _lobbySlots.length;
       }
     }
 
-    _activeParticipantIndex = 0;
-    _remainingRerolls = 3;
-    _usedPackIdsInCurrentTurn.clear();
-    _prepareManagerChoicesForActive();
-    _phase = LeagueDraftPhase.pickManager;
-    notifyListeners();
+    startDraftFromLobby();
   }
 
   void _prepareManagerChoicesForActive() {
@@ -436,6 +647,30 @@ class LeagueDraftProvider extends ChangeNotifier {
     _currentMatchday = 1;
   }
 
+  /// Simulates the next single unplayed fixture so results flow one by one in front of the user
+  LeagueMatchFixture? simulateNextSingleFixture() {
+    if (isAllFixturesPlayed) return null;
+
+    final nextUnplayed = _fixtures.where((f) => !f.isPlayed).toList();
+    if (nextUnplayed.isEmpty) return null;
+
+    final match = nextUnplayed.first;
+    _currentMatchday = match.matchday;
+    _simulateSingleMatch(match);
+    _latestSimulatedFixture = match;
+
+    final remaining = _fixtures.where((f) => !f.isPlayed).toList();
+    if (remaining.isNotEmpty) {
+      _currentMatchday = remaining.first.matchday;
+    } else {
+      _currentMatchday = _totalMatchdays;
+      _checkAndAwardChampionshipIfFinished();
+    }
+
+    notifyListeners();
+    return match;
+  }
+
   /// Simulates all matches of the current matchday
   void simulateNextMatchday() {
     if (isAllFixturesPlayed) return;
@@ -446,6 +681,7 @@ class LeagueDraftProvider extends ChangeNotifier {
 
     for (final match in dayMatches) {
       _simulateSingleMatch(match);
+      _latestSimulatedFixture = match;
     }
 
     if (_currentMatchday < _totalMatchdays) {
@@ -453,6 +689,10 @@ class LeagueDraftProvider extends ChangeNotifier {
       if (nextUnplayed.isNotEmpty) {
         _currentMatchday = nextUnplayed.first.matchday;
       }
+    }
+
+    if (isAllFixturesPlayed) {
+      _checkAndAwardChampionshipIfFinished();
     }
 
     notifyListeners();
@@ -463,15 +703,47 @@ class LeagueDraftProvider extends ChangeNotifier {
     for (final match in _fixtures) {
       if (!match.isPlayed) {
         _simulateSingleMatch(match);
+        _latestSimulatedFixture = match;
       }
     }
     _currentMatchday = _totalMatchdays;
+    _checkAndAwardChampionshipIfFinished();
     notifyListeners();
+  }
+
+  void _checkAndAwardChampionshipIfFinished() {
+    if (_championshipAwardedForCurrentSeason || !isAllFixturesPlayed) return;
+    final winner = champion;
+    if (winner == null) return;
+    _championshipAwardedForCurrentSeason = true;
+    winner.championshipsWon += 1;
+
+    for (final slot in _lobbySlots) {
+      if (slot.name == winner.name) {
+        slot.championshipsWon = winner.championshipsWon;
+        break;
+      }
+    }
   }
 
   /// Resets the current league scores and replays the season with the same drafted squads
   void replaySeasonWithSameSquads() {
+    _championshipAwardedForCurrentSeason = false;
+    _latestSimulatedFixture = null;
     _generateLeagueFixtures();
+    notifyListeners();
+  }
+
+  /// Returns to the same Online/Invite Lobby for the next season, keeping room code, friends, bots, and trophy counts
+  void continueToLobbyForNextSeason() {
+    _checkAndAwardChampionshipIfFinished();
+    _seasonNumber += 1;
+    _fixtures.clear();
+    _latestSimulatedFixture = null;
+    _goalScorerCounts.clear();
+    _goalScorerClubTags.clear();
+    _participants.clear();
+    _phase = LeagueDraftPhase.setup;
     notifyListeners();
   }
 

@@ -264,6 +264,76 @@ void main() {
       expect(draftProvider.isAllFixturesPlayed, isTrue);
       expect(draftProvider.standings.first.played, greaterThan(0));
     });
+
+    test('Online League Lobby supports capacity, friend invites + AI bots, live flowing match simulation, and returning to lobby for next season', () {
+      final draftProvider = LeagueDraftProvider();
+      expect(draftProvider.lobbyRoomCode.length, 6);
+      expect(draftProvider.seasonNumber, 1);
+
+      // Set league capacity to 6 teams
+      draftProvider.setLeagueCapacity(6);
+      expect(draftProvider.leagueCapacity, 6);
+      expect(draftProvider.lobbySlots.length, 6);
+      expect(draftProvider.invitedHumanCount, 1); // Host only initially
+      expect(draftProvider.botFillCount, 5);
+
+      // Invite 1 friend -> 2 humans, 4 AI bots
+      final invited = draftProvider.inviteFriendToLobby('Emre');
+      expect(invited, isTrue);
+      expect(draftProvider.invitedHumanCount, 2);
+      expect(draftProvider.botFillCount, 4);
+
+      // Start draft from lobby
+      draftProvider.startDraftFromLobby();
+      expect(draftProvider.participants.length, 6);
+      expect(draftProvider.participants.where((p) => !p.isBot).length, 2);
+      expect(draftProvider.participants.where((p) => p.isBot).length, 4);
+
+      // Draft for both human participants; AI bots auto-draft at the end
+      for (int p = 0; p < 2; p++) {
+        if (draftProvider.phase == LeagueDraftPhase.nextPlayerHandoff) {
+          draftProvider.beginNextHumanTurn();
+        }
+        draftProvider.selectManager(draftProvider.currentManagerChoices.first);
+        draftProvider.selectFormation(draftProvider.currentFormationChoices.first);
+        for (int slot = 0; slot < 11; slot++) {
+          draftProvider.selectPlayerForSquad(
+            draftProvider.currentPlayerChoices.first,
+          );
+        }
+      }
+
+      // Now in leagueSimulation phase with all 6 teams (including 4 AI bots with full 11-player squads)
+      expect(draftProvider.phase, LeagueDraftPhase.leagueSimulation);
+      for (final participant in draftProvider.participants) {
+        expect(participant.squad.length, 11);
+        expect(participant.manager, isNotNull);
+        expect(participant.formation, isNotNull);
+      }
+
+      // Stream matches one by one via simulateNextSingleFixture()
+      final firstPlayed = draftProvider.simulateNextSingleFixture();
+      expect(firstPlayed, isNotNull);
+      expect(draftProvider.playedFixturesCount, 1);
+      expect(draftProvider.latestSimulatedFixture?.homeIndex, firstPlayed!.homeIndex);
+      expect(draftProvider.latestSimulatedFixture?.awayIndex, firstPlayed.awayIndex);
+
+      // Finish remaining matches
+      while (!draftProvider.isAllFixturesPlayed) {
+        draftProvider.simulateNextSingleFixture();
+      }
+      expect(draftProvider.isAllFixturesPlayed, isTrue);
+
+      // Continue to lobby for Season #2
+      draftProvider.continueToLobbyForNextSeason();
+      expect(draftProvider.phase, LeagueDraftPhase.setup);
+      expect(draftProvider.seasonNumber, 2);
+      expect(draftProvider.lobbySlots.length, 6);
+      expect(
+        draftProvider.lobbySlots.fold<int>(0, (sum, s) => sum + s.championshipsWon),
+        1,
+      );
+    });
   });
 
   group('Swipe Navigation & Category Filtering Tests', () {

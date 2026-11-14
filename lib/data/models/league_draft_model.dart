@@ -94,10 +94,29 @@ class EraClubPack {
   });
 }
 
+class LeagueLobbySlot {
+  final int slotIndex;
+  String name;
+  bool isBot;
+  bool isHost;
+  bool isReady;
+  int championshipsWon;
+
+  LeagueLobbySlot({
+    required this.slotIndex,
+    required this.name,
+    this.isBot = false,
+    this.isHost = false,
+    this.isReady = true,
+    this.championshipsWon = 0,
+  });
+}
+
 class LeagueParticipant {
   final String id;
   final String name;
   final bool isBot;
+  int championshipsWon;
   ManagerOption? manager;
   FormationOption? formation;
   final List<EraPlayerCandidate> squad;
@@ -114,6 +133,7 @@ class LeagueParticipant {
     required this.id,
     required this.name,
     this.isBot = false,
+    this.championshipsWon = 0,
     this.manager,
     this.formation,
     List<EraPlayerCandidate>? initialSquad,

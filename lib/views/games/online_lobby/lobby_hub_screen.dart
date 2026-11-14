@@ -10,6 +10,7 @@ import '../../widgets/stadium_background.dart';
 import 'active_room_screen.dart';
 import 'matchmaking_screen.dart';
 import '../party_mode/party_setup_screen.dart';
+import '../league_draft/league_draft_screen.dart';
 
 class LobbyHubScreen extends StatefulWidget {
   final GameTargetType initialGameTarget;
@@ -111,6 +112,69 @@ class _LobbyHubScreenState extends State<LobbyHubScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              // 0. Online League Draft Lobby (4-12 Teams, Friend Invites + Auto AI Bots)
+              Container(
+                padding: const EdgeInsets.all(15),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF1E3A8A), Color(0xFF0A141E)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                    color: AppColors.gold.withValues(alpha: 0.65),
+                    width: 1.3,
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Row(
+                      children: [
+                        Icon(Icons.emoji_events_rounded, color: AppColors.gold, size: 20),
+                        SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'Online Lig Draft Lobisi (4-12 Takım)',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w900,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 5),
+                    const Text(
+                      'Lig kapasitesini seç (4-12 takım), arkadaşlarını davet et; davet edilmeyen koltukları Yapay Zeka Bot Menajerler doldursun ve canlı maç akışıyla ligi simüle et!',
+                      style: TextStyle(
+                        fontSize: 11.5,
+                        color: AppColors.textSecondary,
+                        height: 1.35,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    CustomButton(
+                      text: 'Lig Draft Lobisini Aç',
+                      icon: Icons.hub_rounded,
+                      backgroundColor: AppColors.gold,
+                      textColor: AppColors.background,
+                      onPressed: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => const LeagueDraftScreen(),
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 14),
+
               // 1. Select Which Game Mode to Play in Duel
               Container(
                 padding: const EdgeInsets.all(14),
