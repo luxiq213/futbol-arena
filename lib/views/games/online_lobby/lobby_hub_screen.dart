@@ -105,7 +105,7 @@ class _LobbyHubScreenState extends State<LobbyHubScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // 0. Online League Draft Lobby (4-12 Teams, Friend Invites + Auto AI Bots)
+              // 0. Online League Draft Lobby (18-20 Teams, Friend Invites + Auto AI Bots)
               Container(
                 padding: const EdgeInsets.all(15),
                 decoration: BoxDecoration(
@@ -129,7 +129,7 @@ class _LobbyHubScreenState extends State<LobbyHubScreen> {
                         SizedBox(width: 8),
                         Expanded(
                           child: Text(
-                            'Online Lig Draft Lobisi (4-12 Takım)',
+                            'Online Lig Draft Lobisi (18-20 Takım • Tam Sezon)',
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w900,
@@ -141,7 +141,7 @@ class _LobbyHubScreenState extends State<LobbyHubScreen> {
                     ),
                     const SizedBox(height: 5),
                     const Text(
-                      'Lig kapasitesini seç (4-12 takım), arkadaşlarını davet et; davet edilmeyen koltukları Yapay Zeka Bot Menajerler doldursun ve canlı maç akışıyla ligi simüle et!',
+                      'Gerçek futbol ligi formatında (Süper Lig 18 Takım / 34 Hafta veya Avrupa Devleri 20 Takım / 38 Hafta) arkadaşlarını davet et; kalan koltukları AI Kulüpler doldursun!',
                       style: TextStyle(
                         fontSize: 11.5,
                         color: AppColors.textSecondary,

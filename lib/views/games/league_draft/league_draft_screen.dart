@@ -45,6 +45,50 @@ class _LeagueDraftViewState extends State<_LeagueDraftView> {
     _liveStreamTimer = null;
   }
 
+  void _scheduleNextStreamStep(LeagueDraftProvider provider) {
+    _liveStreamTimer?.cancel();
+    if (!mounted ||
+        provider.phase != LeagueDraftPhase.leagueSimulation ||
+        provider.isAllFixturesPlayed) {
+      _liveStreamTimer = null;
+      if (mounted) setState(() {});
+      return;
+    }
+
+    final latest = provider.latestSimulatedFixture;
+    bool isHumanMatch = false;
+    if (latest != null &&
+        latest.homeIndex < provider.participants.length &&
+        latest.awayIndex < provider.participants.length) {
+      final h = provider.participants[latest.homeIndex];
+      final a = provider.participants[latest.awayIndex];
+      isHumanMatch = !h.isBot || !a.isBot;
+    }
+
+    // In 18/20-team leagues (306-380 matches), let AI matches flow briskly
+    // and pause slightly longer on human matches so the user clearly reads their score!
+    final delayMs = isHumanMatch
+        ? (_isFastStream ? 210 : 440)
+        : (_isFastStream ? 34 : 80);
+
+    _liveStreamTimer = Timer(Duration(milliseconds: delayMs), () {
+      if (!mounted ||
+          provider.phase != LeagueDraftPhase.leagueSimulation ||
+          provider.isAllFixturesPlayed) {
+        _stopLiveStream();
+        if (mounted) setState(() {});
+        return;
+      }
+      provider.simulateNextSingleFixture();
+      if (provider.isAllFixturesPlayed) {
+        _stopLiveStream();
+        if (mounted) setState(() {});
+      } else {
+        _scheduleNextStreamStep(provider);
+      }
+    });
+  }
+
   void _toggleLiveMatchStream(LeagueDraftProvider provider, {bool? fastMode}) {
     if (fastMode != null) {
       _isFastStream = fastMode;
@@ -63,20 +107,8 @@ class _LeagueDraftViewState extends State<_LeagueDraftView> {
       return;
     }
 
-    final intervalMs = _isFastStream ? 360 : 800;
     setState(() {
-      _liveStreamTimer = Timer.periodic(Duration(milliseconds: intervalMs), (timer) {
-        if (!mounted || provider.phase != LeagueDraftPhase.leagueSimulation || provider.isAllFixturesPlayed) {
-          _stopLiveStream();
-          if (mounted) setState(() {});
-          return;
-        }
-        provider.simulateNextSingleFixture();
-        if (provider.isAllFixturesPlayed) {
-          _stopLiveStream();
-          if (mounted) setState(() {});
-        }
-      });
+      _scheduleNextStreamStep(provider);
     });
   }
 
@@ -364,7 +396,8 @@ class _LeagueDraftViewState extends State<_LeagueDraftView> {
   // PHASE 0: ONLINE LEAGUE LOBBY (INVITE UP TO LEAGUE SIZE, REST ARE AI BOTS)
   // ===========================================================================
   Widget _buildSetupPhase(BuildContext context, LeagueDraftProvider provider) {
-    const capacities = [4, 6, 8, 10, 12];
+    const capacities = [18, 20];
+    final totalWeeks = (provider.leagueCapacity - 1) * 2;
 
     return SingleChildScrollView(
       key: const ValueKey('setup'),
@@ -412,7 +445,7 @@ class _LeagueDraftViewState extends State<_LeagueDraftView> {
                                   borderRadius: BorderRadius.circular(5),
                                 ),
                                 child: Text(
-                                  'ONLINE LİG LOBİSİ • SEZON #${provider.seasonNumber}',
+                                  'ONLINE LİG LOBİSİ • SEZON #${provider.seasonNumber} (${provider.leagueCapacity} TAKIM)',
                                   style: const TextStyle(
                                     fontSize: 9.5,
                                     fontWeight: FontWeight.w900,
@@ -437,9 +470,9 @@ class _LeagueDraftViewState extends State<_LeagueDraftView> {
                   ],
                 ),
                 const SizedBox(height: 8),
-                const Text(
-                  'Seçtiğin lig takım sayısı kadar arkadaş davet edebilirsin; davet edilmeyen tüm boş koltuklar otomatik olarak Yapay Zeka (AI Bot) menajerlerle tamamlanır! Sezon bitince "Devam Et" diyerek aynı lobide yeni sezona devam edebilirsin.',
-                  style: TextStyle(
+                Text(
+                  'Gerçek futbol ligi formatında (${provider.leagueCapacity} Takım • $totalWeeks Hafta) istediğin kadar arkadaş davet edebilirsin; davet edilmeyen tüm koltuklar otomatik olarak Yapay Zeka (AI Bot) kulüplerle tamamlanır!',
+                  style: const TextStyle(
                     fontSize: 11.2,
                     color: AppColors.textSecondary,
                     height: 1.35,
@@ -497,12 +530,12 @@ class _LeagueDraftViewState extends State<_LeagueDraftView> {
           ),
           const SizedBox(height: 14),
 
-          // 2. League Capacity Selector (4, 6, 8, 10, 12 Teams)
+          // 2. Real Football League Format & Team Count Selector (18 Takım Süper Lig/Bundesliga, 20 Takım PL/LaLiga/SerieA)
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const Text(
-                '1. LİG TAKIM SAYISI (KAPASİTE)',
+                '1. GERÇEK FUTBOL LİGİ TAKIM SAYISI',
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w800,
@@ -511,7 +544,7 @@ class _LeagueDraftViewState extends State<_LeagueDraftView> {
                 ),
               ),
               Text(
-                '${provider.invitedHumanCount} Oyuncu + ${provider.botFillCount} AI Bot',
+                '${provider.invitedHumanCount} Oyuncu + ${provider.botFillCount} AI Kulüp',
                 style: const TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w900,
@@ -524,20 +557,23 @@ class _LeagueDraftViewState extends State<_LeagueDraftView> {
           Row(
             children: capacities.map((cap) {
               final isSelected = provider.leagueCapacity == cap;
+              final subtitle = cap == 18
+                  ? '34 Hafta • Süper Lig / Bundesliga'
+                  : '38 Hafta • Premier League / La Liga / Serie A';
               return Expanded(
                 child: Padding(
-                  padding: EdgeInsets.only(right: cap == capacities.last ? 0 : 6),
+                  padding: EdgeInsets.only(right: cap == capacities.last ? 0 : 8),
                   child: InkWell(
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(11),
                     onTap: () => provider.setLeagueCapacity(cap),
                     child: AnimatedContainer(
                       duration: const Duration(milliseconds: 160),
-                      padding: const EdgeInsets.symmetric(vertical: 9),
+                      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
                       decoration: BoxDecoration(
                         color: isSelected
                             ? AppColors.pitchGreen.withValues(alpha: 0.28)
                             : AppColors.surface.withValues(alpha: 0.85),
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: BorderRadius.circular(11),
                         border: Border.all(
                           color: isSelected ? AppColors.gold : AppColors.border,
                           width: isSelected ? 1.4 : 0.8,
@@ -546,17 +582,21 @@ class _LeagueDraftViewState extends State<_LeagueDraftView> {
                       child: Column(
                         children: [
                           Text(
-                            '$cap Takım',
+                            '$cap Takımlı Lig',
                             style: TextStyle(
-                              fontSize: 11.5,
+                              fontSize: 12.5,
                               fontWeight: FontWeight.w900,
                               color: isSelected ? Colors.white : AppColors.textSecondary,
                             ),
                           ),
+                          const SizedBox(height: 2),
                           Text(
-                            '${(cap - 1) * 2} Hafta',
+                            subtitle,
+                            textAlign: TextAlign.center,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                             style: TextStyle(
-                              fontSize: 9,
+                              fontSize: 9.2,
                               color: isSelected ? AppColors.gold : AppColors.textMuted,
                             ),
                           ),
@@ -575,7 +615,7 @@ class _LeagueDraftViewState extends State<_LeagueDraftView> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const Text(
-                '2. TAKIM & SEZON HAVUZU SEÇİMİ',
+                '2. LİG & TARİHİ SEZON HAVUZU SEÇİMİ',
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w800,
@@ -613,33 +653,43 @@ class _LeagueDraftViewState extends State<_LeagueDraftView> {
               _buildPoolFilterChip(
                 provider: provider,
                 theme: LeaguePoolTheme.allWorldHistory,
-                label: 'Tüm Dünya & Tarih (${LeagueDraftProvider.allEraClubPacks.length} Paket)',
+                label: 'Dünya Süper Ligi • 20 Takım (${LeagueDraftProvider.allEraClubPacks.length} Paket)',
               ),
               _buildPoolFilterChip(
                 provider: provider,
                 theme: LeaguePoolTheme.superLigHistory,
-                label: 'Süper Lig Tarihi (14 Paket)',
+                label: 'Türkiye Süper Lig • 18 Takım (14 Paket)',
               ),
               _buildPoolFilterChip(
                 provider: provider,
                 theme: LeaguePoolTheme.europeanGiants,
-                label: 'Avrupa Devleri (40 Paket)',
+                label: 'Avrupa Devler Ligi • 20 Takım (40 Paket)',
               ),
               _buildPoolFilterChip(
                 provider: provider,
                 theme: LeaguePoolTheme.worldCupLegends,
-                label: 'Milli Takım & Süper Lig Efsaneleri',
+                label: 'Milli Takım & Süper Lig • 18 Takım',
               ),
             ],
           ),
+          const SizedBox(height: 14),
+
+          // Quick Start Button right above the 18/20 team list so the user can start immediately
+          CustomButton(
+            text: '${provider.seasonNumber}. Sezon Kadro Seçimini Başlat (${provider.leagueCapacity} Takım • $totalWeeks Hafta)',
+            icon: Icons.play_arrow_rounded,
+            backgroundColor: AppColors.pitchGreen,
+            textColor: Colors.white,
+            onPressed: provider.startDraftFromLobby,
+          ),
           const SizedBox(height: 15),
 
-          // 4. Lobby Slots (Invited Friends + Auto AI Bot Fillers)
+          // 4. Lobby Slots (Invited Friends + Auto AI Bot Fillers up to 18 or 20 Teams)
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                '3. LOBİ KOLTUKLARI (${provider.invitedHumanCount} DAVETLİ • ${provider.botFillCount} BOT)',
+                '3. LİG TAKIMLARI (${provider.invitedHumanCount} OYUNCU • ${provider.botFillCount} AI KULÜP)',
                 style: const TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w800,
@@ -1682,16 +1732,16 @@ class _LeagueDraftViewState extends State<_LeagueDraftView> {
                             isStreaming
                                 ? 'Akışı Duraklat'
                                 : (playedCount == 0 ? 'Maçları Canlı Akıt' : 'Akışa Devam Et'),
-                            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w900),
+                            style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w900),
                           ),
                         ),
                       ),
-                      const SizedBox(width: 6),
+                      const SizedBox(width: 5),
                       InkWell(
                         borderRadius: BorderRadius.circular(11),
                         onTap: () => _toggleLiveMatchStream(provider, fastMode: !_isFastStream),
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 11),
+                          padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 11),
                           decoration: BoxDecoration(
                             color: _isFastStream
                                 ? AppColors.gold.withValues(alpha: 0.22)
@@ -1704,14 +1754,40 @@ class _LeagueDraftViewState extends State<_LeagueDraftView> {
                           child: Text(
                             _isFastStream ? '2x Hız' : '1x Hız',
                             style: TextStyle(
-                              fontSize: 11,
+                              fontSize: 10.5,
                               fontWeight: FontWeight.w900,
                               color: _isFastStream ? AppColors.gold : Colors.white,
                             ),
                           ),
                         ),
                       ),
-                      const SizedBox(width: 6),
+                      const SizedBox(width: 5),
+                      InkWell(
+                        borderRadius: BorderRadius.circular(11),
+                        onTap: () {
+                          _stopLiveStream();
+                          provider.simulateNextMatchday();
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 11),
+                          decoration: BoxDecoration(
+                            color: AppColors.pitchGreen.withValues(alpha: 0.20),
+                            borderRadius: BorderRadius.circular(11),
+                            border: Border.all(
+                              color: AppColors.pitchGreen.withValues(alpha: 0.7),
+                            ),
+                          ),
+                          child: const Text(
+                            '+1 Hafta',
+                            style: TextStyle(
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.w900,
+                              color: AppColors.greenLight,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 5),
                       Expanded(
                         flex: 3,
                         child: OutlinedButton.icon(
@@ -1727,10 +1803,10 @@ class _LeagueDraftViewState extends State<_LeagueDraftView> {
                             _stopLiveStream();
                             provider.simulateAllRemainingMatchdays();
                           },
-                          icon: const Icon(Icons.fast_forward_rounded, size: 16),
+                          icon: const Icon(Icons.fast_forward_rounded, size: 15),
                           label: const Text(
                             'Sonuca Geç',
-                            style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w800),
+                            style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800),
                           ),
                         ),
                       ),
@@ -1969,10 +2045,37 @@ class _LeagueDraftViewState extends State<_LeagueDraftView> {
                 ...List.generate(table.length, (idx) {
                   final team = table[idx];
                   final isLeader = idx == 0;
+                  final isChampionsLeague = idx >= 1 && idx <= 3;
+                  final isRelegation = table.length >= 16 && idx >= table.length - 3;
+                  final isHuman = !team.isBot;
+
+                  Color rankBgColor = Colors.white.withValues(alpha: 0.06);
+                  Color rankTextColor = Colors.white;
+                  if (isLeader) {
+                    rankBgColor = AppColors.gold.withValues(alpha: 0.24);
+                    rankTextColor = AppColors.gold;
+                  } else if (isChampionsLeague) {
+                    rankBgColor = AppColors.pitchGreen.withValues(alpha: 0.22);
+                    rankTextColor = AppColors.greenLight;
+                  } else if (isRelegation) {
+                    rankBgColor = Colors.redAccent.withValues(alpha: 0.20);
+                    rankTextColor = Colors.redAccent;
+                  }
+
                   return InkWell(
                     onTap: () => _showTeamSquadSheet(context, team),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 6),
+                    child: Container(
+                      margin: const EdgeInsets.symmetric(vertical: 2),
+                      padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 5),
+                      decoration: BoxDecoration(
+                        color: isHuman
+                            ? AppColors.pitchGreen.withValues(alpha: 0.16)
+                            : Colors.transparent,
+                        borderRadius: BorderRadius.circular(8),
+                        border: isHuman
+                            ? Border.all(color: AppColors.gold.withValues(alpha: 0.55), width: 0.9)
+                            : null,
+                      ),
                       child: Row(
                         children: [
                           Container(
@@ -1980,9 +2083,7 @@ class _LeagueDraftViewState extends State<_LeagueDraftView> {
                             height: 22,
                             alignment: Alignment.center,
                             decoration: BoxDecoration(
-                              color: isLeader
-                                  ? AppColors.gold.withValues(alpha: 0.22)
-                                  : Colors.white.withValues(alpha: 0.06),
+                              color: rankBgColor,
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: Text(
@@ -1990,7 +2091,7 @@ class _LeagueDraftViewState extends State<_LeagueDraftView> {
                               style: TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.w900,
-                                color: isLeader ? AppColors.gold : Colors.white,
+                                color: rankTextColor,
                               ),
                             ),
                           ),
@@ -1999,15 +2100,41 @@ class _LeagueDraftViewState extends State<_LeagueDraftView> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(
-                                  team.name,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(
-                                    fontSize: 12.5,
-                                    fontWeight: FontWeight.w800,
-                                    color: isLeader ? AppColors.gold : Colors.white,
-                                  ),
+                                Row(
+                                  children: [
+                                    Flexible(
+                                      child: Text(
+                                        team.name,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: TextStyle(
+                                          fontSize: 12.2,
+                                          fontWeight: FontWeight.w800,
+                                          color: isLeader
+                                              ? AppColors.gold
+                                              : (isHuman ? AppColors.greenLight : Colors.white),
+                                        ),
+                                      ),
+                                    ),
+                                    if (isHuman) ...[
+                                      const SizedBox(width: 5),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                                        decoration: BoxDecoration(
+                                          color: AppColors.gold,
+                                          borderRadius: BorderRadius.circular(4),
+                                        ),
+                                        child: const Text(
+                                          'SEN',
+                                          style: TextStyle(
+                                            fontSize: 7.5,
+                                            fontWeight: FontWeight.w900,
+                                            color: Color(0xFF06160F),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ],
                                 ),
                                 Text(
                                   '${team.manager?.name ?? ""} • ${team.formation?.code ?? ""}',

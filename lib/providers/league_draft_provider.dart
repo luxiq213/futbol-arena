@@ -21,26 +21,61 @@ enum LeaguePoolTheme {
 class LeagueDraftProvider extends ChangeNotifier {
   final Random _rng = Random();
 
-  static const List<String> _defaultBotNames = [
-    'Taktik Dehası AI',
-    'Galaktikos Bot',
-    'Kuzey Fırtınası AI',
-    'Anadolu Kartalı Bot',
-    'Sambacılar AI',
-    'Panzerler Bot',
-    'Boğazın Efendisi AI',
-    'Total Futbol Bot',
-    'Catenaccio AI',
-    'Kralın Takımı Bot',
-    'Altın Jenerasyon AI',
+  static const List<String> _worldClubBotNames = [
+    'Real Madrid AI',
+    'Barcelona AI',
+    'Manchester City AI',
+    'Bayern Münih AI',
+    'Liverpool AI',
+    'AC Milan AI',
+    'Inter Milan AI',
+    'Arsenal AI',
+    'Manchester United AI',
+    'Juventus AI',
+    'Chelsea AI',
+    'Paris Saint-Germain AI',
+    'Atlético Madrid AI',
+    'Borussia Dortmund AI',
+    'Bayer Leverkusen AI',
+    'Napoli AI',
+    'AS Roma AI',
+    'Ajax AI',
+    'FC Porto AI',
+    'SL Benfica AI',
   ];
+
+  static const List<String> _superLigBotNames = [
+    'Galatasaray AI',
+    'Fenerbahçe AI',
+    'Beşiktaş AI',
+    'Trabzonspor AI',
+    'Başakşehir AI',
+    'Bursaspor AI',
+    'Samsunspor AI',
+    'Göztepe AI',
+    'Sivasspor AI',
+    'Adana Demirspor AI',
+    'Konyaspor AI',
+    'Antalyaspor AI',
+    'Kasımpaşa AI',
+    'Alanyaspor AI',
+    'Çaykur Rizespor AI',
+    'Gaziantep FK AI',
+    'Kayserispor AI',
+    'MKE Ankaragücü AI',
+    'Gençlerbirliği AI',
+    'Eskişehirspor AI',
+  ];
+
+  List<String> get _activeBotNames =>
+      _poolTheme == LeaguePoolTheme.superLigHistory ? _superLigBotNames : _worldClubBotNames;
 
   LeagueDraftPhase _phase = LeagueDraftPhase.setup;
   LeaguePoolTheme _poolTheme = LeaguePoolTheme.allWorldHistory;
 
-  // Online Lobby State (Room Code, Capacity, Invited Friends + AI Bots, Multi-Season Tracker)
+  // Online Lobby State (Room Code, Real League Capacity 18 or 20, Invited Friends + AI Bots, Multi-Season Tracker)
   String _lobbyRoomCode = '482915';
-  int _leagueCapacity = 4;
+  int _leagueCapacity = 20;
   int _seasonNumber = 1;
   bool _championshipAwardedForCurrentSeason = false;
   final List<LeagueLobbySlot> _lobbySlots = [];
@@ -66,7 +101,7 @@ class LeagueDraftProvider extends ChangeNotifier {
 
   LeagueDraftProvider() {
     _lobbyRoomCode = (100000 + _rng.nextInt(900000)).toString();
-    _rebuildLobbySlotsForCapacity(4);
+    _rebuildLobbySlotsForCapacity(20);
   }
 
   LeagueDraftPhase get phase => _phase;
@@ -100,7 +135,7 @@ class LeagueDraftProvider extends ChangeNotifier {
       isAllFixturesPlayed && standings.isNotEmpty ? standings.first : null;
 
   void _rebuildLobbySlotsForCapacity(int newCapacity) {
-    _leagueCapacity = newCapacity.clamp(2, 12);
+    _leagueCapacity = newCapacity.clamp(2, 20);
     final existingHumans = _lobbySlots.where((s) => !s.isBot).toList();
     final existingTrophies = <String, int>{
       for (final s in _lobbySlots) s.name: s.championshipsWon,
@@ -130,10 +165,11 @@ class LeagueDraftProvider extends ChangeNotifier {
       }
     }
 
+    final botPool = _activeBotNames;
     int botNameCursor = 0;
     while (_lobbySlots.length < _leagueCapacity) {
       final slotIdx = _lobbySlots.length;
-      final bName = _defaultBotNames[botNameCursor % _defaultBotNames.length];
+      final bName = botPool[botNameCursor % botPool.length];
       botNameCursor++;
       _lobbySlots.add(
         LeagueLobbySlot(
@@ -175,7 +211,8 @@ class LeagueDraftProvider extends ChangeNotifier {
   /// Removes an invited friend slot and turns it back into an AI Bot slot
   void convertSlotToBot(int slotIndex) {
     if (slotIndex <= 0 || slotIndex >= _lobbySlots.length) return;
-    final bName = _defaultBotNames[slotIndex % _defaultBotNames.length];
+    final botPool = _activeBotNames;
+    final bName = botPool[(slotIndex - 1) % botPool.length];
     _lobbySlots[slotIndex].name = bName;
     _lobbySlots[slotIndex].isBot = true;
     notifyListeners();
@@ -207,6 +244,14 @@ class LeagueDraftProvider extends ChangeNotifier {
 
   void setPoolTheme(LeaguePoolTheme theme) {
     _poolTheme = theme;
+    // Match real football league team counts automatically:
+    // Süper Lig / Bundesliga -> 18 Takım (34 Hafta)
+    // Premier League / La Liga / Serie A / Dünya -> 20 Takım (38 Hafta)
+    final targetCapacity = (theme == LeaguePoolTheme.superLigHistory ||
+            theme == LeaguePoolTheme.worldCupLegends)
+        ? 18
+        : 20;
+    _rebuildLobbySlotsForCapacity(targetCapacity);
     notifyListeners();
   }
 
@@ -341,9 +386,14 @@ class LeagueDraftProvider extends ChangeNotifier {
     _goalScorerClubTags.clear();
     _championshipAwardedForCurrentSeason = false;
 
-    final targetCap = leagueCapacity ?? (isSoloMode ? 4 : max(_leagueCapacity, playerNames.length));
-    _leagueCapacity = targetCap.clamp(2, 12);
+    final defaultCap = (_poolTheme == LeaguePoolTheme.superLigHistory ||
+            _poolTheme == LeaguePoolTheme.worldCupLegends)
+        ? 18
+        : 20;
+    final targetCap = leagueCapacity ?? (isSoloMode ? defaultCap : max(_leagueCapacity, playerNames.length));
+    _leagueCapacity = targetCap.clamp(2, 20);
     _lobbySlots.clear();
+    final botPool = _activeBotNames;
 
     if (isSoloMode) {
       final humanName = playerNames.isNotEmpty && playerNames.first.trim().isNotEmpty
@@ -353,7 +403,7 @@ class LeagueDraftProvider extends ChangeNotifier {
         LeagueLobbySlot(slotIndex: 0, name: humanName, isBot: false, isHost: true),
       );
       for (int i = 1; i < _leagueCapacity; i++) {
-        final bName = _defaultBotNames[(i - 1) % _defaultBotNames.length];
+        final bName = botPool[(i - 1) % botPool.length];
         _lobbySlots.add(
           LeagueLobbySlot(slotIndex: i, name: bName, isBot: true, isHost: false),
         );
@@ -371,7 +421,7 @@ class LeagueDraftProvider extends ChangeNotifier {
       if (leagueCapacity != null && _lobbySlots.length < _leagueCapacity) {
         int botIdx = 0;
         while (_lobbySlots.length < _leagueCapacity) {
-          final bName = _defaultBotNames[botIdx % _defaultBotNames.length];
+          final bName = botPool[botIdx % botPool.length];
           botIdx++;
           _lobbySlots.add(
             LeagueLobbySlot(
@@ -554,7 +604,18 @@ class LeagueDraftProvider extends ChangeNotifier {
   }
 
   void _autoDraftBotParticipant(LeagueParticipant bot) {
-    final mgrs = List<ManagerOption>.from(allManagers)..shuffle(_rng);
+    final takenManagerIds = _participants
+        .map((p) => p.manager?.id)
+        .whereType<String>()
+        .toSet();
+    final availableManagers = allManagers
+        .where((m) => !takenManagerIds.contains(m.id))
+        .toList()
+      ..shuffle(_rng);
+    final mgrs = availableManagers.isNotEmpty
+        ? availableManagers
+        : (List<ManagerOption>.from(allManagers)..shuffle(_rng));
+
     final forms = List<FormationOption>.from(allFormations)..shuffle(_rng);
     bot.manager = mgrs.first;
     bot.formation = forms.first;
@@ -563,14 +624,25 @@ class LeagueDraftProvider extends ChangeNotifier {
     final roles = bot.formation!.draftSlotRoles;
     final pool = activePoolPacks.isNotEmpty ? activePoolPacks : allEraClubPacks;
     final packs = List<EraClubPack>.from(pool);
+    final pickedPlayerIds = <String>{};
 
     for (final role in roles) {
       packs.shuffle(_rng);
-      final pack = packs.first;
-      final candidates = pack.roster.where((p) => p.role == role).toList();
-      final chosen = candidates.isNotEmpty
-          ? candidates[_rng.nextInt(candidates.length)]
-          : pack.roster[_rng.nextInt(pack.roster.length)];
+      EraPlayerCandidate? chosen;
+      for (final pack in packs) {
+        final candidates = pack.roster
+            .where((p) => p.role == role && !pickedPlayerIds.contains(p.id))
+            .toList();
+        if (candidates.isNotEmpty) {
+          chosen = candidates[_rng.nextInt(candidates.length)];
+          break;
+        }
+      }
+      if (chosen == null) {
+        final fallbackPack = packs.first;
+        chosen = fallbackPack.roster[_rng.nextInt(fallbackPack.roster.length)];
+      }
+      pickedPlayerIds.add(chosen.id);
       bot.squad.add(
         EraPlayerCandidate(
           id: chosen.id,
@@ -586,7 +658,7 @@ class LeagueDraftProvider extends ChangeNotifier {
     }
   }
 
-  /// Generates a full home & away round-robin schedule (Çift Devreli Lig Fikstürü)
+  /// Generates a full home & away round-robin schedule (Çift Devreli Lig Fikstürü: 18 Takım=34 Hafta, 20 Takım=38 Hafta)
   void _generateLeagueFixtures() {
     _fixtures.clear();
     _goalScorerCounts.clear();
@@ -611,6 +683,7 @@ class LeagueDraftProvider extends ChangeNotifier {
     // First half (Home)
     final firstHalfFixtures = <LeagueMatchFixture>[];
     for (int round = 0; round < roundsPerHalf; round++) {
+      final roundBatch = <LeagueMatchFixture>[];
       for (int m = 0; m < matchesPerRound; m++) {
         final t1 = rotating[m];
         final t2 = rotating[totalTeams - 1 - m];
@@ -618,10 +691,18 @@ class LeagueDraftProvider extends ChangeNotifier {
           final fixture = round % 2 == 0
               ? LeagueMatchFixture(matchday: matchdayCounter, homeIndex: t1, awayIndex: t2)
               : LeagueMatchFixture(matchday: matchdayCounter, homeIndex: t2, awayIndex: t1);
-          _fixtures.add(fixture);
-          firstHalfFixtures.add(fixture);
+          roundBatch.add(fixture);
         }
       }
+      // Order each matchday so human matches are simulated last (headline match of the week)
+      roundBatch.sort((a, b) {
+        final aHuman = !_participants[a.homeIndex].isBot || !_participants[a.awayIndex].isBot;
+        final bHuman = !_participants[b.homeIndex].isBot || !_participants[b.awayIndex].isBot;
+        if (aHuman == bHuman) return 0;
+        return aHuman ? 1 : -1;
+      });
+      _fixtures.addAll(roundBatch);
+      firstHalfFixtures.addAll(roundBatch);
       matchdayCounter++;
       // Rotate all except the first element
       final last = rotating.removeLast();
