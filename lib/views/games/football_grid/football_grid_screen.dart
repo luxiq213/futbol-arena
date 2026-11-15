@@ -40,17 +40,8 @@ class FootballGridScreen extends StatelessWidget {
             backgroundColor: AppColors.background,
             extendBodyBehindAppBar: true,
             appBar: AppBar(
-              toolbarHeight: 46,
-              backgroundColor: Colors.transparent,
-              elevation: 0,
-              iconTheme: const IconThemeData(color: Colors.white),
               title: Text(
-                grid.isDuelMode ? 'Futbol Grid 3x3 • Düello' : 'Futbol Grid 3x3 • Kupa & Kulüp',
-                style: const TextStyle(
-                  fontWeight: FontWeight.w700,
-                  fontSize: 15,
-                  color: Colors.white,
-                ),
+                grid.isDuelMode ? 'Futbol Grid 3x3 • Düello' : 'Futbol Grid 3x3',
               ),
               actions: [
                 // Guesses Remaining Pill

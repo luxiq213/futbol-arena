@@ -44,17 +44,8 @@ class FiveClubsScreen extends StatelessWidget {
             backgroundColor: AppColors.background,
             extendBodyBehindAppBar: true,
             appBar: AppBar(
-              toolbarHeight: 46,
-              backgroundColor: Colors.transparent,
-              elevation: 0,
-              iconTheme: const IconThemeData(color: Colors.white),
               title: Text(
-                game.isDuelMode ? '5 Takım 1 Oyuncu • Düello' : '5 Takım 1 Oyuncu • Kendini Sına',
-                style: const TextStyle(
-                  fontWeight: FontWeight.w700,
-                  fontSize: 15,
-                  color: Colors.white,
-                ),
+                game.isDuelMode ? '5 Takım 1 Oyuncu • Düello' : '5 Takım 1 Oyuncu',
               ),
               actions: [
                 Container(

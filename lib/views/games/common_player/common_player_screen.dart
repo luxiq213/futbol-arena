@@ -47,17 +47,8 @@ class CommonPlayerScreen extends StatelessWidget {
             backgroundColor: AppColors.background,
             extendBodyBehindAppBar: true,
             appBar: AppBar(
-              toolbarHeight: 46,
-              backgroundColor: Colors.transparent,
-              elevation: 0,
-              iconTheme: const IconThemeData(color: Colors.white),
               title: Text(
-                game.isDuelMode ? 'Ortak Oyuncu • 1v1 Düello' : 'Ortak Oyuncu • 3-2-1',
-                style: const TextStyle(
-                  fontWeight: FontWeight.w700,
-                  fontSize: 15,
-                  color: Colors.white,
-                ),
+                game.isDuelMode ? 'Ortak Oyuncu • Düello' : 'Ortak Oyuncu (3-2-1)',
               ),
               actions: [
                 // Score indicator

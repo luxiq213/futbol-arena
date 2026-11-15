@@ -97,14 +97,7 @@ class _LobbyHubScreenState extends State<LobbyHubScreen> {
       backgroundColor: AppColors.background,
       extendBodyBehindAppBar: true,
       appBar: AppBar(
-        toolbarHeight: 46,
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.white),
-        title: const Text(
-          'Arkadaş Daveti & Online Eşleşme',
-          style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15, color: Colors.white),
-        ),
+        title: const Text('Online Lobi & Davet'),
       ),
       body: StadiumBackground(
         child: SingleChildScrollView(

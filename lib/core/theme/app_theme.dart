@@ -14,6 +14,28 @@ class AppTheme {
         surface: AppColors.surface,
         error: AppColors.error,
       ),
+      appBarTheme: AppBarTheme(
+        backgroundColor: const Color(0xEB061811),
+        surfaceTintColor: Colors.transparent,
+        scrolledUnderElevation: 0,
+        elevation: 0,
+        centerTitle: false,
+        titleSpacing: 4,
+        toolbarHeight: 48,
+        iconTheme: const IconThemeData(color: Colors.white, size: 20),
+        titleTextStyle: GoogleFonts.inter(
+          fontSize: 14.5,
+          fontWeight: FontWeight.w800,
+          color: Colors.white,
+          letterSpacing: -0.2,
+        ),
+        shape: Border(
+          bottom: BorderSide(
+            color: AppColors.borderGreen.withValues(alpha: 0.42),
+            width: 0.9,
+          ),
+        ),
+      ),
       textTheme: GoogleFonts.interTextTheme(
         const TextTheme(
           displayLarge: TextStyle(

@@ -131,30 +131,37 @@ class _HomeScreenState extends State<HomeScreen> {
     final currentTitle = tabTitles[_activeTab.clamp(0, tabTitles.length - 1)];
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 8),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            const Color(0xFF0E2B1F).withValues(alpha: 0.90),
-            const Color(0xFF071A12).withValues(alpha: 0.90),
+            const Color(0xFF0E2B1F).withValues(alpha: 0.94),
+            const Color(0xFF071A12).withValues(alpha: 0.94),
           ],
         ),
-        borderRadius: BorderRadius.circular(13),
+        borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color: AppColors.borderGreen.withValues(alpha: 0.42),
-          width: 0.9,
+          color: AppColors.borderGreen.withValues(alpha: 0.48),
+          width: 1.0,
         ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.28),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
       ),
       child: Row(
         children: [
-          // Left: Illustrated Footballer Avatar + App Title & User Subtitle
+          // Left: Illustrated Footballer Avatar + Full App Title & User Subtitle
           GestureDetector(
             onTap: () => _onFooterTabTapped(2),
             child: PlayerAvatarWidget(
               avatarKey: user?.avatar ?? 'goat_10',
-              size: 35,
+              size: 36,
               borderColor: AppColors.pitchGreen,
-              borderWidth: 1.2,
+              borderWidth: 1.3,
             ),
           ),
           const SizedBox(width: 9),
@@ -165,64 +172,55 @@ class _HomeScreenState extends State<HomeScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
+                  Text(
+                    currentTitle,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w900,
+                      color: Colors.white,
+                      letterSpacing: -0.2,
+                      height: 1.15,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
                   Row(
                     children: [
-                      Flexible(
-                        child: Text(
-                          currentTitle,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontSize: 14.5,
-                            fontWeight: FontWeight.w800,
-                            color: Colors.white,
-                            letterSpacing: -0.3,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 5),
-                      Container(
-                        width: 4,
-                        height: 4,
-                        decoration: const BoxDecoration(
-                          color: AppColors.pitchGreen,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                      const SizedBox(width: 5),
                       Flexible(
                         child: Text(
                           user?.username ?? 'Kaptan',
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
-                            fontSize: 11.5,
+                            fontSize: 10.5,
                             fontWeight: FontWeight.w700,
                             color: AppColors.greenLight,
                           ),
                         ),
                       ),
+                      const SizedBox(width: 4),
+                      Text(
+                        '• ${user?.favoriteTeam ?? "Galatasaray"}',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 10,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
                     ],
-                  ),
-                  Text(
-                    '${user?.favoriteTeam ?? "Galatasaray"} • ${user?.rankTitle ?? "Genç Yetenek"}',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 10,
-                      color: AppColors.textSecondary,
-                    ),
                   ),
                 ],
               ),
             ),
           ),
-          const SizedBox(width: 5),
+          const SizedBox(width: 6),
           // Language Switcher Pill
           GestureDetector(
             onTap: () => showLanguageSelectorSheet(context),
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 5),
               decoration: BoxDecoration(
                 color: Colors.white.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(8),
@@ -253,10 +251,10 @@ class _HomeScreenState extends State<HomeScreen> {
           GestureDetector(
             onTap: () => showAdFreePurchaseSheet(context),
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 5),
               decoration: BoxDecoration(
                 color: (user?.isAdFree ?? false)
-                    ? AppColors.pitchGreen.withValues(alpha: 0.18)
+                    ? AppColors.pitchGreen.withValues(alpha: 0.20)
                     : Colors.white.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
@@ -272,7 +270,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   Icon(
                     (user?.isAdFree ?? false) ? Icons.verified_rounded : Icons.block_flipped,
                     size: 11,
-                    color: (user?.isAdFree ?? false) ? AppColors.greenLight : AppColors.textSecondary,
+                    color: (user?.isAdFree ?? false) ? AppColors.greenLight : AppColors.gold,
                   ),
                   const SizedBox(width: 3),
                   Text(
@@ -292,7 +290,7 @@ class _HomeScreenState extends State<HomeScreen> {
           GestureDetector(
             onTap: () => _onFooterTabTapped(1),
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 5),
               decoration: BoxDecoration(
                 color: AppColors.gold.withValues(alpha: 0.14),
                 borderRadius: BorderRadius.circular(8),
@@ -304,10 +302,10 @@ class _HomeScreenState extends State<HomeScreen> {
                   const Icon(Icons.star_rounded, size: 12, color: AppColors.gold),
                   const SizedBox(width: 2),
                   Text(
-                    '${user?.points ?? 0} XP',
+                    '${user?.points ?? 0}',
                     style: const TextStyle(
                       fontSize: 10.5,
-                      fontWeight: FontWeight.w800,
+                      fontWeight: FontWeight.w900,
                       color: AppColors.gold,
                     ),
                   ),

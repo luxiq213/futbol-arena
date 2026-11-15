@@ -33,18 +33,11 @@ class PartyGameScreen extends StatelessWidget {
         backgroundColor: AppColors.background,
         extendBodyBehindAppBar: true,
         appBar: AppBar(
-          toolbarHeight: 46,
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          iconTheme: const IconThemeData(color: Colors.white),
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
             onPressed: () => _showExitConfirmation(context, provider),
           ),
-          title: const Text(
-            '3-2-1 Düello Turları',
-            style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
-          ),
+          title: const Text('3-2-1 Düello Turları'),
           actions: [
             Container(
               margin: const EdgeInsets.only(right: 16),

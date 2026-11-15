@@ -301,13 +301,10 @@ class _LeagueDraftViewState extends State<_LeagueDraftView> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.white),
         title: Text(
-          'Lig Draft & Simülasyon • Sezon #${provider.seasonNumber}',
-          style: const TextStyle(fontSize: 15.5, fontWeight: FontWeight.w800),
+          'Lig Draft • Sezon #${provider.seasonNumber}',
         ),
         actions: [
           Container(
@@ -338,11 +335,9 @@ class _LeagueDraftViewState extends State<_LeagueDraftView> {
       ),
       body: StadiumBackground(
         showLiveMatch: false,
-        child: SafeArea(
-          child: AnimatedSwitcher(
-            duration: const Duration(milliseconds: 220),
-            child: _buildPhaseContent(context, provider),
-          ),
+        child: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 220),
+          child: _buildPhaseContent(context, provider),
         ),
       ),
     );

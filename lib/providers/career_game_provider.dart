@@ -109,7 +109,8 @@ class CareerGameProvider extends ChangeNotifier {
     _penaltiesScored = 0;
     _penaltiesTaken = 0;
     _formMomentum = 72;
-    _hasPendingPenalty = true;
+    // Penalty does NOT appear on initial screen; it triggers randomly after signing a transfer
+    _hasPendingPenalty = false;
     _lastPenaltyResult = null;
 
     // Pick authentic starting club based on region
@@ -120,15 +121,17 @@ class CareerGameProvider extends ChangeNotifier {
     // Generate initial performance and first transfer offers
     final initialSeason = _simulateSeason(startingClub, _stageAges.first);
     _seasonHistory.add(initialSeason);
-    _highlightsHistory.add('17 yaşında profesyonel sözleşmeyi imzaladın ve ilk sezonunda taraftarın sevgilisi oldun!');
+    _highlightsHistory.add(
+      '17 yaşında profesyonel sözleşmeyi imzaladın ve A takımla sahaya çıktın. İstatistiklerin gizli tutuluyor ve jübilede açıklanacak!',
+    );
 
     _generateNextOffers();
     notifyListeners();
   }
 
-  /// Interactive Penalty Shootout for the current career period
+  /// Interactive Penalty Shootout triggered after signing a transfer
   PenaltyShotResult takeSeasonPenalty(PenaltyCorner chosenCorner) {
-    if (!_hasPendingPenalty || _seasonHistory.isEmpty) {
+    if (_seasonHistory.isEmpty) {
       return _lastPenaltyResult ??
           PenaltyShotResult(
             playerCorner: chosenCorner,
@@ -228,8 +231,10 @@ class CareerGameProvider extends ChangeNotifier {
     return _lastPenaltyResult!;
   }
 
-  /// User chooses to transfer to Club A, Club B, or stay
-  void selectTransferDecision(ClubModel? chosenClub) {
+  /// User chooses to transfer to Club A, Club B, or stay.
+  /// After signing a transfer, there is a random chance (~42%) that a full-screen
+  /// Critical Match Penalty Shootout triggers for that newly signed season.
+  void selectTransferDecision(ClubModel? chosenClub, {bool? forcePenalty}) {
     if (_isCareerFinished) return;
 
     if (chosenClub != null && chosenClub.id != _currentClub?.id) {
@@ -242,17 +247,22 @@ class CareerGameProvider extends ChangeNotifier {
     _currentStageIndex++;
 
     if (_currentStageIndex >= _maxStages) {
+      _hasPendingPenalty = false;
       _finishCareer();
     } else {
-      _hasPendingPenalty = true;
-      _lastPenaltyResult = null;
-
       final seasonAge = currentAge;
       final seasonPerf = _simulateSeason(_currentClub!, seasonAge);
       _seasonHistory.add(seasonPerf);
 
       final highlight = _generateHighlight(_currentClub!, seasonAge, seasonPerf);
       _highlightsHistory.add(highlight);
+
+      // Random chance (~42%) to trigger a full-screen penalty shootout after signing transfer
+      // (Guaranteed at least once by stage 5 if none triggered yet)
+      final bool triggerPenalty = forcePenalty ??
+          (_random.nextDouble() < 0.42 || (_penaltiesTaken == 0 && _currentStageIndex == 5));
+      _hasPendingPenalty = triggerPenalty;
+      _lastPenaltyResult = null;
 
       _generateNextOffers();
     }
@@ -413,12 +423,12 @@ class CareerGameProvider extends ChangeNotifier {
 
   String _generateHighlight(ClubModel club, int age, SeasonPerformance perf) {
     final highlights = [
-      'Derbide 90+4. dakikada attığın unutulmaz golle tribünleri ayağa kaldırdın!',
-      'Sezonun en iyi oyuncusu seçildin ve kaptanlık pazubandını koluna taktın.',
-      'Büyük kupa finalinde maçın adamı seçilerek kupayı havaya kaldırdın.',
-      'Muhteşem vole golün dünya çapında yılın golleri arasına girdi.',
-      'Kritik deplasmanda sergilediğin resitalle rakip taraftarlarca alkışlandın.',
-      'Şampiyonluk maçında hat-trick yaparak kulüp tarihine adını altın harflerle yazdırdın.',
+      '${club.name} formasıyla çıktığın derbi maçlardaki performansın tribünleri ayağa kaldırdı (İstatistikler gizli).',
+      'Teknik direktörün seni takımın kilit ismi ilan etti; Avrupa kulüplerinin gözlemcileri peşinde.',
+      'Kritik haftalarda sorumluluk alarak sahada liderliğini konuşturduğun bir dönem geçirdin.',
+      'Şampiyonluk yarışı ve kupa gecelerinde adından sıkça söz ettirdin (Kupa ve gol sayıları jübilede açıklanacak).',
+      'Deplasmanda sergilediğin futbol resitaliyle hem kendi taraftarından hem rakiplerden alkış topladın.',
+      'Soyunma odasında ve sahada gerçek bir profesyonel olarak kariyer basamaklarını tırmanmaya devam ettin.',
     ];
     return highlights[_random.nextInt(highlights.length)];
   }

@@ -64,18 +64,7 @@ class _CareerSetupScreenState extends State<CareerSetupScreen> {
       backgroundColor: AppColors.background,
       extendBodyBehindAppBar: true,
       appBar: AppBar(
-        toolbarHeight: 46,
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.white),
-        title: const Text(
-          'Futbolcu Kariyeri Başlat',
-          style: TextStyle(
-            fontWeight: FontWeight.w700,
-            fontSize: 16,
-            color: Colors.white,
-          ),
-        ),
+        title: const Text('Futbolcu Kariyeri Başlat'),
       ),
       body: StadiumBackground(
         child: SingleChildScrollView(

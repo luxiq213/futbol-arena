@@ -47,18 +47,7 @@ class AuctionDuelScreen extends StatelessWidget {
             backgroundColor: AppColors.background,
             extendBodyBehindAppBar: true,
             appBar: AppBar(
-              toolbarHeight: 46,
-              backgroundColor: Colors.transparent,
-              elevation: 0,
-              iconTheme: const IconThemeData(color: Colors.white),
-              title: const Text(
-                'Açık Artırma Düellosu • İddia & Blöf',
-                style: TextStyle(
-                  fontWeight: FontWeight.w700,
-                  fontSize: 15,
-                  color: Colors.white,
-                ),
-              ),
+              title: const Text('Açık Artırma Düellosu'),
               actions: [
                 Container(
                   margin: const EdgeInsets.only(right: 16),

@@ -85,18 +85,8 @@ class CareerSummaryScreen extends StatelessWidget {
       backgroundColor: AppColors.background,
       extendBodyBehindAppBar: true,
       appBar: AppBar(
-        toolbarHeight: 46,
-        backgroundColor: Colors.transparent,
-        elevation: 0,
         automaticallyImplyLeading: false,
-        title: const Text(
-          'Kariyer Jübilesi & Efsane Kartı',
-          style: TextStyle(
-            fontWeight: FontWeight.w700,
-            fontSize: 16,
-            color: Colors.white,
-          ),
-        ),
+        title: const Text('Kariyer Jübilesi & Efsane Kartı'),
         actions: [
           IconButton(
             tooltip: 'Kariyeri Kopyala & Paylaş',

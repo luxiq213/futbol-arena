@@ -50,17 +50,8 @@ class FootballBridgeScreen extends StatelessWidget {
             backgroundColor: AppColors.background,
             extendBodyBehindAppBar: true,
             appBar: AppBar(
-              toolbarHeight: 46,
-              backgroundColor: Colors.transparent,
-              elevation: 0,
-              iconTheme: const IconThemeData(color: Colors.white),
               title: Text(
-                game.isDuelMode ? 'Futbol Köprüsü • 1v1 Düello' : 'Futbol Köprüsü • Yıldız Bağla',
-                style: const TextStyle(
-                  fontWeight: FontWeight.w700,
-                  fontSize: 15,
-                  color: Colors.white,
-                ),
+                game.isDuelMode ? 'Futbol Köprüsü • Düello' : 'Futbol Köprüsü',
               ),
               actions: [
                 Container(

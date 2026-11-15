@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/constants/app_colors.dart';
@@ -20,35 +21,7 @@ class CareerSeasonScreen extends StatefulWidget {
 
 class _CareerSeasonScreenState extends State<CareerSeasonScreen> {
   bool _isProcessing = false;
-
-  void _onShootPenalty(PenaltyCorner corner) {
-    final provider = context.read<CareerGameProvider>();
-    if (!provider.hasPendingPenalty) return;
-
-    final result = provider.takeSeasonPenalty(corner);
-
-    if (result.isGoal) {
-      AppNotification.show(
-        context,
-        title: provider.position == PlayerPosition.goalkeeper
-            ? 'EFSANE KURTARIŞ! (${corner.label})'
-            : 'GOOOL! 90. Dakikada Ağları Sarstın! (${corner.label})',
-        subtitle: 'Formun ve piyasa değerin yükseldi, dev kulüpler harekete geçti!',
-        type: AppNotificationType.gold,
-        icon: Icons.sports_soccer,
-      );
-    } else {
-      AppNotification.show(
-        context,
-        title: provider.position == PlayerPosition.goalkeeper
-            ? 'Penaltıyı Kurtaramadın (${corner.label})'
-            : 'KALECİ ÇIKARDI! Penaltı Kaçtı (${corner.label})',
-        subtitle: 'Kritik maçta kaçan fırsat sonrası moral ve form kaybı yaşadın.',
-        type: AppNotificationType.error,
-        icon: Icons.sports_handball_outlined,
-      );
-    }
-  }
+  bool _showingFullScreenPenalty = false;
 
   void _onSelectClub(ClubModel? chosenClub) async {
     if (_isProcessing) return;
@@ -70,18 +43,17 @@ class _CareerSeasonScreenState extends State<CareerSeasonScreen> {
           : 'Yeni formayla sahaya çıkıyorsun, başarılar Kaptan!',
       type: isStay ? AppNotificationType.success : AppNotificationType.gold,
       icon: isStay ? Icons.verified_outlined : Icons.swap_horiz_rounded,
-      duration: const Duration(milliseconds: 1600),
+      duration: const Duration(milliseconds: 1400),
     );
 
-    await Future.delayed(const Duration(milliseconds: 420));
+    await Future.delayed(const Duration(milliseconds: 360));
 
     if (!mounted) return;
 
     provider.selectTransferDecision(chosenClub);
 
-    setState(() => _isProcessing = false);
-
     if (provider.isCareerFinished) {
+      setState(() => _isProcessing = false);
       final summary = provider.finalSummary;
       if (summary != null) {
         auth.addPoints(
@@ -92,7 +64,16 @@ class _CareerSeasonScreenState extends State<CareerSeasonScreen> {
       nav.pushReplacement(
         MaterialPageRoute(builder: (_) => const CareerSummaryScreen()),
       );
+      return;
     }
+
+    setState(() {
+      _isProcessing = false;
+      // If the random chance triggered a penalty after signing this transfer, open Full-Screen Penalty!
+      if (provider.hasPendingPenalty) {
+        _showingFullScreenPenalty = true;
+      }
+    });
   }
 
   void _confirmEarlyRetire(BuildContext context) {
@@ -105,7 +86,7 @@ class _CareerSeasonScreenState extends State<CareerSeasonScreen> {
           style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w700),
         ),
         content: const Text(
-          'Kariyerini şu anki yaşında sonlandırıp efsane kartını ve istatistiklerini görüntülemek istiyor musun?',
+          'Kariyerini şu anki yaşında sonlandırıp gizli tutulan tüm gol, asist ve kupa istatistiklerini açmak istiyor musun?',
           style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
         ),
         actions: [
@@ -122,7 +103,7 @@ class _CareerSeasonScreenState extends State<CareerSeasonScreen> {
               final provider = context.read<CareerGameProvider>();
               final auth = context.read<AuthProvider>();
               while (!provider.isCareerFinished) {
-                provider.selectTransferDecision(provider.currentClub);
+                provider.selectTransferDecision(provider.currentClub, forcePenalty: false);
               }
               final summary = provider.finalSummary;
               if (summary != null) {
@@ -148,7 +129,6 @@ class _CareerSeasonScreenState extends State<CareerSeasonScreen> {
     final provider = context.watch<CareerGameProvider>();
     final currentClub = provider.currentClub;
     final offers = provider.currentOffers;
-    final lastSeason = provider.seasonHistory.isNotEmpty ? provider.seasonHistory.last : null;
     final lastHighlight = provider.highlightsHistory.isNotEmpty ? provider.highlightsHistory.last : null;
 
     if (currentClub == null) {
@@ -158,28 +138,35 @@ class _CareerSeasonScreenState extends State<CareerSeasonScreen> {
       );
     }
 
-    final totalGoals = provider.seasonHistory.fold<int>(0, (sum, s) => sum + s.goals);
-    final totalAssists = provider.seasonHistory.fold<int>(0, (sum, s) => sum + s.assists);
-    final totalTrophies = provider.seasonHistory.fold<int>(0, (sum, s) => sum + s.trophiesWon.length);
+    // Full-Screen Animated 3D Penalty Shootout (triggered randomly after signing a transfer)
+    if (_showingFullScreenPenalty && provider.hasPendingPenalty) {
+      return _FullScreenPenaltyShootoutView(
+        provider: provider,
+        currentClub: currentClub,
+        onCompleted: () {
+          if (mounted) {
+            setState(() {
+              _showingFullScreenPenalty = false;
+            });
+          }
+        },
+      );
+    }
 
     return Scaffold(
       backgroundColor: AppColors.background,
       extendBodyBehindAppBar: true,
       appBar: AppBar(
-        toolbarHeight: 46,
-        backgroundColor: Colors.transparent,
-        elevation: 0,
         title: Text(
           '${provider.playerName} • ${provider.position.shortCode}',
-          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16, color: Colors.white),
         ),
         actions: [
           TextButton.icon(
             onPressed: () => _confirmEarlyRetire(context),
-            icon: const Icon(Icons.flag_outlined, size: 16, color: AppColors.gold),
+            icon: const Icon(Icons.flag_outlined, size: 15, color: AppColors.gold),
             label: const Text(
               'Jübile',
-              style: TextStyle(color: AppColors.gold, fontSize: 12, fontWeight: FontWeight.w700),
+              style: TextStyle(color: AppColors.gold, fontSize: 12, fontWeight: FontWeight.w800),
             ),
           ),
         ],
@@ -187,31 +174,26 @@ class _CareerSeasonScreenState extends State<CareerSeasonScreen> {
       body: StadiumBackground(
         showFieldLines: true,
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // 1. Career Progress Header Bar (10 Stages, Market Value, Form)
+              // 1. Career Progress Header Bar (Age, Stage, Mystery Stats Notice)
               _buildProgressHeader(provider),
 
               const SizedBox(height: 10),
 
-              // 2. Current Club Card & Ticker
-              _buildCurrentClubBanner(currentClub, totalGoals, totalAssists, totalTrophies),
+              // 2. Current Club Card with Hidden Stats (??? GOL, ??? ASİST, ??? KUPA)
+              _buildCurrentClubBanner(currentClub),
 
               const SizedBox(height: 10),
 
-              // 3. Interactive Penalty Shootout Pitch Card (Kritik Maç Anı)
-              _buildInteractivePenaltyCard(provider),
-
-              const SizedBox(height: 10),
-
-              // 4. Last Season Performance & Highlight
-              if (lastSeason != null) _buildSeasonReviewCard(lastSeason, lastHighlight),
+              // 3. Mystery Season Diary Card (Stats remain secret until Jubilee)
+              _buildMysterySeasonDiaryCard(provider, lastHighlight),
 
               const SizedBox(height: 14),
 
-              // 5. Transfer Window Section Header
+              // 4. Transfer Window Section Header
               Row(
                 children: [
                   Container(
@@ -236,7 +218,7 @@ class _CareerSeasonScreenState extends State<CareerSeasonScreen> {
               ),
               const SizedBox(height: 4),
               const Text(
-                'Bir sonraki 2 yıllık dönem için kulüp teklifini değerlendir veya takımında kal:',
+                'Sözleşme imzaladıktan sonra sezon içinde sürpriz kritik maç penaltıları çıkabilir:',
                 style: TextStyle(fontSize: 11.5, color: AppColors.textSecondary),
               ),
 
@@ -286,9 +268,9 @@ class _CareerSeasonScreenState extends State<CareerSeasonScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
-        color: AppColors.surface.withValues(alpha: 0.90),
+        color: AppColors.surface.withValues(alpha: 0.92),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.borderGreen.withValues(alpha: 0.40)),
+        border: Border.all(color: AppColors.borderGreen.withValues(alpha: 0.42)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -332,8 +314,8 @@ class _CareerSeasonScreenState extends State<CareerSeasonScreen> {
                 ),
               ),
               Text(
-                'Sezon ${provider.currentStageIndex + 1}/${provider.maxStages}',
-                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.gold),
+                'Dönem ${provider.currentStageIndex + 1}/${provider.maxStages}',
+                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: AppColors.gold),
               ),
             ],
           ),
@@ -351,13 +333,13 @@ class _CareerSeasonScreenState extends State<CareerSeasonScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
+              const Row(
                 children: [
-                  const Icon(Icons.trending_up_rounded, size: 14, color: AppColors.gold),
-                  const SizedBox(width: 4),
+                  Icon(Icons.lock_clock_outlined, size: 13, color: AppColors.gold),
+                  SizedBox(width: 5),
                   Text(
-                    'Piyasa Değeri: €${provider.marketValueMillions}M',
-                    style: const TextStyle(
+                    'İstatistikler & Kupalar: Jübilede Açıklanır',
+                    style: TextStyle(
                       fontSize: 10.5,
                       fontWeight: FontWeight.w700,
                       color: AppColors.gold,
@@ -365,23 +347,13 @@ class _CareerSeasonScreenState extends State<CareerSeasonScreen> {
                   ),
                 ],
               ),
-              Row(
-                children: [
-                  Icon(
-                    Icons.bolt_rounded,
-                    size: 14,
-                    color: provider.formMomentum >= 65 ? AppColors.greenLight : AppColors.warning,
-                  ),
-                  const SizedBox(width: 3),
-                  Text(
-                    'Form & Moral: %${provider.formMomentum}',
-                    style: TextStyle(
-                      fontSize: 10.5,
-                      fontWeight: FontWeight.w700,
-                      color: provider.formMomentum >= 65 ? AppColors.greenLight : AppColors.warning,
-                    ),
-                  ),
-                ],
+              Text(
+                '${provider.careerClubsHistory.length} Kulüp',
+                style: const TextStyle(
+                  fontSize: 10.5,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.greenLight,
+                ),
               ),
             ],
           ),
@@ -390,259 +362,7 @@ class _CareerSeasonScreenState extends State<CareerSeasonScreen> {
     );
   }
 
-  Widget _buildInteractivePenaltyCard(CareerGameProvider provider) {
-    final hasPending = provider.hasPendingPenalty;
-    final lastRes = provider.lastPenaltyResult;
-    final isGk = provider.position == PlayerPosition.goalkeeper;
-
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            const Color(0xFF0E3323).withValues(alpha: 0.95),
-            const Color(0xFF071A12).withValues(alpha: 0.95),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: hasPending
-              ? AppColors.gold.withValues(alpha: 0.75)
-              : (lastRes?.isGoal == true ? AppColors.pitchGreen : AppColors.error.withValues(alpha: 0.7)),
-          width: 1.2,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            children: [
-              Icon(
-                Icons.sports_soccer,
-                size: 16,
-                color: hasPending ? AppColors.gold : AppColors.greenLight,
-              ),
-              const SizedBox(width: 6),
-              Expanded(
-                child: Text(
-                  hasPending
-                      ? (isGk ? 'KRİTİK AN • 90. DAKİKA PENALTI KURTARIŞI' : 'KRİTİK AN • 90. DAKİKA PENALTI ATIŞI')
-                      : (lastRes?.isGoal == true ? 'KRİTİK PENALTI: BAŞARILI!' : 'KRİTİK PENALTI: KAÇIRILDI'),
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 0.6,
-                    color: hasPending
-                        ? AppColors.gold
-                        : (lastRes?.isGoal == true ? AppColors.greenLight : AppColors.error),
-                  ),
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-                decoration: BoxDecoration(
-                  color: Colors.black.withValues(alpha: 0.35),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Text(
-                  'Penaltı: ${provider.penaltiesScored}/${provider.penaltiesTaken}',
-                  style: const TextStyle(
-                    fontSize: 9.5,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 6),
-          if (hasPending) ...[
-            Text(
-              isGk
-                  ? 'Rakip forvet topun başında! Hangi köşeye atlayacağını seç (Kurtarırsan formun ve kupa şansın fırlar):'
-                  : 'Kalede devleşen kaleciye karşı köşeni seç! (Atarsan sezonun parlar ve dev teklifler gelir, kaçırırsan formun düşer):',
-              style: const TextStyle(
-                fontSize: 11,
-                color: AppColors.textSecondary,
-                height: 1.3,
-              ),
-            ),
-            const SizedBox(height: 10),
-            // Visual Goalpost Frame with 5 Interactive Target Corners
-            Container(
-              padding: const EdgeInsets.fromLTRB(10, 10, 10, 6),
-              decoration: BoxDecoration(
-                color: const Color(0xFF061E14),
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
-                border: const Border(
-                  top: BorderSide(color: Colors.white, width: 3.0),
-                  left: BorderSide(color: Colors.white, width: 3.0),
-                  right: BorderSide(color: Colors.white, width: 3.0),
-                ),
-              ),
-              child: Column(
-                children: [
-                  // Upper 90 Corners Row + Goalkeeper Head/Torso
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      _buildCornerTargetButton(
-                        corner: PenaltyCorner.topLeft,
-                        icon: Icons.north_west_rounded,
-                        isUpper90: true,
-                      ),
-                      Column(
-                        children: [
-                          Container(
-                            width: 28,
-                            height: 28,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: AppColors.gold.withValues(alpha: 0.2),
-                              border: Border.all(color: AppColors.gold, width: 1.2),
-                            ),
-                            child: const Center(
-                              child: Icon(Icons.sports_handball, size: 16, color: AppColors.gold),
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          const Text(
-                            'KALECİ',
-                            style: TextStyle(fontSize: 8, fontWeight: FontWeight.w800, color: AppColors.textMuted),
-                          ),
-                        ],
-                      ),
-                      _buildCornerTargetButton(
-                        corner: PenaltyCorner.topRight,
-                        icon: Icons.north_east_rounded,
-                        isUpper90: true,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  // Bottom Corners + Panenka Center Row
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      _buildCornerTargetButton(
-                        corner: PenaltyCorner.bottomLeft,
-                        icon: Icons.west_rounded,
-                        isUpper90: false,
-                      ),
-                      _buildCornerTargetButton(
-                        corner: PenaltyCorner.center,
-                        icon: Icons.arrow_upward_rounded,
-                        isUpper90: false,
-                      ),
-                      _buildCornerTargetButton(
-                        corner: PenaltyCorner.bottomRight,
-                        icon: Icons.east_rounded,
-                        isUpper90: false,
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ] else if (lastRes != null) ...[
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: Colors.black.withValues(alpha: 0.35),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(
-                  color: lastRes.isGoal
-                      ? AppColors.pitchGreen.withValues(alpha: 0.6)
-                      : AppColors.error.withValues(alpha: 0.6),
-                ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Senin Seçimin: ${lastRes.playerCorner.label}',
-                        style: const TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white,
-                        ),
-                      ),
-                      Text(
-                        'Kaleci Köşesi: ${lastRes.keeperCorner.label}',
-                        style: const TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textMuted,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    lastRes.commentary,
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: lastRes.isGoal ? AppColors.greenLight : Colors.redAccent,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCornerTargetButton({
-    required PenaltyCorner corner,
-    required IconData icon,
-    required bool isUpper90,
-  }) {
-    return GestureDetector(
-      onTap: () => _onShootPenalty(corner),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-        decoration: BoxDecoration(
-          color: isUpper90
-              ? AppColors.gold.withValues(alpha: 0.16)
-              : AppColors.pitchGreen.withValues(alpha: 0.22),
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-            color: isUpper90 ? AppColors.gold : AppColors.pitchGreen,
-            width: 1.1,
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              icon,
-              size: 13,
-              color: isUpper90 ? AppColors.gold : AppColors.greenLight,
-            ),
-            const SizedBox(width: 4),
-            Text(
-              corner.label,
-              style: const TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.w800,
-                color: Colors.white,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCurrentClubBanner(ClubModel club, int totalGoals, int totalAssists, int totalTrophies) {
+  Widget _buildCurrentClubBanner(ClubModel club) {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -690,113 +410,137 @@ class _CareerSeasonScreenState extends State<CareerSeasonScreen> {
               ],
             ),
           ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                '$totalGoals GOL',
-                style: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.greenLight,
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: BoxDecoration(
+              color: Colors.black.withValues(alpha: 0.35),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: AppColors.gold.withValues(alpha: 0.45)),
+            ),
+            child: const Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  '??? GOL',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w900,
+                    color: AppColors.greenLight,
+                  ),
                 ),
-              ),
-              Text(
-                '$totalAssists ASİST',
-                style: const TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.white,
+                Text(
+                  '??? ASİST',
+                  style: TextStyle(
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                  ),
                 ),
-              ),
-              Text(
-                '$totalTrophies KUPA',
-                style: const TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.gold,
+                Text(
+                  '??? KUPA',
+                  style: TextStyle(
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.gold,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildSeasonReviewCard(dynamic season, String? highlight) {
+  Widget _buildMysterySeasonDiaryCard(CareerGameProvider provider, String? highlight) {
+    final lastRes = provider.lastPenaltyResult;
+
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppColors.surface.withValues(alpha: 0.85),
+        color: AppColors.surface.withValues(alpha: 0.88),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.borderGreen.withValues(alpha: 0.35)),
+        border: Border.all(color: AppColors.borderGreen.withValues(alpha: 0.38)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const Icon(Icons.insights_outlined, size: 15, color: AppColors.pitchGreen),
+              const Icon(Icons.visibility_off_outlined, size: 15, color: AppColors.gold),
               const SizedBox(width: 6),
               const Text(
-                'DÖNEM PERFORMANS RAPORU',
+                'GİZLİ SEZON KAYDI',
                 style: TextStyle(
                   fontSize: 10.5,
                   fontWeight: FontWeight.w800,
                   letterSpacing: 0.8,
-                  color: AppColors.pitchGreen,
+                  color: AppColors.gold,
                 ),
               ),
               const Spacer(),
-              Text(
-                '${season.matches} Maç Oynadın',
-                style: const TextStyle(fontSize: 10.5, color: AppColors.textMuted),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                decoration: BoxDecoration(
+                  color: AppColors.pitchGreen.withValues(alpha: 0.16),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: const Text(
+                  'Kariyer Sonunda Açılır',
+                  style: TextStyle(
+                    fontSize: 9.5,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.greenLight,
+                  ),
+                ),
               ),
             ],
           ),
           const SizedBox(height: 8),
           Row(
             children: [
-              _buildMiniMetric('GOL', '${season.goals}'),
-              const SizedBox(width: 12),
-              _buildMiniMetric('ASİST', '${season.assists}'),
-              const SizedBox(width: 12),
-              _buildMiniMetric('KUPA', '${season.trophiesWon.length}'),
-              const Spacer(),
-              if (season.trophiesWon.isNotEmpty)
-                Flexible(
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: AppColors.gold.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(6),
-                      border: Border.all(color: AppColors.gold, width: 0.8),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.emoji_events_outlined, size: 13, color: AppColors.gold),
-                        const SizedBox(width: 4),
-                        Flexible(
-                          child: Text(
-                            season.trophiesWon.first,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              fontSize: 10.5,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.gold,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
+              _buildHiddenMetric('MAÇ', '???'),
+              const SizedBox(width: 14),
+              _buildHiddenMetric('GOL', '???'),
+              const SizedBox(width: 14),
+              _buildHiddenMetric('ASİST', '???'),
+              const SizedBox(width: 14),
+              _buildHiddenMetric('KUPA', '???'),
             ],
           ),
-          if (highlight != null && highlight.isNotEmpty) ...[
+          if (lastRes != null) ...[
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
+              decoration: BoxDecoration(
+                color: (lastRes.isGoal ? AppColors.pitchGreen : AppColors.error).withValues(alpha: 0.16),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: (lastRes.isGoal ? AppColors.pitchGreen : AppColors.error).withValues(alpha: 0.5),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    lastRes.isGoal ? Icons.sports_soccer : Icons.info_outline,
+                    size: 14,
+                    color: lastRes.isGoal ? AppColors.greenLight : Colors.redAccent,
+                  ),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      lastRes.commentary,
+                      style: TextStyle(
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w600,
+                        color: lastRes.isGoal ? AppColors.greenLight : Colors.redAccent,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ] else if (highlight != null && highlight.isNotEmpty) ...[
             const SizedBox(height: 8),
             Container(
               padding: const EdgeInsets.all(8),
@@ -806,7 +550,7 @@ class _CareerSeasonScreenState extends State<CareerSeasonScreen> {
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.star_outline, size: 14, color: AppColors.gold),
+                  const Icon(Icons.auto_awesome_outlined, size: 14, color: AppColors.gold),
                   const SizedBox(width: 6),
                   Expanded(
                     child: Text(
@@ -827,27 +571,35 @@ class _CareerSeasonScreenState extends State<CareerSeasonScreen> {
     );
   }
 
-  Widget _buildMiniMetric(String label, String value) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          value,
-          style: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w800,
-            color: Colors.white,
+  Widget _buildHiddenMetric(String label, String value) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.28),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w900,
+              color: AppColors.gold,
+            ),
           ),
-        ),
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 9,
-            fontWeight: FontWeight.w600,
-            color: AppColors.textMuted,
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 8.5,
+              fontWeight: FontWeight.w700,
+              color: AppColors.textMuted,
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -943,4 +695,993 @@ class _CareerSeasonScreenState extends State<CareerSeasonScreen> {
       ),
     );
   }
+}
+
+// =============================================================================
+// FULL-SCREEN 3D INTERACTIVE PENALTY SHOOTOUT VIEW (SWIPE OR TAP REAL BALL SHOT)
+// =============================================================================
+class _FullScreenPenaltyShootoutView extends StatefulWidget {
+  final CareerGameProvider provider;
+  final ClubModel currentClub;
+  final VoidCallback onCompleted;
+
+  const _FullScreenPenaltyShootoutView({
+    required this.provider,
+    required this.currentClub,
+    required this.onCompleted,
+  });
+
+  @override
+  State<_FullScreenPenaltyShootoutView> createState() => _FullScreenPenaltyShootoutViewState();
+}
+
+class _FullScreenPenaltyShootoutViewState extends State<_FullScreenPenaltyShootoutView>
+    with TickerProviderStateMixin {
+  late final AnimationController _idleController;
+  late final AnimationController _shotController;
+
+  PenaltyCorner? _selectedCorner;
+  PenaltyShotResult? _shotResult;
+  bool _isShooting = false;
+  bool _shotFinished = false;
+
+  // Drag/flick gesture tracking from ball
+  Offset? _dragStart;
+  Offset? _dragCurrent;
+
+  @override
+  void initState() {
+    super.initState();
+    _idleController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1400),
+    )..repeat(reverse: true);
+
+    _shotController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 780),
+    );
+  }
+
+  @override
+  void dispose() {
+    _idleController.dispose();
+    _shotController.dispose();
+    super.dispose();
+  }
+
+  void _firePenaltyShot(PenaltyCorner corner) async {
+    if (_isShooting || _shotFinished) return;
+
+    final result = widget.provider.takeSeasonPenalty(corner);
+
+    setState(() {
+      _selectedCorner = corner;
+      _shotResult = result;
+      _isShooting = true;
+      _dragStart = null;
+      _dragCurrent = null;
+    });
+
+    await _shotController.forward(from: 0.0);
+    if (!mounted) return;
+
+    setState(() {
+      _shotFinished = true;
+    });
+  }
+
+  void _onPanStart(DragStartDetails details) {
+    if (_isShooting || _shotFinished) return;
+    setState(() {
+      _dragStart = details.localPosition;
+      _dragCurrent = details.localPosition;
+    });
+  }
+
+  void _onPanUpdate(DragUpdateDetails details) {
+    if (_isShooting || _shotFinished || _dragStart == null) return;
+    setState(() {
+      _dragCurrent = details.localPosition;
+    });
+  }
+
+  void _onPanEnd(DragEndDetails details) {
+    if (_isShooting || _shotFinished || _dragStart == null || _dragCurrent == null) return;
+    final delta = _dragCurrent! - _dragStart!;
+    // Require upward swipe/flick toward the goal
+    if (delta.dy > -30 && details.velocity.pixelsPerSecond.dy > -180) {
+      setState(() {
+        _dragStart = null;
+        _dragCurrent = null;
+      });
+      return;
+    }
+
+    final dx = delta.dx;
+    final dy = delta.dy;
+    PenaltyCorner corner;
+    if (dx < -45) {
+      corner = dy < -125 ? PenaltyCorner.topLeft : PenaltyCorner.bottomLeft;
+    } else if (dx > 45) {
+      corner = dy < -125 ? PenaltyCorner.topRight : PenaltyCorner.bottomRight;
+    } else {
+      corner = PenaltyCorner.center;
+    }
+    _firePenaltyShot(corner);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isGk = widget.provider.position == PlayerPosition.goalkeeper;
+
+    return Scaffold(
+      backgroundColor: const Color(0xFF04120C),
+      body: SafeArea(
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            // 1. Full-Screen 3D Stadium Goal, Goalkeeper, and Flying Football Canvas
+            GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onPanStart: _onPanStart,
+              onPanUpdate: _onPanUpdate,
+              onPanEnd: _onPanEnd,
+              child: AnimatedBuilder(
+                animation: Listenable.merge([_idleController, _shotController]),
+                builder: (context, _) {
+                  return CustomPaint(
+                    painter: _Penalty3DArenaPainter(
+                      idleProgress: _idleController.value,
+                      shotProgress: _shotController.value,
+                      isShooting: _isShooting,
+                      targetCorner: _selectedCorner,
+                      keeperCorner: _shotResult?.keeperCorner,
+                      isGoal: _shotResult?.isGoal ?? false,
+                      clubPrimaryColor: widget.currentClub.primaryColor,
+                      dragStart: _dragStart,
+                      dragCurrent: _dragCurrent,
+                    ),
+                  );
+                },
+              ),
+            ),
+
+            // 2. Top Broadcast Scoreboard HUD
+            Positioned(
+              top: 10,
+              left: 14,
+              right: 14,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                decoration: BoxDecoration(
+                  color: const Color(0xEB061811),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: AppColors.gold.withValues(alpha: 0.65), width: 1.2),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.45),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    ClubCrestWidget(club: widget.currentClub, size: 36),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: AppColors.gold.withValues(alpha: 0.2),
+                                  borderRadius: BorderRadius.circular(5),
+                                ),
+                                child: Text(
+                                  isGk ? '90+3\' KRİTİK KURTARIŞ ANI' : '90+3\' KRİTİK PENALTI ATIŞI',
+                                  style: const TextStyle(
+                                    fontSize: 9.5,
+                                    fontWeight: FontWeight.w900,
+                                    color: AppColors.gold,
+                                    letterSpacing: 0.5,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                '${widget.provider.currentAge} Yaş',
+                                style: const TextStyle(
+                                  fontSize: 10.5,
+                                  fontWeight: FontWeight.w800,
+                                  color: AppColors.greenLight,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 3),
+                          Text(
+                            '${widget.currentClub.name} • Kupa & Şampiyonluk Virajı',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w800,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            // 3. Interactive Goal Target Zones (Tap directly on a corner inside the goal!)
+            if (!_isShooting)
+              Positioned.fill(
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final w = constraints.maxWidth;
+                    final h = constraints.maxHeight;
+                    final goalLeft = w * 0.12;
+                    final goalRight = w * 0.88;
+                    final goalTop = h * 0.21;
+                    final goalBottom = h * 0.46;
+                    final goalW = goalRight - goalLeft;
+                    final goalH = goalBottom - goalTop;
+
+                    return Stack(
+                      children: [
+                        // Top-Left 90
+                        Positioned(
+                          left: goalLeft + 8,
+                          top: goalTop + 8,
+                          child: _buildGoalTargetCrosshair(
+                            corner: PenaltyCorner.topLeft,
+                            label: 'Sol 90',
+                            isUpper90: true,
+                          ),
+                        ),
+                        // Top-Right 90
+                        Positioned(
+                          right: (w - goalRight) + 8,
+                          top: goalTop + 8,
+                          child: _buildGoalTargetCrosshair(
+                            corner: PenaltyCorner.topRight,
+                            label: 'Sağ 90',
+                            isUpper90: true,
+                          ),
+                        ),
+                        // Center / Panenka
+                        Positioned(
+                          left: goalLeft + goalW * 0.5 - 42,
+                          top: goalTop + goalH * 0.45,
+                          child: _buildGoalTargetCrosshair(
+                            corner: PenaltyCorner.center,
+                            label: 'Panenka',
+                            isUpper90: false,
+                          ),
+                        ),
+                        // Bottom-Left
+                        Positioned(
+                          left: goalLeft + 8,
+                          top: goalBottom - 44,
+                          child: _buildGoalTargetCrosshair(
+                            corner: PenaltyCorner.bottomLeft,
+                            label: 'Sol Köşe',
+                            isUpper90: false,
+                          ),
+                        ),
+                        // Bottom-Right
+                        Positioned(
+                          right: (w - goalRight) + 8,
+                          top: goalBottom - 44,
+                          child: _buildGoalTargetCrosshair(
+                            corner: PenaltyCorner.bottomRight,
+                            label: 'Sağ Köşe',
+                            isUpper90: false,
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                ),
+              ),
+
+            // 4. Bottom Instruction / Power Meter OR Shot Result Celebration Card
+            Positioned(
+              left: 16,
+              right: 16,
+              bottom: 18,
+              child: _shotFinished && _shotResult != null
+                  ? _buildResultOverlayCard(_shotResult!, isGk)
+                  : _buildAimingInstructionBar(isGk),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGoalTargetCrosshair({
+    required PenaltyCorner corner,
+    required String label,
+    required bool isUpper90,
+  }) {
+    return GestureDetector(
+      onTap: () => _firePenaltyShot(corner),
+      child: AnimatedBuilder(
+        animation: _idleController,
+        builder: (context, _) {
+          final scale = 0.95 + 0.08 * _idleController.value;
+          return Transform.scale(
+            scale: scale,
+            child: Container(
+              width: 84,
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+              decoration: BoxDecoration(
+                color: (isUpper90 ? AppColors.gold : AppColors.pitchGreen).withValues(alpha: 0.24),
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(
+                  color: isUpper90 ? AppColors.gold : AppColors.greenLight,
+                  width: 1.5,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: (isUpper90 ? AppColors.gold : AppColors.pitchGreen).withValues(alpha: 0.35),
+                    blurRadius: 8,
+                  ),
+                ],
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.gps_fixed_rounded,
+                    size: 13,
+                    color: isUpper90 ? AppColors.gold : Colors.white,
+                  ),
+                  const SizedBox(width: 4),
+                  Flexible(
+                    child: Text(
+                      label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w900,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildAimingInstructionBar(bool isGk) {
+    return IgnorePointer(
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          color: const Color(0xE6061811),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: AppColors.borderGreen.withValues(alpha: 0.5)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.touch_app_rounded, size: 16, color: AppColors.gold),
+                const SizedBox(width: 6),
+                Flexible(
+                  child: Text(
+                    isGk
+                        ? 'Atlamak istediğin köşeye dokun veya topu o yöne kaydır!'
+                        : 'Topu parmağınla kaleye doğru fırlat veya kaledeki hedefe dokun!',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            // Animated Shot Power Bar
+            AnimatedBuilder(
+              animation: _idleController,
+              builder: (context, _) {
+                final power = 0.45 + 0.55 * _idleController.value;
+                return Row(
+                  children: [
+                    const Text(
+                      'ŞUT GÜCÜ',
+                      style: TextStyle(
+                        fontSize: 9.5,
+                        fontWeight: FontWeight.w900,
+                        color: AppColors.gold,
+                        letterSpacing: 0.6,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(6),
+                        child: LinearProgressIndicator(
+                          value: power,
+                          minHeight: 7,
+                          backgroundColor: Colors.white.withValues(alpha: 0.12),
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            power > 0.82 ? AppColors.gold : AppColors.pitchGreen,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      '%${(power * 100).round()}',
+                      style: const TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w900,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildResultOverlayCard(PenaltyShotResult result, bool isGk) {
+    final isGoal = result.isGoal;
+
+    return Container(
+      padding: const EdgeInsets.all(15),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: isGoal
+              ? [const Color(0xFF0F3B27), const Color(0xFF071B12)]
+              : [const Color(0xFF3B1216), const Color(0xFF1A080A)],
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isGoal ? AppColors.gold : Colors.redAccent,
+          width: 1.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.55),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: (isGoal ? AppColors.gold : Colors.redAccent).withValues(alpha: 0.2),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  isGoal ? Icons.sports_soccer : Icons.sports_handball,
+                  color: isGoal ? AppColors.gold : Colors.redAccent,
+                  size: 22,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      isGoal
+                          ? (isGk ? 'EFSANE KURTARIŞ!' : 'GOOOL! AĞLARI SARSTIN!')
+                          : (isGk ? 'PENALTI GOL OLDU' : 'KALECİ KURTARDI!'),
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w900,
+                        color: isGoal ? AppColors.gold : Colors.redAccent,
+                      ),
+                    ),
+                    Text(
+                      'Köşen: ${result.playerCorner.label} • Kaleci: ${result.keeperCorner.label}',
+                      style: const TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white70,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            result.commentary,
+            style: const TextStyle(
+              fontSize: 11.5,
+              color: Colors.white,
+              height: 1.3,
+            ),
+          ),
+          const SizedBox(height: 12),
+          CustomButton(
+            text: 'Kariyere Devam Et ›',
+            icon: Icons.arrow_forward_rounded,
+            backgroundColor: isGoal ? AppColors.pitchGreen : AppColors.surfaceLight,
+            onPressed: widget.onCompleted,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// =============================================================================
+// 3D PERSPECTIVE PENALTY STADIUM, GOAL, GOALKEEPER & FLYING BALL PAINTER
+// =============================================================================
+class _Penalty3DArenaPainter extends CustomPainter {
+  final double idleProgress;
+  final double shotProgress;
+  final bool isShooting;
+  final PenaltyCorner? targetCorner;
+  final PenaltyCorner? keeperCorner;
+  final bool isGoal;
+  final Color clubPrimaryColor;
+  final Offset? dragStart;
+  final Offset? dragCurrent;
+
+  _Penalty3DArenaPainter({
+    required this.idleProgress,
+    required this.shotProgress,
+    required this.isShooting,
+    required this.targetCorner,
+    required this.keeperCorner,
+    required this.isGoal,
+    required this.clubPrimaryColor,
+    this.dragStart,
+    this.dragCurrent,
+  });
+
+  Offset _cornerToGoalPoint(PenaltyCorner corner, Rect goalRect) {
+    switch (corner) {
+      case PenaltyCorner.topLeft:
+        return Offset(goalRect.left + goalRect.width * 0.16, goalRect.top + goalRect.height * 0.22);
+      case PenaltyCorner.topRight:
+        return Offset(goalRect.right - goalRect.width * 0.16, goalRect.top + goalRect.height * 0.22);
+      case PenaltyCorner.bottomLeft:
+        return Offset(goalRect.left + goalRect.width * 0.16, goalRect.bottom - goalRect.height * 0.16);
+      case PenaltyCorner.bottomRight:
+        return Offset(goalRect.right - goalRect.width * 0.16, goalRect.bottom - goalRect.height * 0.16);
+      case PenaltyCorner.center:
+        return Offset(goalRect.center.dx, goalRect.top + goalRect.height * 0.42);
+    }
+  }
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final w = size.width;
+    final h = size.height;
+    final horizonY = h * 0.46;
+
+    // 1. Night Sky & Stadium Floodlights Backdrop
+    final skyPaint = Paint()
+      ..shader = const LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [
+          Color(0xFF030B08),
+          Color(0xFF082217),
+          Color(0xFF0A2E1F),
+        ],
+      ).createShader(Rect.fromLTWH(0, 0, w, horizonY));
+    canvas.drawRect(Rect.fromLTWH(0, 0, w, horizonY), skyPaint);
+
+    // Floodlight beams
+    final beamPaint = Paint()
+      ..shader = RadialGradient(
+        colors: [
+          const Color(0xFFF59E0B).withValues(alpha: 0.16),
+          Colors.transparent,
+        ],
+      ).createShader(Rect.fromCircle(center: Offset(w * 0.2, h * 0.12), radius: w * 0.45));
+    canvas.drawCircle(Offset(w * 0.2, h * 0.12), w * 0.45, beamPaint);
+    canvas.drawCircle(Offset(w * 0.8, h * 0.12), w * 0.45, beamPaint);
+
+    // 2. 3D Perspective Pitch Turf (from horizonY down to h)
+    final turfRect = Rect.fromLTWH(0, horizonY, w, h - horizonY);
+    final turfPaint = Paint()
+      ..shader = const LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [
+          Color(0xFF0A3322),
+          Color(0xFF0D442D),
+          Color(0xFF07281A),
+        ],
+      ).createShader(turfRect);
+    canvas.drawRect(turfRect, turfPaint);
+
+    // Perspective mowing stripes
+    const stripeCount = 8;
+    for (int i = 0; i < stripeCount; i++) {
+      if (i.isEven) continue;
+      final t0 = i / stripeCount;
+      final t1 = (i + 1) / stripeCount;
+      final y0 = horizonY + (h - horizonY) * (t0 * t0);
+      final y1 = horizonY + (h - horizonY) * (t1 * t1);
+      canvas.drawRect(
+        Rect.fromLTRB(0, y0, w, y1),
+        Paint()..color = const Color(0xFF10B981).withValues(alpha: 0.06),
+      );
+    }
+
+    // Perspective Penalty Area Lines
+    final linePaint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.42)
+      ..strokeWidth = 2.0
+      ..style = PaintingStyle.stroke;
+
+    // Goal line
+    canvas.drawLine(Offset(0, horizonY), Offset(w, horizonY), linePaint);
+
+    // 6-yard box in perspective
+    final sixYardPath = Path()
+      ..moveTo(w * 0.22, horizonY)
+      ..lineTo(w * 0.12, horizonY + (h - horizonY) * 0.22)
+      ..lineTo(w * 0.88, horizonY + (h - horizonY) * 0.22)
+      ..lineTo(w * 0.78, horizonY);
+    canvas.drawPath(sixYardPath, linePaint);
+
+    // 3. 3D Goal Frame & Net Mesh
+    final goalLeft = w * 0.12;
+    final goalRight = w * 0.88;
+    final goalTop = h * 0.21;
+    final goalBottom = horizonY;
+    final goalRect = Rect.fromLTRB(goalLeft, goalTop, goalRight, goalBottom);
+
+    // Inner depth frame of goal net
+    final backRect = Rect.fromLTRB(
+      goalLeft + 18,
+      goalTop + 14,
+      goalRight - 18,
+      goalBottom - 6,
+    );
+
+    final netBgPaint = Paint()
+      ..color = Colors.black.withValues(alpha: 0.38)
+      ..style = PaintingStyle.fill;
+    canvas.drawRect(goalRect, netBgPaint);
+
+    // Net mesh lines (ripples when a goal is scored!)
+    final netRipple = (isShooting && isGoal && shotProgress > 0.75)
+        ? math.sin((shotProgress - 0.75) * 40) * 5.0
+        : 0.0;
+    final netPaint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.18)
+      ..strokeWidth = 0.9;
+
+    const cols = 18;
+    for (int c = 0; c <= cols; c++) {
+      final f = c / cols;
+      final xFront = goalLeft + goalRect.width * f;
+      final xBack = backRect.left + backRect.width * f + netRipple * (f - 0.5);
+      canvas.drawLine(Offset(xFront, goalTop), Offset(xBack, backRect.top), netPaint);
+      canvas.drawLine(Offset(xBack, backRect.top), Offset(xBack, backRect.bottom), netPaint);
+    }
+    const rows = 9;
+    for (int r = 0; r <= rows; r++) {
+      final f = r / rows;
+      final yBack = backRect.top + backRect.height * f + netRipple * 0.4;
+      canvas.drawLine(Offset(backRect.left, yBack), Offset(backRect.right, yBack), netPaint);
+    }
+
+    // Goalposts & Crossbar with metallic highlight
+    final postGlow = Paint()
+      ..color = (isShooting && isGoal && shotProgress > 0.8)
+          ? AppColors.gold.withValues(alpha: 0.55)
+          : Colors.white.withValues(alpha: 0.22)
+      ..strokeWidth = 9
+      ..strokeCap = StrokeCap.round
+      ..style = PaintingStyle.stroke;
+    final postPaint = Paint()
+      ..color = Colors.white
+      ..strokeWidth = 5.0
+      ..strokeCap = StrokeCap.round
+      ..style = PaintingStyle.stroke;
+
+    final postPath = Path()
+      ..moveTo(goalLeft, goalBottom)
+      ..lineTo(goalLeft, goalTop)
+      ..lineTo(goalRight, goalTop)
+      ..lineTo(goalRight, goalBottom);
+    canvas.drawPath(postPath, postGlow);
+    canvas.drawPath(postPath, postPaint);
+
+    // 4. Animated Goalkeeper on Goal Line
+    final idleSwayX = math.sin(idleProgress * math.pi * 2) * 14.0;
+    final keeperStartCenter = Offset(goalRect.center.dx + idleSwayX, goalBottom - 36);
+    Offset keeperCenter = keeperStartCenter;
+    double keeperRotation = 0.0;
+
+    if (isShooting && keeperCorner != null) {
+      final diveTarget = _cornerToGoalPoint(keeperCorner!, goalRect);
+      final diveT = Curves.easeOutCubic.transform((shotProgress * 1.15).clamp(0.0, 1.0));
+      keeperCenter = Offset.lerp(keeperStartCenter, diveTarget, diveT)!;
+      if (keeperCorner == PenaltyCorner.topLeft || keeperCorner == PenaltyCorner.bottomLeft) {
+        keeperRotation = -0.85 * diveT;
+      } else if (keeperCorner == PenaltyCorner.topRight || keeperCorner == PenaltyCorner.bottomRight) {
+        keeperRotation = 0.85 * diveT;
+      }
+    }
+
+    _drawGoalkeeper(canvas, keeperCenter, keeperRotation);
+
+    // 5. Penalty Spot & 3D Flying Football
+    final spotCenter = Offset(w * 0.5, h * 0.77);
+
+    // Penalty spot turf mark
+    canvas.drawOval(
+      Rect.fromCenter(center: Offset(spotCenter.dx, spotCenter.dy + 18), width: 26, height: 8),
+      Paint()..color = Colors.white.withValues(alpha: 0.65),
+    );
+
+    // Drag Aim Arrow if user is dragging the ball
+    if (!isShooting && dragStart != null && dragCurrent != null) {
+      final delta = dragCurrent! - dragStart!;
+      if (delta.dy < -10) {
+        final aimEnd = Offset(
+          (spotCenter.dx + delta.dx * 1.3).clamp(goalLeft, goalRight),
+          (spotCenter.dy + delta.dy * 1.4).clamp(goalTop, spotCenter.dy),
+        );
+        final aimPaint = Paint()
+          ..color = AppColors.gold.withValues(alpha: 0.85)
+          ..strokeWidth = 3.0
+          ..strokeCap = StrokeCap.round;
+        canvas.drawLine(spotCenter, aimEnd, aimPaint);
+        canvas.drawCircle(aimEnd, 8, Paint()..color = AppColors.gold);
+      }
+    }
+
+    // Compute Ball Position & Scale
+    Offset ballPos = spotCenter;
+    double ballRadius = 29.0;
+    double spinAngle = 0.0;
+
+    if (isShooting && targetCorner != null) {
+      final t = Curves.easeOutQuad.transform(shotProgress.clamp(0.0, 1.0));
+      final goalTarget = _cornerToGoalPoint(targetCorner!, goalRect);
+
+      // Parabolic arc + slight curve (falso)
+      final curveX = (targetCorner == PenaltyCorner.topLeft || targetCorner == PenaltyCorner.bottomLeft)
+          ? -28.0 * math.sin(t * math.pi)
+          : (targetCorner == PenaltyCorner.topRight || targetCorner == PenaltyCorner.bottomRight)
+              ? 28.0 * math.sin(t * math.pi)
+              : 0.0;
+      final arcLiftY = -65.0 * math.sin(t * math.pi);
+
+      if (!isGoal && t > 0.82) {
+        // Saved by goalkeeper: deflects off gloves!
+        final saveContact = _cornerToGoalPoint(targetCorner!, goalRect);
+        final deflectT = (t - 0.82) / 0.18;
+        final deflectDir = targetCorner!.name.contains('Left') ? -55.0 : 55.0;
+        ballPos = Offset(
+          saveContact.dx + deflectDir * deflectT,
+          saveContact.dy + 25.0 * deflectT,
+        );
+      } else {
+        ballPos = Offset(
+          spotCenter.dx + (goalTarget.dx - spotCenter.dx) * t + curveX,
+          spotCenter.dy + (goalTarget.dy - spotCenter.dy) * t + arcLiftY,
+        );
+      }
+
+      ballRadius = 29.0 - 16.5 * t;
+      spinAngle = t * math.pi * 5.0;
+
+      // Motion speed trail behind flying ball
+      for (int i = 1; i <= 4; i++) {
+        final trailT = (t - i * 0.035).clamp(0.0, 1.0);
+        final trailPos = Offset(
+          spotCenter.dx + (goalTarget.dx - spotCenter.dx) * trailT + curveX * 0.8,
+          spotCenter.dy + (goalTarget.dy - spotCenter.dy) * trailT - 65.0 * math.sin(trailT * math.pi),
+        );
+        canvas.drawCircle(
+          trailPos,
+          (ballRadius * (1.0 - i * 0.18)).clamp(3.0, 24.0),
+          Paint()..color = AppColors.gold.withValues(alpha: (0.24 - i * 0.05).clamp(0.0, 1.0)),
+        );
+      }
+
+      // Ground shadow under flying ball
+      final groundY = spotCenter.dy + (goalBottom - spotCenter.dy) * t;
+      canvas.drawOval(
+        Rect.fromCenter(
+          center: Offset(ballPos.dx, groundY + 10),
+          width: ballRadius * 1.6,
+          height: ballRadius * 0.45,
+        ),
+        Paint()..color = Colors.black.withValues(alpha: 0.42),
+      );
+    } else {
+      // Ground shadow under stationary ball
+      canvas.drawOval(
+        Rect.fromCenter(
+          center: Offset(spotCenter.dx, spotCenter.dy + ballRadius * 0.88),
+          width: ballRadius * 1.8,
+          height: ballRadius * 0.55,
+        ),
+        Paint()..color = Colors.black.withValues(alpha: 0.55),
+      );
+    }
+
+    _draw3DFootball(canvas, ballPos, ballRadius, spinAngle);
+  }
+
+  void _drawGoalkeeper(Canvas canvas, Offset center, double rotation) {
+    canvas.save();
+    canvas.translate(center.dx, center.dy);
+    canvas.rotate(rotation);
+
+    // Keeper shadow
+    canvas.drawOval(
+      Rect.fromCenter(center: const Offset(0, 34), width: 42, height: 10),
+      Paint()..color = Colors.black.withValues(alpha: 0.45),
+    );
+
+    // Legs / Shorts
+    final legPaint = Paint()
+      ..color = const Color(0xFF1E293B)
+      ..strokeWidth = 6.5
+      ..strokeCap = StrokeCap.round;
+    canvas.drawLine(const Offset(-8, 10), const Offset(-13, 30), legPaint);
+    canvas.drawLine(const Offset(8, 10), const Offset(13, 30), legPaint);
+
+    // Torso Jersey (Neon Orange/Gold Keeper Kit)
+    final torsoRect = RRect.fromRectAndRadius(
+      Rect.fromCenter(center: const Offset(0, -2), width: 26, height: 28),
+      const Radius.circular(6),
+    );
+    canvas.drawRRect(torsoRect, Paint()..color = const Color(0xFFF59E0B));
+    canvas.drawRRect(
+      torsoRect,
+      Paint()
+        ..color = Colors.white.withValues(alpha: 0.5)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.2,
+    );
+
+    // Outstretched Arms & Goalkeeper Gloves
+    final armPaint = Paint()
+      ..color = const Color(0xFFF59E0B)
+      ..strokeWidth = 5.5
+      ..strokeCap = StrokeCap.round;
+    canvas.drawLine(const Offset(-12, -10), const Offset(-30, -22), armPaint);
+    canvas.drawLine(const Offset(12, -10), const Offset(30, -22), armPaint);
+
+    // Gloves
+    final glovePaint = Paint()..color = Colors.white;
+    canvas.drawCircle(const Offset(-32, -23), 6.0, glovePaint);
+    canvas.drawCircle(const Offset(32, -23), 6.0, glovePaint);
+
+    // Head
+    canvas.drawCircle(const Offset(0, -24), 9.0, Paint()..color = const Color(0xFFFDE68A));
+    canvas.drawArc(
+      Rect.fromCircle(center: const Offset(0, -25), radius: 9.2),
+      math.pi,
+      math.pi,
+      true,
+      Paint()..color = const Color(0xFF1E293B),
+    );
+
+    canvas.restore();
+  }
+
+  void _draw3DFootball(Canvas canvas, Offset center, double radius, double spinAngle) {
+    canvas.save();
+    canvas.translate(center.dx, center.dy);
+
+    // Outer golden glow
+    canvas.drawCircle(
+      Offset.zero,
+      radius * 1.18,
+      Paint()..color = AppColors.gold.withValues(alpha: 0.22),
+    );
+
+    // 3D Spherical shaded white ball body
+    final spherePaint = Paint()
+      ..shader = RadialGradient(
+        center: const Alignment(-0.35, -0.35),
+        radius: 0.95,
+        colors: const [
+          Color(0xFFFFFFFF),
+          Color(0xFFE2E8F0),
+          Color(0xFF94A3B8),
+        ],
+      ).createShader(Rect.fromCircle(center: Offset.zero, radius: radius));
+    canvas.drawCircle(Offset.zero, radius, spherePaint);
+
+    // Rotating Pentagon Pattern
+    canvas.save();
+    canvas.rotate(spinAngle);
+
+    final pentPaint = Paint()
+      ..color = const Color(0xFF0F172A)
+      ..style = PaintingStyle.fill;
+    final seamPaint = Paint()
+      ..color = const Color(0xFF334155)
+      ..strokeWidth = (radius * 0.06).clamp(1.0, 2.2)
+      ..style = PaintingStyle.stroke;
+
+    // Center pentagon
+    final centerPent = _createPolygonPath(Offset.zero, radius * 0.36, 5);
+    canvas.drawPath(centerPent, pentPaint);
+
+    // 5 surrounding panel patches + seams
+    for (int i = 0; i < 5; i++) {
+      final a = (i * 2 * math.pi / 5) - math.pi / 2;
+      final p1 = Offset(math.cos(a) * radius * 0.34, math.sin(a) * radius * 0.34);
+      final p2 = Offset(math.cos(a) * radius * 0.78, math.sin(a) * radius * 0.78);
+      canvas.drawLine(p1, p2, seamPaint);
+      canvas.drawCircle(p2, radius * 0.18, pentPaint);
+    }
+    canvas.restore();
+
+    // Crisp rim outline
+    canvas.drawCircle(
+      Offset.zero,
+      radius,
+      Paint()
+        ..color = Colors.white.withValues(alpha: 0.85)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.4,
+    );
+
+    canvas.restore();
+  }
+
+  Path _createPolygonPath(Offset center, double r, int sides) {
+    final path = Path();
+    for (int i = 0; i < sides; i++) {
+      final a = (i * 2 * math.pi / sides) - math.pi / 2;
+      final pt = Offset(center.dx + math.cos(a) * r, center.dy + math.sin(a) * r);
+      if (i == 0) {
+        path.moveTo(pt.dx, pt.dy);
+      } else {
+        path.lineTo(pt.dx, pt.dy);
+      }
+    }
+    path.close();
+    return path;
+  }
+
+  @override
+  bool shouldRepaint(covariant _Penalty3DArenaPainter oldDelegate) => true;
 }

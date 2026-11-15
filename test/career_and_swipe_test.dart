@@ -38,26 +38,29 @@ void main() {
       expect(provider.maxStages, 10);
       expect(provider.currentClub, isNotNull);
       expect(provider.currentOffers.length, 2);
+      // Penalty does not appear before signing a transfer
+      expect(provider.hasPendingPenalty, isFalse);
 
-      // Play through all 10 stages to jubilee retirement, taking penalty shots along the way
+      // Play through all 10 stages to jubilee retirement; penalties trigger after signing transfers
       for (int i = 0; i < provider.maxStages; i++) {
-        expect(provider.hasPendingPenalty, isTrue);
-        final penResult = provider.takeSeasonPenalty(PenaltyCorner.topLeft);
-        expect(penResult, isNotNull);
-        expect(provider.hasPendingPenalty, isFalse);
-
         final nextClub = provider.currentOffers.first;
         provider.selectTransferDecision(nextClub);
+
+        if (!provider.isCareerFinished && provider.hasPendingPenalty) {
+          final penResult = provider.takeSeasonPenalty(PenaltyCorner.topLeft);
+          expect(penResult, isNotNull);
+          expect(provider.hasPendingPenalty, isFalse);
+        }
       }
 
-      // After 10 decisions, career must be finished
+      // After 10 decisions, career must be finished and at least 1 penalty triggered
       expect(provider.isCareerFinished, isTrue);
       final summary = provider.finalSummary;
       expect(summary, isNotNull);
       expect(summary!.playerName, 'Mehmet Ali');
       expect(summary.totalMatches, greaterThan(220));
       expect(summary.totalGoals, greaterThan(40));
-      expect(summary.penaltiesTaken, 10);
+      expect(summary.penaltiesTaken, greaterThanOrEqualTo(1));
       expect(summary.careerRating, inInclusiveRange(82, 99));
       expect(summary.clubsPlayed.isNotEmpty, isTrue);
       expect(summary.legacyTitle.isNotEmpty, isTrue);
