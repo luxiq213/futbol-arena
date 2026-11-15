@@ -72,54 +72,35 @@ class _CareerSetupScreenState extends State<CareerSetupScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Header Card
+              // Compact Top Header Strip
               Container(
-                padding: const EdgeInsets.all(14),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
                 decoration: BoxDecoration(
-                  color: AppColors.surface.withValues(alpha: 0.85),
-                  borderRadius: BorderRadius.circular(14),
+                  color: AppColors.surface.withValues(alpha: 0.88),
+                  borderRadius: BorderRadius.circular(11),
                   border: Border.all(color: AppColors.borderGreen.withValues(alpha: 0.4)),
                 ),
-                child: Row(
+                child: const Row(
                   children: [
-                    Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        color: AppColors.darkGreen,
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: AppColors.pitchGreen, width: 1.2),
-                      ),
-                      child: const Center(
-                        child: Icon(Icons.stars_outlined, color: AppColors.gold, size: 24),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    const Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Kendi Futbol Efsaneni Yarat',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w800,
-                              color: Colors.white,
-                            ),
-                          ),
-                          SizedBox(height: 2),
-                          Text(
-                            'Altyapıdan zirveye 10 dönemde ilerle, penaltı anlarında kaderini belirle, kupaları topla!',
-                            style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
-                          ),
-                        ],
+                    Icon(Icons.stars_outlined, color: AppColors.gold, size: 17),
+                    SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Altyapıdan zirveye 10 dönem ilerle • İstatistikler jübilede açılır',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textSecondary,
+                        ),
                       ),
                     ),
                   ],
                 ),
               ),
 
-              const SizedBox(height: 20),
+              const SizedBox(height: 12),
 
               // 1. Oyuncu Adı
               const Text(

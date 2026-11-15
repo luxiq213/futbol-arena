@@ -57,47 +57,35 @@ class _PartySetupScreenState extends State<PartySetupScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    // Mode Information Card
+                    // Compact Mode Information Strip
                     Container(
-                      padding: const EdgeInsets.all(14),
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
                       decoration: BoxDecoration(
                         color: AppColors.surface,
-                        borderRadius: BorderRadius.circular(14),
+                        borderRadius: BorderRadius.circular(11),
                         border: Border.all(color: AppColors.border),
                       ),
                       child: const Row(
                         children: [
-                          Icon(Icons.alarm, color: AppColors.gold, size: 28),
-                          SizedBox(width: 14),
+                          Icon(Icons.alarm, color: AppColors.gold, size: 17),
+                          SizedBox(width: 8),
                           Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Arkadaşlarla Yan Yana Oynanış',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.w700,
-                                    fontSize: 14,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                                SizedBox(height: 4),
-                                Text(
-                                  '3-2-1 sayımından sonra Takım × Takım veya Takım × Ülke eşleşmesi belirir. Sırası gelen oyuncu süre bitmeden ortak futbolcuyu sesli olarak söyler.',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: AppColors.textSecondary,
-                                    height: 1.3,
-                                  ),
-                                ),
-                              ],
+                            child: Text(
+                              '3-2-1 sayımı sonrası süre bitmeden ortak futbolcuyu sesli söyle!',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.textSecondary,
+                              ),
                             ),
                           ),
                         ],
                       ),
                     ),
 
-                    const SizedBox(height: 18),
+                    const SizedBox(height: 12),
 
                     // Pair Format Selector (Takım × Takım | Takım × Ülke | Karışık)
                     const Text(

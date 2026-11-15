@@ -127,50 +127,53 @@ class FootballGridScreen extends StatelessWidget {
                       ),
                     ),
 
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 7),
 
-                    // Grid Info Card
+                    // Compact Grid Info Strip
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
                       decoration: BoxDecoration(
                         color: AppColors.surface.withValues(alpha: 0.90),
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(10),
                         border: Border.all(color: AppColors.border),
                       ),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                            child: Row(
                               children: [
                                 Text(
                                   grid.challenge.title.toUpperCase(),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                   style: const TextStyle(
-                                    fontSize: 11,
+                                    fontSize: 10.5,
                                     fontWeight: FontWeight.w800,
-                                    letterSpacing: 0.6,
                                     color: AppColors.gold,
                                   ),
                                 ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  '${grid.solvedCount} / 9 Hücre Tamamlandı • ${difficulty.label} Mod',
-                                  style: const TextStyle(
-                                    fontSize: 11.5,
-                                    color: AppColors.textSecondary,
+                                const SizedBox(width: 6),
+                                Flexible(
+                                  child: Text(
+                                    '• ${grid.solvedCount}/9 Hücre (${difficulty.label})',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                      fontSize: 10.5,
+                                      color: AppColors.textSecondary,
+                                    ),
                                   ),
                                 ),
                               ],
                             ),
                           ),
+                          const SizedBox(width: 6),
                           Text(
                             '${grid.score} Puan',
                             style: const TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w800,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w900,
                               color: AppColors.gold,
                             ),
                           ),
@@ -178,7 +181,7 @@ class FootballGridScreen extends StatelessWidget {
                       ),
                     ),
 
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 8),
 
                     // Opponent Thinking Indicator
                     if (grid.isOpponentThinking)

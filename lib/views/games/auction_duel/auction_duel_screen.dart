@@ -91,11 +91,11 @@ class AuctionDuelScreen extends StatelessWidget {
                             opponent: game.effectiveOpponent,
                             opponentScore: game.opponentScore,
                           ),
-                          const SizedBox(height: 12),
+                          const SizedBox(height: 8),
 
-                          // 2. Auction Category Card
+                          // 2. Compact Auction Category Card
                           Container(
-                            padding: const EdgeInsets.all(14),
+                            padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 8),
                             decoration: BoxDecoration(
                               gradient: const LinearGradient(
                                 begin: Alignment.topLeft,
@@ -105,10 +105,10 @@ class AuctionDuelScreen extends StatelessWidget {
                                   Color(0xFF0A2116),
                                 ],
                               ),
-                              borderRadius: BorderRadius.circular(15),
+                              borderRadius: BorderRadius.circular(12),
                               border: Border.all(
                                 color: AppColors.gold.withValues(alpha: 0.65),
-                                width: 1.3,
+                                width: 1.1,
                               ),
                             ),
                             child: Column(
@@ -118,21 +118,21 @@ class AuctionDuelScreen extends StatelessWidget {
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
                                     Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                       decoration: BoxDecoration(
                                         color: AppColors.gold.withValues(alpha: 0.18),
-                                        borderRadius: BorderRadius.circular(6),
+                                        borderRadius: BorderRadius.circular(5),
                                         border: Border.all(color: AppColors.gold.withValues(alpha: 0.5)),
                                       ),
                                       child: Row(
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
-                                          const Icon(Icons.gavel_rounded, size: 12, color: AppColors.gold),
+                                          const Icon(Icons.gavel_rounded, size: 11, color: AppColors.gold),
                                           const SizedBox(width: 4),
                                           Text(
                                             cat.badge,
                                             style: const TextStyle(
-                                              fontSize: 9.5,
+                                              fontSize: 9,
                                               fontWeight: FontWeight.w800,
                                               color: AppColors.gold,
                                             ),
@@ -143,28 +143,30 @@ class AuctionDuelScreen extends StatelessWidget {
                                     Text(
                                       'Havuz: ${cat.validPlayers.length} Yıldız',
                                       style: const TextStyle(
-                                        fontSize: 10.5,
+                                        fontSize: 9.8,
                                         fontWeight: FontWeight.w700,
                                         color: AppColors.greenLight,
                                       ),
                                     ),
                                   ],
                                 ),
-                                const SizedBox(height: 8),
+                                const SizedBox(height: 4),
                                 Text(
                                   cat.title,
                                   style: const TextStyle(
-                                    fontSize: 15.5,
+                                    fontSize: 13.5,
                                     fontWeight: FontWeight.w900,
                                     color: Colors.white,
-                                    height: 1.2,
+                                    height: 1.15,
                                   ),
                                 ),
-                                const SizedBox(height: 4),
+                                const SizedBox(height: 2),
                                 Text(
                                   cat.subtitle,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
                                   style: const TextStyle(
-                                    fontSize: 11.5,
+                                    fontSize: 10.5,
                                     color: AppColors.textSecondary,
                                   ),
                                 ),
@@ -172,7 +174,7 @@ class AuctionDuelScreen extends StatelessWidget {
                             ),
                           ),
 
-                          const SizedBox(height: 12),
+                          const SizedBox(height: 8),
 
                           // 3. Phase-Specific Body
                           if (game.phase == AuctionPhase.bidding)

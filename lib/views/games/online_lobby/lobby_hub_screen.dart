@@ -105,55 +105,59 @@ class _LobbyHubScreenState extends State<LobbyHubScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // 0. Online League Draft Lobby (18-20 Teams, Friend Invites + Auto AI Bots)
+              // 0. Compact Online League Draft Lobby Banner (18-20 Teams, Friend Invites + Auto AI Bots)
               Container(
-                padding: const EdgeInsets.all(15),
+                padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 9),
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
                     colors: [Color(0xFF1E3A8A), Color(0xFF0A141E)],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(12),
                   border: Border.all(
                     color: AppColors.gold.withValues(alpha: 0.65),
-                    width: 1.3,
+                    width: 1.1,
                   ),
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                child: Row(
                   children: [
-                    const Row(
-                      children: [
-                        Icon(Icons.emoji_events_rounded, color: AppColors.gold, size: 20),
-                        SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            'Online Lig Draft Lobisi (18-20 Takım • Tam Sezon)',
+                    const Icon(Icons.emoji_events_rounded, color: AppColors.gold, size: 18),
+                    const SizedBox(width: 8),
+                    const Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Online Lig Draft (18-20 Takım)',
                             style: TextStyle(
-                              fontSize: 14,
+                              fontSize: 12.5,
                               fontWeight: FontWeight.w900,
                               color: Colors.white,
                             ),
                           ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 5),
-                    const Text(
-                      'Gerçek futbol ligi formatında (Süper Lig 18 Takım / 34 Hafta veya Avrupa Devleri 20 Takım / 38 Hafta) arkadaşlarını davet et; kalan koltukları AI Kulüpler doldursun!',
-                      style: TextStyle(
-                        fontSize: 11.5,
-                        color: AppColors.textSecondary,
-                        height: 1.35,
+                          Text(
+                            'Arkadaş davet et, kalan koltuklar AI Bot olsun',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 10,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    const SizedBox(height: 12),
-                    CustomButton(
-                      text: 'Lig Draft Lobisini Aç',
-                      icon: Icons.hub_rounded,
-                      backgroundColor: AppColors.gold,
-                      textColor: AppColors.background,
+                    const SizedBox(width: 8),
+                    ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.gold,
+                        foregroundColor: AppColors.background,
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(9)),
+                      ),
                       onPressed: () {
                         Navigator.of(context).push(
                           MaterialPageRoute(
@@ -161,12 +165,17 @@ class _LobbyHubScreenState extends State<LobbyHubScreen> {
                           ),
                         );
                       },
+                      icon: const Icon(Icons.hub_rounded, size: 13),
+                      label: const Text(
+                        'Lobi Aç',
+                        style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w900),
+                      ),
                     ),
                   ],
                 ),
               ),
 
-              const SizedBox(height: 14),
+              const SizedBox(height: 10),
 
               // 1. Select Which Game Mode to Play in Duel
               Container(

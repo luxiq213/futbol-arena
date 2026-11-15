@@ -16,19 +16,19 @@ class ClubCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.all(isCompact ? 10 : 16),
+      padding: EdgeInsets.all(isCompact ? 8 : 11),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: club.primaryColor.withValues(alpha: 0.5),
-          width: 1.5,
+          width: 1.2,
         ),
         boxShadow: [
           BoxShadow(
-            color: club.primaryColor.withValues(alpha: 0.15),
-            blurRadius: 16,
-            offset: const Offset(0, 4),
+            color: club.primaryColor.withValues(alpha: 0.12),
+            blurRadius: 12,
+            offset: const Offset(0, 3),
           ),
         ],
       ),
@@ -38,10 +38,10 @@ class ClubCard extends StatelessWidget {
           // Geometric Shield Crest
           ClubCrestWidget(
             club: club,
-            size: isCompact ? 50 : 66,
+            size: isCompact ? 40 : 46,
           ),
 
-          SizedBox(height: isCompact ? 8 : 12),
+          SizedBox(height: isCompact ? 5 : 7),
 
           // Club Full Name (up to 2 lines so long names never get truncated)
           Text(
@@ -50,13 +50,13 @@ class ClubCard extends StatelessWidget {
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
-              fontSize: isCompact ? 13 : 15,
+              fontSize: isCompact ? 12 : 13,
               height: 1.15,
               fontWeight: FontWeight.w800,
               color: AppColors.textPrimary,
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 3),
 
           // League & Country pill
           Container(

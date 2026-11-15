@@ -68,7 +68,7 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             // Compact Top Header sitting directly under the phone status bar
             Padding(
-              padding: const EdgeInsets.fromLTRB(14, 4, 14, 6),
+              padding: const EdgeInsets.fromLTRB(14, 2, 14, 4),
               child: _buildCompactTopBar(user, loc),
             ),
 
@@ -132,7 +132,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final currentTitle = tabTitles[_activeTab.clamp(0, tabTitles.length - 1)];
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
@@ -140,18 +140,11 @@ class _HomeScreenState extends State<HomeScreen> {
             const Color(0xFF071A12).withValues(alpha: 0.94),
           ],
         ),
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(11),
         border: Border.all(
-          color: AppColors.borderGreen.withValues(alpha: 0.48),
-          width: 1.0,
+          color: AppColors.borderGreen.withValues(alpha: 0.45),
+          width: 0.9,
         ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.28),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
-          ),
-        ],
       ),
       child: Row(
         children: [
@@ -160,12 +153,12 @@ class _HomeScreenState extends State<HomeScreen> {
             onTap: () => _onFooterTabTapped(2),
             child: PlayerAvatarWidget(
               avatarKey: user?.avatar ?? 'goat_10',
-              size: 36,
+              size: 28,
               borderColor: AppColors.pitchGreen,
-              borderWidth: 1.3,
+              borderWidth: 1.1,
             ),
           ),
-          const SizedBox(width: 9),
+          const SizedBox(width: 7),
           Expanded(
             child: GestureDetector(
               onTap: () => _onFooterTabTapped(2),
@@ -178,14 +171,14 @@ class _HomeScreenState extends State<HomeScreen> {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
-                      fontSize: 13.5,
+                      fontSize: 12,
                       fontWeight: FontWeight.w900,
                       color: Colors.white,
                       letterSpacing: -0.2,
-                      height: 1.15,
+                      height: 1.1,
                     ),
                   ),
-                  const SizedBox(height: 2),
+                  const SizedBox(height: 1),
                   Row(
                     children: [
                       Flexible(
@@ -194,7 +187,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
-                            fontSize: 10.5,
+                            fontSize: 9.5,
                             fontWeight: FontWeight.w700,
                             color: AppColors.greenLight,
                           ),
@@ -206,7 +199,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
-                          fontSize: 10,
+                          fontSize: 9.2,
                           color: AppColors.textSecondary,
                         ),
                       ),
@@ -216,15 +209,15 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
           ),
-          const SizedBox(width: 6),
+          const SizedBox(width: 5),
           // Language Switcher Pill
           GestureDetector(
             onTap: () => showLanguageSelectorSheet(context),
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 5),
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3.5),
               decoration: BoxDecoration(
                 color: Colors.white.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(7),
                 border: Border.all(
                   color: Colors.white.withValues(alpha: 0.22),
                   width: 0.8,
@@ -233,12 +226,12 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.language_rounded, size: 11, color: AppColors.greenLight),
-                  const SizedBox(width: 3),
+                  const Icon(Icons.language_rounded, size: 10.5, color: AppColors.greenLight),
+                  const SizedBox(width: 2.5),
                   Text(
                     loc.currentLanguage.shortCode,
                     style: const TextStyle(
-                      fontSize: 10,
+                      fontSize: 9.5,
                       fontWeight: FontWeight.w900,
                       color: Colors.white,
                     ),
@@ -247,17 +240,17 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
           ),
-          const SizedBox(width: 5),
+          const SizedBox(width: 4),
           // Ad-Free Single Purchase Badge
           GestureDetector(
             onTap: () => showAdFreePurchaseSheet(context),
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 5),
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3.5),
               decoration: BoxDecoration(
                 color: (user?.isAdFree ?? false)
                     ? AppColors.pitchGreen.withValues(alpha: 0.20)
                     : Colors.white.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(7),
                 border: Border.all(
                   color: (user?.isAdFree ?? false)
                       ? AppColors.pitchGreen.withValues(alpha: 0.55)
@@ -270,14 +263,14 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   Icon(
                     (user?.isAdFree ?? false) ? Icons.verified_rounded : Icons.block_flipped,
-                    size: 11,
+                    size: 10.5,
                     color: (user?.isAdFree ?? false) ? AppColors.greenLight : AppColors.gold,
                   ),
-                  const SizedBox(width: 3),
+                  const SizedBox(width: 2.5),
                   Text(
                     (user?.isAdFree ?? false) ? loc.t('pro_badge') : loc.t('ad_free_badge'),
                     style: TextStyle(
-                      fontSize: 9.5,
+                      fontSize: 9,
                       fontWeight: FontWeight.w800,
                       color: (user?.isAdFree ?? false) ? AppColors.greenLight : Colors.white,
                     ),
@@ -286,26 +279,26 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
           ),
-          const SizedBox(width: 5),
+          const SizedBox(width: 4),
           // Right: Gold XP Badge
           GestureDetector(
             onTap: () => _onFooterTabTapped(1),
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 5),
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3.5),
               decoration: BoxDecoration(
                 color: AppColors.gold.withValues(alpha: 0.14),
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(7),
                 border: Border.all(color: AppColors.gold.withValues(alpha: 0.45), width: 0.8),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.star_rounded, size: 12, color: AppColors.gold),
+                  const Icon(Icons.star_rounded, size: 11, color: AppColors.gold),
                   const SizedBox(width: 2),
                   Text(
                     '${user?.points ?? 0}',
                     style: const TextStyle(
-                      fontSize: 10.5,
+                      fontSize: 10,
                       fontWeight: FontWeight.w900,
                       color: AppColors.gold,
                     ),

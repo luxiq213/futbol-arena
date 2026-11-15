@@ -67,87 +67,80 @@ class PartyGameScreen extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: Column(
                   children: [
-                    // Active Player Turn Banner
+                    // Compact Active Player Turn Banner
                     if (curPlayer != null)
                       Container(
-                        padding: const EdgeInsets.all(12),
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
                         decoration: BoxDecoration(
                           color: AppColors.surface.withValues(alpha: 0.90),
-                          borderRadius: BorderRadius.circular(14),
+                          borderRadius: BorderRadius.circular(11),
                           border: Border.all(
                             color: curPlayer.isEliminated ? AppColors.border : AppColors.gold,
-                            width: 1.2,
+                            width: 1.0,
                           ),
                         ),
                         child: Row(
                           children: [
                             Container(
-                              width: 36,
-                              height: 36,
+                              width: 28,
+                              height: 28,
                               decoration: BoxDecoration(
                                 color: AppColors.pitchGreen,
-                                borderRadius: BorderRadius.circular(8),
+                                borderRadius: BorderRadius.circular(7),
                               ),
                               child: Center(
                                 child: Text(
                                   curPlayer.avatar,
                                   style: const TextStyle(
-                                    fontSize: 12,
+                                    fontSize: 10.5,
                                     fontWeight: FontWeight.w800,
                                     color: AppColors.gold,
                                   ),
                                 ),
                               ),
                             ),
-                            const SizedBox(width: 12),
+                            const SizedBox(width: 9),
                             Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                              child: Row(
                                 children: [
                                   const Text(
-                                    'SIRADAKİ OYUNCU',
+                                    'SIRA:',
                                     style: TextStyle(
-                                      fontSize: 10,
-                                      letterSpacing: 1.0,
-                                      fontWeight: FontWeight.w700,
+                                      fontSize: 9.5,
+                                      fontWeight: FontWeight.w800,
                                       color: AppColors.gold,
                                     ),
                                   ),
-                                  Text(
-                                    curPlayer.name,
-                                    style: const TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w800,
-                                      color: Colors.white,
+                                  const SizedBox(width: 5),
+                                  Flexible(
+                                    child: Text(
+                                      curPlayer.name,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(
+                                        fontSize: 13.5,
+                                        fontWeight: FontWeight.w800,
+                                        color: Colors.white,
+                                      ),
                                     ),
                                   ),
                                 ],
                               ),
                             ),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                const Text(
-                                  'Kalan Can',
-                                  style: TextStyle(fontSize: 10, color: AppColors.textMuted),
+                            Row(
+                              children: List.generate(
+                                curPlayer.lives,
+                                (_) => const Padding(
+                                  padding: EdgeInsets.symmetric(horizontal: 1),
+                                  child: Icon(Icons.favorite, size: 13, color: AppColors.error),
                                 ),
-                                const SizedBox(height: 2),
-                                Row(
-                                  children: List.generate(
-                                    curPlayer.lives,
-                                    (_) => const Padding(
-                                      padding: EdgeInsets.symmetric(horizontal: 1),
-                                      child: Icon(Icons.favorite, size: 14, color: AppColors.error),
-                                    ),
-                                  ),
-                                ),
-                              ],
+                              ),
                             ),
                           ],
                         ),
                       ),
 
-                    const SizedBox(height: 14),
+                    const SizedBox(height: 8),
 
                     // Timer Dial
                     _buildTimerRing(provider),

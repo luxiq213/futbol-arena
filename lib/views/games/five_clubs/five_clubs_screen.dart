@@ -92,55 +92,44 @@ class FiveClubsScreen extends StatelessWidget {
                       const SizedBox(height: 12),
                     ],
 
-                    // Challenge Objective Card
+                    // Compact Challenge Objective Strip
                     Container(
-                      padding: const EdgeInsets.all(14),
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
                       decoration: BoxDecoration(
                         color: AppColors.surface.withValues(alpha: 0.90),
-                        borderRadius: BorderRadius.circular(14),
+                        borderRadius: BorderRadius.circular(10),
                         border: Border.all(color: AppColors.border),
                       ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                      child: Row(
                         children: [
-                          Row(
-                            children: [
-                              const Icon(Icons.military_tech_outlined, color: AppColors.gold, size: 18),
-                              const SizedBox(width: 8),
-                              Text(
-                                game.isDuelMode
-                                    ? 'DÜELLO GÖREVİ: RAKİPTEN FAZLA KULÜP TUTTUR'
-                                    : 'KENDİNİ SINA: MAKSİMUM KULÜP EŞLEŞMESİ',
-                                style: const TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w700,
-                                  letterSpacing: 0.8,
-                                  color: AppColors.gold,
-                                ),
+                          const Icon(Icons.military_tech_outlined, color: AppColors.gold, size: 16),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Text(
+                              game.isDuelMode
+                                  ? '5 kulübün en çoğunda oynamış futbolcuyu bul (Düello)'
+                                  : '5 kulübün en çoğunda forma giymiş ortak futbolcuyu tahmin et',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.textSecondary,
                               ),
-                            ],
-                          ),
-                          const SizedBox(height: 6),
-                          const Text(
-                            'Aşağıdaki 5 kulübün en çoğunda forma giymiş ortak futbolcuyu tahmin et.',
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: AppColors.textSecondary,
-                              height: 1.4,
                             ),
                           ),
                         ],
                       ),
                     ),
 
-                    const SizedBox(height: 14),
+                    const SizedBox(height: 9),
 
                     // 5 Clubs Display in a 3 + 2 Formation Layout with Full Team Names
                     Container(
-                      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 10),
+                      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
                       decoration: BoxDecoration(
                         color: AppColors.surface.withValues(alpha: 0.92),
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(14),
                         border: Border.all(color: AppColors.border),
                       ),
                       child: Column(

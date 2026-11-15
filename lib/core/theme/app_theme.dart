@@ -20,11 +20,11 @@ class AppTheme {
         scrolledUnderElevation: 0,
         elevation: 0,
         centerTitle: false,
-        titleSpacing: 4,
-        toolbarHeight: 48,
-        iconTheme: const IconThemeData(color: Colors.white, size: 20),
+        titleSpacing: 2,
+        toolbarHeight: 36,
+        iconTheme: const IconThemeData(color: Colors.white, size: 18),
         titleTextStyle: GoogleFonts.inter(
-          fontSize: 14.5,
+          fontSize: 13,
           fontWeight: FontWeight.w800,
           color: Colors.white,
           letterSpacing: -0.2,
@@ -32,7 +32,7 @@ class AppTheme {
         shape: Border(
           bottom: BorderSide(
             color: AppColors.borderGreen.withValues(alpha: 0.42),
-            width: 0.9,
+            width: 0.8,
           ),
         ),
       ),

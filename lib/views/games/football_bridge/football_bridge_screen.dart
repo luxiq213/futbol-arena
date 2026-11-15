@@ -99,63 +99,42 @@ class FootballBridgeScreen extends StatelessWidget {
                             const SizedBox(height: 10),
                           ],
 
-                          // Challenge Banner
+                          // Compact Challenge Banner
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 10),
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
                             decoration: BoxDecoration(
                               color: AppColors.surface.withValues(alpha: 0.92),
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: BorderRadius.circular(10),
                               border: Border.all(color: AppColors.borderGreen.withValues(alpha: 0.5)),
                             ),
                             child: Row(
                               children: [
-                                Container(
-                                  width: 34,
-                                  height: 34,
-                                  decoration: BoxDecoration(
-                                    color: AppColors.darkGreen,
-                                    borderRadius: BorderRadius.circular(9),
-                                    border: Border.all(color: AppColors.pitchGreen),
-                                  ),
-                                  child: const Center(
-                                    child: Icon(Icons.hub_outlined, color: AppColors.gold, size: 18),
-                                  ),
-                                ),
-                                const SizedBox(width: 10),
+                                const Icon(Icons.hub_outlined, color: AppColors.gold, size: 16),
+                                const SizedBox(width: 7),
                                 Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        ch.title,
-                                        style: const TextStyle(
-                                          fontSize: 13,
-                                          fontWeight: FontWeight.w800,
-                                          color: Colors.white,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 2),
-                                      Text(
-                                        'Ortak oynadıkları kulüpler üzerinden iki yıldızı birbirine bağla.',
-                                        style: const TextStyle(
-                                          fontSize: 10.5,
-                                          color: AppColors.textSecondary,
-                                        ),
-                                      ),
-                                    ],
+                                  child: Text(
+                                    '${ch.title} • Ortak kulüplerle bağla',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                      fontSize: 11.5,
+                                      fontWeight: FontWeight.w800,
+                                      color: Colors.white,
+                                    ),
                                   ),
                                 ),
+                                const SizedBox(width: 6),
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
                                   decoration: BoxDecoration(
                                     color: AppColors.gold.withValues(alpha: 0.15),
-                                    borderRadius: BorderRadius.circular(8),
+                                    borderRadius: BorderRadius.circular(6),
                                     border: Border.all(color: AppColors.gold.withValues(alpha: 0.5)),
                                   ),
                                   child: Text(
-                                    'Optimal: ${ch.optimalIntermediateCount} Oyuncu',
+                                    'Hedef: ${ch.optimalIntermediateCount} Adım',
                                     style: const TextStyle(
-                                      fontSize: 10,
+                                      fontSize: 9.5,
                                       fontWeight: FontWeight.w800,
                                       color: AppColors.gold,
                                     ),
@@ -165,7 +144,7 @@ class FootballBridgeScreen extends StatelessWidget {
                             ),
                           ),
 
-                          const SizedBox(height: 12),
+                          const SizedBox(height: 8),
 
                           // 1. START PLAYER NODE
                           _buildEndpointPlayerCard(

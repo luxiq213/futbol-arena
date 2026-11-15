@@ -100,10 +100,10 @@ class CommonPlayerScreen extends StatelessWidget {
 
                           // Pair Format Switcher Bar (Takım × Takım | Takım × Ülke | Karışık)
                           Container(
-                            padding: const EdgeInsets.all(4),
+                            padding: const EdgeInsets.all(3),
                             decoration: BoxDecoration(
                               color: AppColors.surface.withValues(alpha: 0.90),
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: BorderRadius.circular(10),
                               border: Border.all(color: AppColors.border),
                             ),
                             child: Row(
@@ -119,15 +119,15 @@ class CommonPlayerScreen extends StatelessWidget {
                                     onTap: () => game.setPairFormat(mode),
                                     child: AnimatedContainer(
                                       duration: const Duration(milliseconds: 180),
-                                      padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 4),
+                                      padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 4),
                                       decoration: BoxDecoration(
                                         color: isSelected
                                             ? AppColors.pitchGreen.withValues(alpha: 0.28)
                                             : Colors.transparent,
-                                        borderRadius: BorderRadius.circular(9),
+                                        borderRadius: BorderRadius.circular(8),
                                         border: Border.all(
                                           color: isSelected ? AppColors.pitchGreen : Colors.transparent,
-                                          width: 1.1,
+                                          width: 1.0,
                                         ),
                                       ),
                                       child: Row(
@@ -135,7 +135,7 @@ class CommonPlayerScreen extends StatelessWidget {
                                         children: [
                                           Icon(
                                             modeIcon,
-                                            size: 13,
+                                            size: 12,
                                             color: isSelected ? AppColors.gold : AppColors.textMuted,
                                           ),
                                           const SizedBox(width: 4),
@@ -145,7 +145,7 @@ class CommonPlayerScreen extends StatelessWidget {
                                               maxLines: 1,
                                               overflow: TextOverflow.ellipsis,
                                               style: TextStyle(
-                                                fontSize: 11,
+                                                fontSize: 10.5,
                                                 fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
                                                 color: isSelected ? Colors.white : AppColors.textSecondary,
                                               ),
@@ -160,7 +160,7 @@ class CommonPlayerScreen extends StatelessWidget {
                             ),
                           ),
 
-                          const SizedBox(height: 12),
+                          const SizedBox(height: 8),
 
                           // Two Clubs / Club x Country Versus Display
                           if (clubA != null && clubB != null)
@@ -168,9 +168,9 @@ class CommonPlayerScreen extends StatelessWidget {
                               children: [
                                 Expanded(child: ClubCard(club: clubA)),
                                 Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                                  padding: const EdgeInsets.symmetric(horizontal: 6),
                                   child: Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                                    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
                                     decoration: BoxDecoration(
                                       color: isClubVsCountry
                                           ? AppColors.pitchGreen.withValues(alpha: 0.22)
@@ -187,17 +187,17 @@ class CommonPlayerScreen extends StatelessWidget {
                                           isClubVsCountry
                                               ? Icons.public_rounded
                                               : Icons.compare_arrows_rounded,
-                                          size: 14,
+                                          size: 13,
                                           color: AppColors.gold,
                                         ),
-                                        const SizedBox(height: 2),
+                                        const SizedBox(height: 1),
                                         Text(
                                           isClubVsCountry ? 'ÜLKE' : 'VS',
                                           style: const TextStyle(
                                             color: AppColors.gold,
                                             fontWeight: FontWeight.w800,
-                                            fontSize: 10,
-                                            letterSpacing: 0.8,
+                                            fontSize: 9.5,
+                                            letterSpacing: 0.6,
                                           ),
                                         ),
                                       ],
@@ -208,73 +208,58 @@ class CommonPlayerScreen extends StatelessWidget {
                               ],
                             ),
 
-                          const SizedBox(height: 14),
+                          const SizedBox(height: 8),
 
-                          // Target info card
+                          // Compact Target info strip
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
                             decoration: BoxDecoration(
                               color: AppColors.surface.withValues(alpha: 0.90),
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: BorderRadius.circular(10),
                               border: Border.all(color: AppColors.border),
                             ),
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                  child: Row(
                                     children: [
-                                      Row(
-                                        children: [
-                                          Container(
-                                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
-                                            decoration: BoxDecoration(
-                                              color: isClubVsCountry
-                                                  ? AppColors.pitchGreen.withValues(alpha: 0.22)
-                                                  : AppColors.gold.withValues(alpha: 0.16),
-                                              borderRadius: BorderRadius.circular(5),
-                                            ),
-                                            child: Text(
-                                              isClubVsCountry ? 'TAKIM × ÜLKE' : 'TAKIM × TAKIM',
-                                              style: TextStyle(
-                                                fontSize: 8.5,
-                                                fontWeight: FontWeight.w800,
-                                                color: isClubVsCountry ? AppColors.greenLight : AppColors.gold,
-                                              ),
-                                            ),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+                                        decoration: BoxDecoration(
+                                          color: isClubVsCountry
+                                              ? AppColors.pitchGreen.withValues(alpha: 0.22)
+                                              : AppColors.gold.withValues(alpha: 0.16),
+                                          borderRadius: BorderRadius.circular(4),
+                                        ),
+                                        child: Text(
+                                          isClubVsCountry ? 'TAKIM×ÜLKE' : 'ORTAK OYUNCU',
+                                          style: TextStyle(
+                                            fontSize: 8.5,
+                                            fontWeight: FontWeight.w800,
+                                            color: isClubVsCountry ? AppColors.greenLight : AppColors.gold,
                                           ),
-                                          const SizedBox(width: 6),
-                                          Flexible(
-                                            child: Text(
-                                              '${clubA?.name} × ${clubB?.name}',
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
-                                              style: const TextStyle(
-                                                fontSize: 13,
-                                                fontWeight: FontWeight.w700,
-                                                color: Colors.white,
-                                              ),
-                                            ),
-                                          ),
-                                        ],
+                                        ),
                                       ),
-                                      const SizedBox(height: 3),
-                                      Text(
-                                        isClubVsCountry
-                                            ? '${clubA?.name} forması giymiş ${clubB?.name} vatandaşı ${game.totalPossible} futbolcu bulunuyor'
-                                            : 'Tarihte her iki kulüpte oynamış ${game.totalPossible} ortak futbolcu bulunuyor',
-                                        style: const TextStyle(
-                                          fontSize: 11,
-                                          color: AppColors.textMuted,
+                                      const SizedBox(width: 6),
+                                      Flexible(
+                                        child: Text(
+                                          '${clubA?.name} × ${clubB?.name} (${game.totalPossible} futbolcu)',
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: const TextStyle(
+                                            fontSize: 11.5,
+                                            fontWeight: FontWeight.w700,
+                                            color: Colors.white,
+                                          ),
                                         ),
                                       ),
                                     ],
                                   ),
                                 ),
-                                const SizedBox(width: 8),
+                                const SizedBox(width: 6),
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                                   decoration: BoxDecoration(
                                     color: game.isAllFound
                                         ? AppColors.pitchGreen

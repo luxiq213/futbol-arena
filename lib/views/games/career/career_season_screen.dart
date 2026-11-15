@@ -174,55 +174,54 @@ class _CareerSeasonScreenState extends State<CareerSeasonScreen> {
       body: StadiumBackground(
         showFieldLines: true,
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // 1. Career Progress Header Bar (Age, Stage, Mystery Stats Notice)
-              _buildProgressHeader(provider),
+              // 1. Unified Compact Career & Current Club Top HUD Bar
+              _buildUnifiedTopHud(provider, currentClub),
 
-              const SizedBox(height: 10),
+              const SizedBox(height: 6),
 
-              // 2. Current Club Card with Hidden Stats (??? GOL, ??? ASİST, ??? KUPA)
-              _buildCurrentClubBanner(currentClub),
-
-              const SizedBox(height: 10),
-
-              // 3. Mystery Season Diary Card (Stats remain secret until Jubilee)
+              // 2. Slim 1-Line Mystery Season Strip (Stats remain secret until Jubilee)
               _buildMysterySeasonDiaryCard(provider, lastHighlight),
 
-              const SizedBox(height: 14),
+              const SizedBox(height: 10),
 
-              // 4. Transfer Window Section Header
+              // 3. Transfer Window Section Header
               Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Container(
-                    width: 4,
-                    height: 16,
-                    decoration: BoxDecoration(
-                      color: AppColors.pitchGreen,
-                      borderRadius: BorderRadius.circular(2),
-                    ),
+                  Row(
+                    children: [
+                      Container(
+                        width: 3.5,
+                        height: 13,
+                        decoration: BoxDecoration(
+                          color: AppColors.pitchGreen,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      const Text(
+                        'TRANSFER MASASI • TEKLİFLER',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 0.6,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 8),
                   const Text(
-                    'TRANSFER MASASI • TEKLİFLER',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 0.8,
-                      color: Colors.white,
-                    ),
+                    'İmza sonrası sürpriz penaltı şansı',
+                    style: TextStyle(fontSize: 10, color: AppColors.textMuted),
                   ),
                 ],
               ),
-              const SizedBox(height: 4),
-              const Text(
-                'Sözleşme imzaladıktan sonra sezon içinde sürpriz kritik maç penaltıları çıkabilir:',
-                style: TextStyle(fontSize: 11.5, color: AppColors.textSecondary),
-              ),
 
-              const SizedBox(height: 10),
+              const SizedBox(height: 8),
 
               // Offer 1 Card
               if (offers.isNotEmpty)
@@ -262,189 +261,120 @@ class _CareerSeasonScreenState extends State<CareerSeasonScreen> {
     );
   }
 
-  Widget _buildProgressHeader(CareerGameProvider provider) {
+  Widget _buildUnifiedTopHud(CareerGameProvider provider, ClubModel club) {
     final stageProgress = (provider.currentStageIndex + 1) / provider.maxStages;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
       decoration: BoxDecoration(
-        color: AppColors.surface.withValues(alpha: 0.92),
+        gradient: LinearGradient(
+          colors: [
+            AppColors.surface.withValues(alpha: 0.94),
+            AppColors.darkGreen.withValues(alpha: 0.55),
+          ],
+        ),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.borderGreen.withValues(alpha: 0.42)),
+        border: Border.all(color: AppColors.borderGreen.withValues(alpha: 0.45)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
+              ClubCrestWidget(club: club, size: 32),
+              const SizedBox(width: 9),
               Expanded(
-                child: Row(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                      decoration: BoxDecoration(
-                        color: AppColors.pitchGreen.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(6),
-                        border: Border.all(color: AppColors.pitchGreen, width: 0.8),
-                      ),
-                      child: Text(
-                        '${provider.currentAge} YAŞ',
-                        style: const TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.greenLight,
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+                          decoration: BoxDecoration(
+                            color: AppColors.pitchGreen.withValues(alpha: 0.22),
+                            borderRadius: BorderRadius.circular(4),
+                            border: Border.all(color: AppColors.pitchGreen, width: 0.7),
+                          ),
+                          child: Text(
+                            '${provider.currentAge} YAŞ • ${provider.currentStageIndex + 1}/${provider.maxStages}',
+                            style: const TextStyle(
+                              fontSize: 9,
+                              fontWeight: FontWeight.w800,
+                              color: AppColors.greenLight,
+                            ),
+                          ),
                         ),
-                      ),
+                        const SizedBox(width: 5),
+                        Flexible(
+                          child: Text(
+                            club.name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w800,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 8),
-                    Flexible(
-                      child: Text(
-                        provider.currentStageTitle,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 12.5,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white,
-                        ),
+                    const SizedBox(height: 1.5),
+                    Text(
+                      '${club.country} • ${club.league} • ${provider.currentStageTitle}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 9.8,
+                        color: AppColors.textSecondary,
                       ),
                     ),
                   ],
                 ),
               ),
-              Text(
-                'Dönem ${provider.currentStageIndex + 1}/${provider.maxStages}',
-                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: AppColors.gold),
+              const SizedBox(width: 6),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.35),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: AppColors.gold.withValues(alpha: 0.45)),
+                ),
+                child: const Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      '??? GOL • ??? AST',
+                      style: TextStyle(
+                        fontSize: 9.2,
+                        fontWeight: FontWeight.w900,
+                        color: AppColors.greenLight,
+                      ),
+                    ),
+                    Text(
+                      '??? KUPA (Gizli)',
+                      style: TextStyle(
+                        fontSize: 9,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.gold,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 5),
           ClipRRect(
-            borderRadius: BorderRadius.circular(4),
+            borderRadius: BorderRadius.circular(3),
             child: LinearProgressIndicator(
               value: stageProgress.clamp(0.0, 1.0),
-              minHeight: 5,
+              minHeight: 3,
               backgroundColor: AppColors.surfaceLight,
               valueColor: const AlwaysStoppedAnimation<Color>(AppColors.pitchGreen),
-            ),
-          ),
-          const SizedBox(height: 8),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Row(
-                children: [
-                  Icon(Icons.lock_clock_outlined, size: 13, color: AppColors.gold),
-                  SizedBox(width: 5),
-                  Text(
-                    'İstatistikler & Kupalar: Jübilede Açıklanır',
-                    style: TextStyle(
-                      fontSize: 10.5,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.gold,
-                    ),
-                  ),
-                ],
-              ),
-              Text(
-                '${provider.careerClubsHistory.length} Kulüp',
-                style: const TextStyle(
-                  fontSize: 10.5,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.greenLight,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCurrentClubBanner(ClubModel club) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            AppColors.surface.withValues(alpha: 0.92),
-            AppColors.darkGreen.withValues(alpha: 0.55),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.borderGreen.withValues(alpha: 0.45)),
-      ),
-      child: Row(
-        children: [
-          ClubCrestWidget(club: club, size: 50),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'MEVCUT KULÜBÜN',
-                  style: TextStyle(
-                    fontSize: 9.5,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 0.8,
-                    color: AppColors.pitchGreen,
-                  ),
-                ),
-                Text(
-                  club.name,
-                  style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w800,
-                    color: Colors.white,
-                  ),
-                ),
-                Text(
-                  '${club.country} • ${club.league}',
-                  style: const TextStyle(
-                    fontSize: 11,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-            decoration: BoxDecoration(
-              color: Colors.black.withValues(alpha: 0.35),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: AppColors.gold.withValues(alpha: 0.45)),
-            ),
-            child: const Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(
-                  '??? GOL',
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w900,
-                    color: AppColors.greenLight,
-                  ),
-                ),
-                Text(
-                  '??? ASİST',
-                  style: TextStyle(
-                    fontSize: 10.5,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white,
-                  ),
-                ),
-                Text(
-                  '??? KUPA',
-                  style: TextStyle(
-                    fontSize: 10.5,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.gold,
-                  ),
-                ),
-              ],
             ),
           ),
         ],
@@ -454,148 +384,56 @@ class _CareerSeasonScreenState extends State<CareerSeasonScreen> {
 
   Widget _buildMysterySeasonDiaryCard(CareerGameProvider provider, String? highlight) {
     final lastRes = provider.lastPenaltyResult;
+    final statusText = lastRes != null
+        ? lastRes.commentary
+        : (highlight != null && highlight.isNotEmpty
+            ? highlight
+            : 'Sezon gol, asist ve kupa kayıtların gizli tutuluyor (Jübilede açılır)');
 
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: AppColors.surface.withValues(alpha: 0.88),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.borderGreen.withValues(alpha: 0.38)),
+        color: AppColors.surface.withValues(alpha: 0.86),
+        borderRadius: BorderRadius.circular(9),
+        border: Border.all(
+          color: lastRes != null
+              ? (lastRes.isGoal ? AppColors.pitchGreen : AppColors.error).withValues(alpha: 0.5)
+              : AppColors.borderGreen.withValues(alpha: 0.35),
+        ),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
-          Row(
-            children: [
-              const Icon(Icons.visibility_off_outlined, size: 15, color: AppColors.gold),
-              const SizedBox(width: 6),
-              const Text(
-                'GİZLİ SEZON KAYDI',
-                style: TextStyle(
-                  fontSize: 10.5,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 0.8,
-                  color: AppColors.gold,
-                ),
-              ),
-              const Spacer(),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-                decoration: BoxDecoration(
-                  color: AppColors.pitchGreen.withValues(alpha: 0.16),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: const Text(
-                  'Kariyer Sonunda Açılır',
-                  style: TextStyle(
-                    fontSize: 9.5,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.greenLight,
-                  ),
-                ),
-              ),
-            ],
+          Icon(
+            lastRes != null
+                ? (lastRes.isGoal ? Icons.sports_soccer : Icons.info_outline)
+                : Icons.visibility_off_outlined,
+            size: 13,
+            color: lastRes != null
+                ? (lastRes.isGoal ? AppColors.greenLight : Colors.redAccent)
+                : AppColors.gold,
           ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              _buildHiddenMetric('MAÇ', '???'),
-              const SizedBox(width: 14),
-              _buildHiddenMetric('GOL', '???'),
-              const SizedBox(width: 14),
-              _buildHiddenMetric('ASİST', '???'),
-              const SizedBox(width: 14),
-              _buildHiddenMetric('KUPA', '???'),
-            ],
-          ),
-          if (lastRes != null) ...[
-            const SizedBox(height: 8),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
-              decoration: BoxDecoration(
-                color: (lastRes.isGoal ? AppColors.pitchGreen : AppColors.error).withValues(alpha: 0.16),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                  color: (lastRes.isGoal ? AppColors.pitchGreen : AppColors.error).withValues(alpha: 0.5),
-                ),
-              ),
-              child: Row(
-                children: [
-                  Icon(
-                    lastRes.isGoal ? Icons.sports_soccer : Icons.info_outline,
-                    size: 14,
-                    color: lastRes.isGoal ? AppColors.greenLight : Colors.redAccent,
-                  ),
-                  const SizedBox(width: 6),
-                  Expanded(
-                    child: Text(
-                      lastRes.commentary,
-                      style: TextStyle(
-                        fontSize: 10.5,
-                        fontWeight: FontWeight.w600,
-                        color: lastRes.isGoal ? AppColors.greenLight : Colors.redAccent,
-                      ),
-                    ),
-                  ),
-                ],
+          const SizedBox(width: 6),
+          Expanded(
+            child: Text(
+              statusText,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w600,
+                color: lastRes != null
+                    ? (lastRes.isGoal ? AppColors.greenLight : Colors.redAccent)
+                    : AppColors.textSecondary,
               ),
             ),
-          ] else if (highlight != null && highlight.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Colors.black.withValues(alpha: 0.3),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.auto_awesome_outlined, size: 14, color: AppColors.gold),
-                  const SizedBox(width: 6),
-                  Expanded(
-                    child: Text(
-                      highlight,
-                      style: const TextStyle(
-                        fontSize: 11,
-                        color: AppColors.textSecondary,
-                        fontStyle: FontStyle.italic,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _buildHiddenMetric(String label, String value) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.28),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
+          ),
+          const SizedBox(width: 6),
           Text(
-            value,
+            '${provider.careerClubsHistory.length} Kulüp',
             style: const TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w900,
+              fontSize: 9.5,
+              fontWeight: FontWeight.w800,
               color: AppColors.gold,
-            ),
-          ),
-          Text(
-            label,
-            style: const TextStyle(
-              fontSize: 8.5,
-              fontWeight: FontWeight.w700,
-              color: AppColors.textMuted,
             ),
           ),
         ],
