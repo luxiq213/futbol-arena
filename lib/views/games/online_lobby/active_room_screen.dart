@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../data/models/grid_challenge_model.dart';
 import '../../../../data/models/play_mode_model.dart';
 import '../../../../providers/auth_provider.dart';
 import '../../../../providers/online_room_provider.dart';
@@ -15,7 +16,12 @@ import '../football_bridge/football_bridge_screen.dart';
 import '../football_grid/football_grid_screen.dart';
 
 class ActiveRoomScreen extends StatelessWidget {
-  const ActiveRoomScreen({super.key});
+  final GridThemeType initialGridTheme;
+
+  const ActiveRoomScreen({
+    super.key,
+    this.initialGridTheme = GridThemeType.mixed,
+  });
 
   void _launchRoomDuel(BuildContext context, GameTargetType targetGame, OpponentProfile friendOpponent) {
     Widget destination;
@@ -36,6 +42,7 @@ class ActiveRoomScreen extends StatelessWidget {
         destination = FootballGridScreen(
           playMode: PlayModeType.friendInvite,
           opponent: friendOpponent,
+          initialTheme: initialGridTheme,
         );
         break;
       case GameTargetType.footballBridge:

@@ -39,7 +39,9 @@ class AuctionDuelScreen extends StatelessWidget {
           if (cat == null) {
             return const Scaffold(
               backgroundColor: AppColors.background,
-              body: Center(child: CircularProgressIndicator()),
+              body: Center(
+                child: CircularProgressIndicator(color: AppColors.pitchGreen),
+              ),
             );
           }
 
@@ -47,30 +49,39 @@ class AuctionDuelScreen extends StatelessWidget {
             backgroundColor: AppColors.background,
             extendBodyBehindAppBar: true,
             appBar: AppBar(
-              title: const Text('Açık Artırma Düellosu'),
+              title: Text(
+                game.isDuelMode ? 'Açık Artırma • 1v1 Düello' : 'Açık Artırma • Kendini Sına',
+              ),
               actions: [
-                Container(
-                  margin: const EdgeInsets.only(right: 16),
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: AppColors.surface,
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: AppColors.border),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.star_outline, color: AppColors.gold, size: 14),
-                      const SizedBox(width: 4),
-                      Text(
-                        '${game.score} Puan',
-                        style: const TextStyle(
-                          color: AppColors.gold,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 12,
+                if (!game.isDuelMode)
+                  Container(
+                    margin: const EdgeInsets.only(right: 8),
+                    padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: AppColors.surface,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: AppColors.gold.withValues(alpha: 0.5)),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.star_rounded, size: 13, color: AppColors.gold),
+                        const SizedBox(width: 3),
+                        Text(
+                          '${game.score} P',
+                          style: const TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w800,
+                            color: AppColors.gold,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
+                IconButton(
+                  tooltip: 'Yeni Kategori',
+                  icon: const Icon(Icons.refresh, color: AppColors.gold, size: 18),
+                  onPressed: game.startNewRound,
                 ),
               ],
             ),
@@ -83,19 +94,21 @@ class AuctionDuelScreen extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          // 1. Live Scoreboard
-                          DuelScoreboardBanner(
-                            userName: user?.username ?? 'Kaptan',
-                            userAvatar: user?.avatar ?? 'goat_10',
-                            userScore: game.score,
-                            opponent: game.effectiveOpponent,
-                            opponentScore: game.opponentScore,
-                          ),
-                          const SizedBox(height: 8),
+                          // 1. Live Scoreboard ONLY in Duel Mode (Online / Friend)
+                          if (game.isDuelMode) ...[
+                            DuelScoreboardBanner(
+                              userName: user?.username ?? 'Kaptan',
+                              userAvatar: user?.avatar ?? 'goat_10',
+                              userScore: game.score,
+                              opponent: game.effectiveOpponent,
+                              opponentScore: game.opponentScore,
+                            ),
+                            const SizedBox(height: 8),
+                          ],
 
                           // 2. Compact Auction Category Card
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 8),
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                             decoration: BoxDecoration(
                               gradient: const LinearGradient(
                                 begin: Alignment.topLeft,
@@ -105,7 +118,7 @@ class AuctionDuelScreen extends StatelessWidget {
                                   Color(0xFF0A2116),
                                 ],
                               ),
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: BorderRadius.circular(13),
                               border: Border.all(
                                 color: AppColors.gold.withValues(alpha: 0.65),
                                 width: 1.1,
@@ -150,11 +163,11 @@ class AuctionDuelScreen extends StatelessWidget {
                                     ),
                                   ],
                                 ),
-                                const SizedBox(height: 4),
+                                const SizedBox(height: 5),
                                 Text(
                                   cat.title,
                                   style: const TextStyle(
-                                    fontSize: 13.5,
+                                    fontSize: 14,
                                     fontWeight: FontWeight.w900,
                                     color: Colors.white,
                                     height: 1.15,
@@ -163,7 +176,7 @@ class AuctionDuelScreen extends StatelessWidget {
                                 const SizedBox(height: 2),
                                 Text(
                                   cat.subtitle,
-                                  maxLines: 1,
+                                  maxLines: 2,
                                   overflow: TextOverflow.ellipsis,
                                   style: const TextStyle(
                                     fontSize: 10.5,
@@ -174,7 +187,7 @@ class AuctionDuelScreen extends StatelessWidget {
                             ),
                           ),
 
-                          const SizedBox(height: 8),
+                          const SizedBox(height: 10),
 
                           // 3. Phase-Specific Body
                           if (game.phase == AuctionPhase.bidding)
@@ -202,6 +215,83 @@ class AuctionDuelScreen extends StatelessWidget {
   }
 
   Widget _buildBiddingPhaseView(AuctionDuelGameProvider game) {
+    if (!game.isDuelMode) {
+      // SOLO MODE: No AI opponent! User sets their own target count and starts proving.
+      return Container(
+        padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
+        decoration: BoxDecoration(
+          color: AppColors.surface.withValues(alpha: 0.94),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: AppColors.pitchGreen,
+            width: 1.3,
+          ),
+        ),
+        child: Column(
+          children: [
+            const Text(
+              'KENDİNİ SINA • HEDEF İDDİANI BELİRLE',
+              style: TextStyle(
+                fontSize: 10.5,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 0.8,
+                color: AppColors.greenLight,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                IconButton(
+                  onPressed: game.currentBid > 1 ? () => game.adjustSoloTarget(-1) : null,
+                  icon: const Icon(Icons.remove_circle_outline_rounded, size: 28, color: AppColors.gold),
+                ),
+                const SizedBox(width: 10),
+                Column(
+                  children: [
+                    Text(
+                      '${game.currentBid}',
+                      style: const TextStyle(
+                        fontSize: 40,
+                        fontWeight: FontWeight.w900,
+                        color: AppColors.gold,
+                        height: 1.0,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    const Text(
+                      'FUTBOLCU SAYARIM!',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(width: 10),
+                IconButton(
+                  onPressed: game.currentBid < game.maxPossibleBid
+                      ? () => game.adjustSoloTarget(1)
+                      : null,
+                  icon: const Icon(Icons.add_circle_outline_rounded, size: 28, color: AppColors.gold),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Hedefin yükseldikçe kazanacağın puan ve süre (${24 + game.currentBid * 4} sn) artar!',
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 11,
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
     final isUserHolding = game.bidHolder == BidHolder.user;
 
     return Column(
@@ -209,13 +299,13 @@ class AuctionDuelScreen extends StatelessWidget {
       children: [
         // Central Bid Counter Dial
         Container(
-          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
           decoration: BoxDecoration(
             color: AppColors.surface.withValues(alpha: 0.94),
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(14),
             border: Border.all(
               color: isUserHolding ? AppColors.pitchGreen : AppColors.gold,
-              width: 1.5,
+              width: 1.3,
             ),
           ),
           child: Column(
@@ -223,13 +313,13 @@ class AuctionDuelScreen extends StatelessWidget {
               const Text(
                 'MASADAKİ GÜNCEL İDDİA',
                 style: TextStyle(
-                  fontSize: 10.5,
+                  fontSize: 10,
                   fontWeight: FontWeight.w800,
-                  letterSpacing: 1.0,
+                  letterSpacing: 0.8,
                   color: AppColors.textMuted,
                 ),
               ),
-              const SizedBox(height: 6),
+              const SizedBox(height: 4),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.baseline,
@@ -238,7 +328,7 @@ class AuctionDuelScreen extends StatelessWidget {
                   Text(
                     '${game.currentBid}',
                     style: const TextStyle(
-                      fontSize: 42,
+                      fontSize: 38,
                       fontWeight: FontWeight.w900,
                       color: AppColors.gold,
                     ),
@@ -247,7 +337,7 @@ class AuctionDuelScreen extends StatelessWidget {
                   const Text(
                     'FUTBOLCU SAYARIM!',
                     style: TextStyle(
-                      fontSize: 14,
+                      fontSize: 13.5,
                       fontWeight: FontWeight.w800,
                       color: Colors.white,
                     ),
@@ -278,7 +368,7 @@ class AuctionDuelScreen extends StatelessWidget {
           ),
         ),
 
-        const SizedBox(height: 12),
+        const SizedBox(height: 10),
 
         // Bidding Log History
         Container(
@@ -347,17 +437,17 @@ class AuctionDuelScreen extends StatelessWidget {
       children: [
         // Timer & Target Progress Banner
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           decoration: BoxDecoration(
             color: AppColors.surface.withValues(alpha: 0.94),
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: AppColors.gold, width: 1.4),
+            borderRadius: BorderRadius.circular(13),
+            border: Border.all(color: AppColors.gold, width: 1.2),
           ),
           child: Row(
             children: [
               Container(
-                width: 48,
-                height: 48,
+                width: 44,
+                height: 44,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: game.proveSecondsLeft <= 8
@@ -365,21 +455,21 @@ class AuctionDuelScreen extends StatelessWidget {
                       : AppColors.darkGreen,
                   border: Border.all(
                     color: game.proveSecondsLeft <= 8 ? AppColors.error : AppColors.gold,
-                    width: 2,
+                    width: 1.8,
                   ),
                 ),
                 child: Center(
                   child: Text(
                     '${game.proveSecondsLeft}s',
                     style: TextStyle(
-                      fontSize: 14,
+                      fontSize: 13.5,
                       fontWeight: FontWeight.w900,
                       color: game.proveSecondsLeft <= 8 ? AppColors.error : AppColors.gold,
                     ),
                   ),
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 10),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -387,16 +477,18 @@ class AuctionDuelScreen extends StatelessWidget {
                     const Text(
                       'İDDİANI KANITLAMA ZAMANI!',
                       style: TextStyle(
-                        fontSize: 11,
+                        fontSize: 10.5,
                         fontWeight: FontWeight.w800,
                         color: AppColors.gold,
                       ),
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      'Rakibin "Kanıtla!" dedi. Süre dolmadan ${game.currentBid} doğru futbolcuyu yaz!',
+                      game.isDuelMode
+                          ? 'Rakibin "Kanıtla!" dedi. Süre dolmadan ${game.currentBid} doğru futbolcuyu yaz!'
+                          : 'Süre dolmadan bu kategorideki ${game.currentBid} doğru futbolcuyu yaz!',
                       style: const TextStyle(
-                        fontSize: 11,
+                        fontSize: 10.5,
                         color: AppColors.textSecondary,
                       ),
                     ),
@@ -413,7 +505,7 @@ class AuctionDuelScreen extends StatelessWidget {
                 child: Text(
                   '${game.foundPlayers.length} / ${game.currentBid}',
                   style: const TextStyle(
-                    fontSize: 14,
+                    fontSize: 13.5,
                     fontWeight: FontWeight.w900,
                     color: Colors.white,
                   ),
@@ -423,7 +515,7 @@ class AuctionDuelScreen extends StatelessWidget {
           ),
         ),
 
-        const SizedBox(height: 12),
+        const SizedBox(height: 10),
 
         if (game.lastFeedback != null)
           Container(
@@ -455,7 +547,7 @@ class AuctionDuelScreen extends StatelessWidget {
           },
         ),
 
-        const SizedBox(height: 12),
+        const SizedBox(height: 10),
 
         // Found Players List
         if (game.foundPlayers.isNotEmpty)
@@ -577,7 +669,7 @@ class AuctionDuelScreen extends StatelessWidget {
             borderRadius: BorderRadius.circular(14),
             border: Border.all(
               color: won ? AppColors.pitchGreen : AppColors.error,
-              width: 1.4,
+              width: 1.3,
             ),
           ),
           child: Column(
@@ -676,6 +768,52 @@ class AuctionDuelScreen extends StatelessWidget {
       child: Builder(
         builder: (context) {
           if (game.phase == AuctionPhase.bidding) {
+            if (!game.isDuelMode) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: CustomButton(
+                          text: '-1 Azalt',
+                          height: 40,
+                          backgroundColor: AppColors.surfaceLight,
+                          textColor: Colors.white,
+                          icon: Icons.remove_rounded,
+                          onPressed: game.currentBid > 1
+                              ? () => game.adjustSoloTarget(-1)
+                              : null,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: CustomButton(
+                          text: '+1 Artır',
+                          height: 40,
+                          backgroundColor: AppColors.surfaceLight,
+                          textColor: AppColors.greenLight,
+                          icon: Icons.add_rounded,
+                          onPressed: game.currentBid < game.maxPossibleBid
+                              ? () => game.adjustSoloTarget(1)
+                              : null,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  CustomButton(
+                    text: 'Süreyi Başlat & Kanıtla (${game.currentBid} Futbolcu)',
+                    height: 46,
+                    backgroundColor: AppColors.pitchGreen,
+                    textColor: Colors.white,
+                    icon: Icons.play_arrow_rounded,
+                    onPressed: game.startSoloProving,
+                  ),
+                ],
+              );
+            }
+
             return Column(
               mainAxisSize: MainAxisSize.min,
               children: [

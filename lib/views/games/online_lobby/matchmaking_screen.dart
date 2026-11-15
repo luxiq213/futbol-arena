@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../data/models/grid_challenge_model.dart';
 import '../../../../data/models/play_mode_model.dart';
 import '../../../../providers/auth_provider.dart';
 import '../../widgets/custom_button.dart';
@@ -16,12 +17,14 @@ class MatchmakingScreen extends StatefulWidget {
   final GameTargetType targetGame;
   final GameDifficulty difficulty;
   final CommonPlayerPairMode commonPlayerPairFormat;
+  final GridThemeType gridTheme;
 
   const MatchmakingScreen({
     super.key,
     required this.targetGame,
     this.difficulty = GameDifficulty.medium,
     this.commonPlayerPairFormat = CommonPlayerPairMode.clubVsClub,
+    this.gridTheme = GridThemeType.mixed,
   });
 
   @override
@@ -97,6 +100,7 @@ class _MatchmakingScreenState extends State<MatchmakingScreen> {
           playMode: PlayModeType.onlineMatchmaking,
           difficulty: widget.difficulty,
           opponent: opponent,
+          initialTheme: widget.gridTheme,
         );
         break;
       case GameTargetType.footballBridge:

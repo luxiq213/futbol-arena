@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../data/models/grid_challenge_model.dart';
 import '../../../../data/models/play_mode_model.dart';
 import '../../../../providers/auth_provider.dart';
 import '../../../../providers/online_room_provider.dart';
@@ -27,6 +28,7 @@ class LobbyHubScreen extends StatefulWidget {
 class _LobbyHubScreenState extends State<LobbyHubScreen> {
   final TextEditingController _codeController = TextEditingController();
   late GameTargetType _selectedGame;
+  GridThemeType _selectedGridTheme = GridThemeType.mixed;
 
   @override
   void initState() {
@@ -49,7 +51,9 @@ class _LobbyHubScreenState extends State<LobbyHubScreen> {
     await roomProvider.createRoom(user, targetGame: _selectedGame);
     if (!mounted) return;
     Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const ActiveRoomScreen()),
+      MaterialPageRoute(
+        builder: (_) => ActiveRoomScreen(initialGridTheme: _selectedGridTheme),
+      ),
     );
   }
 
@@ -68,7 +72,9 @@ class _LobbyHubScreenState extends State<LobbyHubScreen> {
 
     if (success) {
       Navigator.of(context).push(
-        MaterialPageRoute(builder: (_) => const ActiveRoomScreen()),
+        MaterialPageRoute(
+          builder: (_) => ActiveRoomScreen(initialGridTheme: _selectedGridTheme),
+        ),
       );
     } else {
       AppNotification.show(
@@ -84,7 +90,10 @@ class _LobbyHubScreenState extends State<LobbyHubScreen> {
   void _onStartQuickMatchmaking() {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => MatchmakingScreen(targetGame: _selectedGame),
+        builder: (_) => MatchmakingScreen(
+          targetGame: _selectedGame,
+          gridTheme: _selectedGridTheme,
+        ),
       ),
     );
   }
@@ -230,6 +239,52 @@ class _LobbyHubScreenState extends State<LobbyHubScreen> {
                         }).toList(),
                       ),
                     ),
+                    if (_selectedGame == GameTargetType.footballGrid) ...[
+                      const SizedBox(height: 10),
+                      const Text(
+                        'GRİD KATEGORİSİ SEÇİMİ:',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 0.7,
+                          color: AppColors.gold,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          children: GridThemeType.values.map((theme) {
+                            final isSelected = _selectedGridTheme == theme;
+                            return GestureDetector(
+                              onTap: () => setState(() => _selectedGridTheme = theme),
+                              child: Container(
+                                margin: const EdgeInsets.only(right: 6),
+                                padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 10),
+                                decoration: BoxDecoration(
+                                  color: isSelected
+                                      ? AppColors.gold.withValues(alpha: 0.16)
+                                      : AppColors.surfaceLight,
+                                  borderRadius: BorderRadius.circular(9),
+                                  border: Border.all(
+                                    color: isSelected ? AppColors.gold : AppColors.border,
+                                    width: isSelected ? 1.3 : 0.8,
+                                  ),
+                                ),
+                                child: Text(
+                                  theme.label,
+                                  style: TextStyle(
+                                    fontSize: 10.5,
+                                    fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                                    color: isSelected ? AppColors.gold : AppColors.textSecondary,
+                                  ),
+                                ),
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
+import '../../data/models/grid_challenge_model.dart';
 import '../../data/models/play_mode_model.dart';
 import '../games/auction_duel/auction_duel_screen.dart';
 import '../games/common_player/common_player_screen.dart';
@@ -37,6 +38,7 @@ class GameModeSelectorSheet extends StatefulWidget {
 class _GameModeSelectorSheetState extends State<GameModeSelectorSheet> {
   GameDifficulty _selectedDifficulty = GameDifficulty.medium;
   CommonPlayerPairMode _selectedPairFormat = CommonPlayerPairMode.clubVsClub;
+  GridThemeType _selectedGridTheme = GridThemeType.mixed;
 
   void _launchSolo(BuildContext context) {
     Navigator.of(context).pop();
@@ -59,6 +61,7 @@ class _GameModeSelectorSheetState extends State<GameModeSelectorSheet> {
         destination = FootballGridScreen(
           playMode: PlayModeType.solo,
           difficulty: _selectedDifficulty,
+          initialTheme: _selectedGridTheme,
         );
         break;
       case GameTargetType.footballBridge:
@@ -87,6 +90,7 @@ class _GameModeSelectorSheetState extends State<GameModeSelectorSheet> {
           targetGame: widget.targetGame,
           difficulty: _selectedDifficulty,
           commonPlayerPairFormat: _selectedPairFormat,
+          gridTheme: _selectedGridTheme,
         ),
       ),
     );
@@ -131,8 +135,9 @@ class _GameModeSelectorSheetState extends State<GameModeSelectorSheet> {
             ],
           ),
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-          border: Border(
-            top: BorderSide(color: AppColors.pitchGreen.withValues(alpha: 0.65), width: 1.4),
+          border: Border.all(
+            color: AppColors.pitchGreen.withValues(alpha: 0.60),
+            width: 1.2,
           ),
         ),
         child: SingleChildScrollView(
@@ -306,6 +311,74 @@ class _GameModeSelectorSheetState extends State<GameModeSelectorSheet> {
                   ),
                 ],
               ),
+            ),
+            const SizedBox(height: 12),
+          ],
+
+          // If FootballGrid (3x3), show Grid Concept Selector: Karışık | Dev Kulüpler | Milli Takım | Kupalar
+          if (widget.targetGame == GameTargetType.footballGrid) ...[
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'TABLO KATEGORİ KONSEPTİ (3x3 GRİD)',
+                  style: TextStyle(
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 0.8,
+                    color: AppColors.greenLight,
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: AppColors.pitchGreen.withValues(alpha: 0.20),
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(color: AppColors.pitchGreen.withValues(alpha: 0.6), width: 0.8),
+                  ),
+                  child: Text(
+                    _selectedGridTheme.label,
+                    style: const TextStyle(
+                      fontSize: 8.5,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.greenLight,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: GridThemeType.values.map((theme) {
+                final isSelected = _selectedGridTheme == theme;
+                return GestureDetector(
+                  onTap: () => setState(() => _selectedGridTheme = theme),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 160),
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? AppColors.pitchGreen.withValues(alpha: 0.26)
+                          : AppColors.surface.withValues(alpha: 0.90),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color: isSelected ? AppColors.gold : AppColors.border,
+                        width: isSelected ? 1.2 : 0.9,
+                      ),
+                    ),
+                    child: Text(
+                      theme.label,
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                        color: isSelected ? Colors.white : AppColors.textSecondary,
+                      ),
+                    ),
+                  ),
+                );
+              }).toList(),
             ),
             const SizedBox(height: 12),
           ],

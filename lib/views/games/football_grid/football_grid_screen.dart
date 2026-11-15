@@ -15,12 +15,14 @@ class FootballGridScreen extends StatelessWidget {
   final PlayModeType playMode;
   final GameDifficulty difficulty;
   final OpponentProfile? opponent;
+  final GridThemeType initialTheme;
 
   const FootballGridScreen({
     super.key,
     this.playMode = PlayModeType.solo,
     this.difficulty = GameDifficulty.medium,
     this.opponent,
+    this.initialTheme = GridThemeType.mixed,
   });
 
   @override
@@ -33,6 +35,7 @@ class FootballGridScreen extends StatelessWidget {
         playMode: playMode,
         difficulty: difficulty,
         opponent: opponent,
+        initialTheme: initialTheme,
       ),
       child: Consumer<FootballGridGameProvider>(
         builder: (context, grid, _) {
@@ -44,25 +47,25 @@ class FootballGridScreen extends StatelessWidget {
                 grid.isDuelMode ? 'Futbol Grid 3x3 • Düello' : 'Futbol Grid 3x3',
               ),
               actions: [
-                // Guesses Remaining Pill
                 Container(
-                  margin: const EdgeInsets.only(right: 16),
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  margin: const EdgeInsets.only(right: 12),
+                  padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
                   decoration: BoxDecoration(
                     color: AppColors.surface,
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(8),
                     border: Border.all(color: AppColors.border),
                   ),
                   child: Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.history_toggle_off, color: AppColors.gold, size: 14),
+                      const Icon(Icons.grid_view_rounded, color: AppColors.gold, size: 13),
                       const SizedBox(width: 4),
                       Text(
-                        '${grid.guessesRemaining} Hak',
+                        '${grid.solvedCount}/9 • ${grid.score} P',
                         style: const TextStyle(
                           color: AppColors.gold,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 12,
+                          fontWeight: FontWeight.w800,
+                          fontSize: 11,
                         ),
                       ),
                     ],
@@ -72,7 +75,7 @@ class FootballGridScreen extends StatelessWidget {
             ),
             body: StadiumBackground(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
@@ -86,52 +89,12 @@ class FootballGridScreen extends StatelessWidget {
                         opponentScore: grid.opponentScore,
                         centerSubtitle: 'HÜCRE: ${grid.userSolvedCount}-${grid.opponentSolvedCount}',
                       ),
-                      const SizedBox(height: 10),
+                      const SizedBox(height: 8),
                     ],
-
-                    // Grid Category / Variety Selector Row
-                    SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: Row(
-                        children: GridThemeType.values.map((theme) {
-                          final isSelected = grid.selectedTheme == theme;
-                          return Padding(
-                            padding: const EdgeInsets.only(right: 6),
-                            child: GestureDetector(
-                              onTap: () => grid.setGridTheme(theme),
-                              child: AnimatedContainer(
-                                duration: const Duration(milliseconds: 180),
-                                padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 6),
-                                decoration: BoxDecoration(
-                                  color: isSelected
-                                      ? AppColors.pitchGreen.withValues(alpha: 0.25)
-                                      : AppColors.surface.withValues(alpha: 0.85),
-                                  borderRadius: BorderRadius.circular(18),
-                                  border: Border.all(
-                                    color: isSelected ? AppColors.gold : AppColors.border,
-                                    width: isSelected ? 1.2 : 0.8,
-                                  ),
-                                ),
-                                child: Text(
-                                  theme.label,
-                                  style: TextStyle(
-                                    fontSize: 10.5,
-                                    fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-                                    color: isSelected ? Colors.white : AppColors.textSecondary,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          );
-                        }).toList(),
-                      ),
-                    ),
-
-                    const SizedBox(height: 7),
 
                     // Compact Grid Info Strip
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                       decoration: BoxDecoration(
                         color: AppColors.surface.withValues(alpha: 0.90),
                         borderRadius: BorderRadius.circular(10),
@@ -156,11 +119,11 @@ class FootballGridScreen extends StatelessWidget {
                                 const SizedBox(width: 6),
                                 Flexible(
                                   child: Text(
-                                    '• ${grid.solvedCount}/9 Hücre (${difficulty.label})',
+                                    '• ${grid.selectedTheme.label} (${difficulty.label})',
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                     style: const TextStyle(
-                                      fontSize: 10.5,
+                                      fontSize: 10,
                                       color: AppColors.textSecondary,
                                     ),
                                   ),
@@ -169,12 +132,31 @@ class FootballGridScreen extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(width: 6),
-                          Text(
-                            '${grid.score} Puan',
-                            style: const TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w900,
-                              color: AppColors.gold,
+                          InkWell(
+                            borderRadius: BorderRadius.circular(6),
+                            onTap: grid.startNewGrid,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: AppColors.pitchGreen.withValues(alpha: 0.2),
+                                borderRadius: BorderRadius.circular(6),
+                                border: Border.all(color: AppColors.pitchGreen.withValues(alpha: 0.6)),
+                              ),
+                              child: const Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.refresh_rounded, size: 11, color: AppColors.greenLight),
+                                  SizedBox(width: 3),
+                                  Text(
+                                    'Yeni Tablo',
+                                    style: TextStyle(
+                                      fontSize: 9.5,
+                                      fontWeight: FontWeight.w800,
+                                      color: AppColors.greenLight,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         ],

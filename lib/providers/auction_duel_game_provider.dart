@@ -48,6 +48,8 @@ class AuctionDuelGameProvider extends ChangeNotifier {
   String? _lastFeedback;
   bool _isSuccessFeedback = false;
 
+  bool get isDuelMode => playMode != PlayModeType.solo;
+
   AuctionCategory? get category => _category;
   AuctionPhase get phase => _phase;
   BidHolder get bidHolder => _bidHolder;
@@ -70,6 +72,7 @@ class AuctionDuelGameProvider extends ChangeNotifier {
       !_isWaitingOpponentBid &&
       _currentBid < maxPossibleBid;
   bool get canUserCallProve =>
+      isDuelMode &&
       _phase == AuctionPhase.bidding &&
       !_isWaitingOpponentBid &&
       _bidHolder == BidHolder.opponent;
@@ -90,12 +93,22 @@ class AuctionDuelGameProvider extends ChangeNotifier {
 
     _category = _db.getRandomAuctionCategory();
     _phase = AuctionPhase.bidding;
-    _bidHolder = BidHolder.opponent;
-    _currentBid = 2;
     _isWaitingOpponentBid = false;
     _foundPlayers.clear();
     _lastFeedback = null;
     _isSuccessFeedback = false;
+
+    if (!isDuelMode) {
+      // Solo "Kendini Sına" mode: No AI opponent! User picks their own target and proves it.
+      _bidHolder = BidHolder.user;
+      _currentBid = 5.clamp(1, maxPossibleBid);
+      _bidLog.clear();
+      notifyListeners();
+      return;
+    }
+
+    _bidHolder = BidHolder.opponent;
+    _currentBid = 2;
 
     switch (difficulty) {
       case GameDifficulty.easy:
@@ -118,8 +131,26 @@ class AuctionDuelGameProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// In Solo "Kendini Sına" mode, user adjusts their target claim before starting timer
+  void adjustSoloTarget(int delta) {
+    if (_phase != AuctionPhase.bidding) return;
+    _currentBid = (_currentBid + delta).clamp(1, maxPossibleBid);
+    GameFeedback.tick();
+    notifyListeners();
+  }
+
+  /// In Solo "Kendini Sına" mode, user starts proving their target claim against the clock
+  void startSoloProving() {
+    if (_phase != AuctionPhase.bidding) return;
+    _startProvingByUser();
+  }
+
   /// User raises the bid by [delta] (+1 or +2)
   void userRaiseBid(int delta) {
+    if (!isDuelMode) {
+      adjustSoloTarget(delta);
+      return;
+    }
     if (!canUserRaise) return;
     _currentBid = (_currentBid + delta).clamp(1, maxPossibleBid);
     _bidHolder = BidHolder.user;
@@ -136,7 +167,6 @@ class AuctionDuelGameProvider extends ChangeNotifier {
 
   void _processOpponentResponseToUserBid() {
     _isWaitingOpponentBid = false;
-    // Decide if opponent raises or calls "Kanıtla!"
     final shouldCallProve =
         _currentBid >= _opponentMaxCap || _currentBid >= maxPossibleBid;
 
@@ -171,7 +201,7 @@ class AuctionDuelGameProvider extends ChangeNotifier {
     _foundPlayers.clear();
     _proveSecondsLeft = 24 + (_currentBid * 4);
     _lastFeedback =
-        'Süre başladı! Kategoriye uyan $_currentBid futbolcuyu bul ve iddianı kanıtla!';
+        'Süre başladı! Kategoriye uyan $_currentBid futbolcuyu bul ve hedefini tamamla!';
     _isSuccessFeedback = true;
     GameFeedback.explode();
     notifyListeners();
@@ -242,9 +272,9 @@ class AuctionDuelGameProvider extends ChangeNotifier {
           ((130 + _currentBid * 35) * difficulty.pointsMultiplier).round();
       _score += reward;
       _didUserWinRound = true;
-      _roundSummaryTitle = 'İDDİANI KANITLADIN! (+$reward Puan)';
+      _roundSummaryTitle = 'HEDEFİNİ KANITLADIN! (+$reward Puan)';
       _roundSummarySubtitle =
-          '$_currentBid / $_currentBid doğru yıldızı süre dolmadan sayarak turu kazandın!';
+          '$_currentBid / $_currentBid doğru yıldızı süre dolmadan sayarak turu tamamladın!';
       _phase = AuctionPhase.roundSummary;
       notifyListeners();
       return true;
@@ -266,13 +296,22 @@ class AuctionDuelGameProvider extends ChangeNotifier {
   void _finishUserProvingFailed() {
     _proveSecondsLeft = 0;
     _didUserWinRound = false;
-    final oppReward =
-        ((120 + _currentBid * 25) * difficulty.pointsMultiplier).round();
-    _opponentScore += oppReward;
-    _roundSummaryTitle =
-        'İDDİA ÇÖKTÜ! (${_foundPlayers.length} / $_currentBid Bulundu)';
-    _roundSummarySubtitle =
-        'Hedeflediğin $_currentBid oyuncuyu tamamlayamadın. Puan ${effectiveOpponent.name} hanesine yazıldı.';
+    if (isDuelMode) {
+      final oppReward =
+          ((120 + _currentBid * 25) * difficulty.pointsMultiplier).round();
+      _opponentScore += oppReward;
+      _roundSummaryTitle =
+          'İDDİA ÇÖKTÜ! (${_foundPlayers.length} / $_currentBid Bulundu)';
+      _roundSummarySubtitle =
+          'Hedeflediğin $_currentBid oyuncuyu tamamlayamadın. Puan ${effectiveOpponent.name} hanesine yazıldı.';
+    } else {
+      final partialReward = (_foundPlayers.length * 15 * difficulty.pointsMultiplier).round();
+      _score += partialReward;
+      _roundSummaryTitle =
+          'SÜRE DOLDU! (${_foundPlayers.length} / $_currentBid Futbolcu Bulundu)';
+      _roundSummarySubtitle =
+          'Hedeflediğin $_currentBid oyuncuya ulaşamadın ama bildiğin ${_foundPlayers.length} isimden +$partialReward Puan kazandın!';
+    }
     _phase = AuctionPhase.roundSummary;
     GameFeedback.error();
     notifyListeners();
@@ -283,14 +322,11 @@ class AuctionDuelGameProvider extends ChangeNotifier {
     _foundPlayers.clear();
     notifyListeners();
 
-    // Determine how many players opponent actually remembers vs their bluff
     final pool = List<PlayerModel>.from(_category!.validPlayers)..shuffle(_random);
     int actualKnown;
     if (_currentBid <= _opponentMaxCap - 1) {
-      // Opponent was confident and knows enough
       actualKnown = _currentBid;
     } else {
-      // Opponent overextended or was pushed near cap — 65% chance they fall short by 1-2!
       final bluffed = _random.nextDouble() < 0.65;
       actualKnown = bluffed
           ? (_currentBid - 1 - _random.nextInt(2)).clamp(1, _currentBid - 1)

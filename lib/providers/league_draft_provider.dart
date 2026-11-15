@@ -82,6 +82,7 @@ class LeagueDraftProvider extends ChangeNotifier {
 
   final List<LeagueParticipant> _participants = [];
   int _activeParticipantIndex = 0;
+  int _selectedPitchSlotIndex = 0;
 
   // Current 3 random choices for the active participant
   List<ManagerOption> _currentManagerChoices = [];
@@ -118,6 +119,7 @@ class LeagueDraftProvider extends ChangeNotifier {
   List<LeagueParticipant> get participants => List.unmodifiable(_participants);
   int get activeParticipantIndex => _activeParticipantIndex;
   LeagueParticipant get activeParticipant => _participants[_activeParticipantIndex];
+  int get selectedPitchSlotIndex => _selectedPitchSlotIndex;
 
   List<ManagerOption> get currentManagerChoices => _currentManagerChoices;
   List<FormationOption> get currentFormationChoices => _currentFormationChoices;
@@ -128,6 +130,13 @@ class LeagueDraftProvider extends ChangeNotifier {
   LeagueMatchFixture? get latestSimulatedFixture => _latestSimulatedFixture;
   List<LeagueMatchFixture> get playedFixturesReverse =>
       _fixtures.where((f) => f.isPlayed).toList().reversed.toList();
+  List<LeagueMatchFixture> get userPlayedFixturesReverse => _fixtures
+      .where((f) =>
+          f.isPlayed &&
+          (!_participants[f.homeIndex].isBot || !_participants[f.awayIndex].isBot))
+      .toList()
+      .reversed
+      .toList();
   int get playedFixturesCount => _fixtures.where((f) => f.isPlayed).length;
   int get currentMatchday => _currentMatchday;
   int get totalMatchdays => _totalMatchdays;
@@ -284,7 +293,12 @@ class LeagueDraftProvider extends ChangeNotifier {
     }
   }
 
-  int get currentSlotIndex => activeParticipant.squad.length;
+  int get currentSlotIndex => _selectedPitchSlotIndex.clamp(0, 10);
+
+  void selectPitchSlot(int slotIndex) {
+    _selectedPitchSlotIndex = slotIndex.clamp(0, 10);
+    notifyListeners();
+  }
 
   String get currentNeededRole {
     final form = activeParticipant.formation;
@@ -292,6 +306,14 @@ class LeagueDraftProvider extends ChangeNotifier {
     final roles = form.draftSlotRoles;
     if (currentSlotIndex >= roles.length) return 'FWD';
     return roles[currentSlotIndex];
+  }
+
+  String get currentSpecificSlotLabel {
+    final form = activeParticipant.formation;
+    if (form == null) return 'OS';
+    final labels = form.specificSlotLabels;
+    if (currentSlotIndex >= labels.length) return 'SNT';
+    return labels[currentSlotIndex];
   }
 
   String get currentNeededRoleLabel {
@@ -459,6 +481,11 @@ class LeagueDraftProvider extends ChangeNotifier {
 
   void selectFormation(FormationOption formation) {
     activeParticipant.formation = formation;
+    for (int i = 0; i < 11; i++) {
+      activeParticipant.pitchSlots[i] = null;
+    }
+    activeParticipant.squad.clear();
+    _selectedPitchSlotIndex = 0;
     _spinNextHistoricalClubForActive();
     _phase = LeagueDraftPhase.pickPlayers;
     notifyListeners();
@@ -497,8 +524,7 @@ class LeagueDraftProvider extends ChangeNotifier {
     _usedPackIdsInCurrentTurn.add(chosenPack.id);
     _currentSpunClubPack = chosenPack;
 
-    // Build 3 choices from this historical club & year:
-    // Prefer players of the needed role first, then fill up to 3 from the same historical squad
+    // Build 5 choices from this historical club & year:
     final roleMatches = chosenPack.roster
         .where((p) => p.role == neededRole && !alreadyPickedIds.contains(p.id))
         .toList()
@@ -510,34 +536,111 @@ class LeagueDraftProvider extends ChangeNotifier {
       ..shuffle(_rng);
 
     final combined = <EraPlayerCandidate>[...roleMatches, ...othersInPack];
-    if (combined.length < 3) {
-      // Fallback if somehow already picked
-      for (final p in chosenPack.roster) {
-        if (!combined.contains(p)) combined.add(p);
+    for (final p in chosenPack.roster) {
+      if (!combined.any((c) => c.id == p.id)) {
+        combined.add(p);
       }
     }
 
-    _currentPlayerChoices = combined.take(3).toList();
+    // If this pack has fewer than 5 players, supplement from same club's other era packs or iconic club stars
+    if (combined.length < 5) {
+      final sameClubPlayers = allEraClubPacks
+          .where((pack) => pack.clubId == chosenPack.clubId && pack.id != chosenPack.id)
+          .expand((pack) => pack.roster)
+          .where((p) => !alreadyPickedIds.contains(p.id))
+          .toList();
+      for (final p in sameClubPlayers) {
+        if (combined.length >= 5) break;
+        if (!combined.any((c) => c.name == p.name)) {
+          combined.add(
+            EraPlayerCandidate(
+              id: '${chosenPack.id}_ext_${combined.length}',
+              name: p.name,
+              role: p.role,
+              specificPosition: p.specificPosition,
+              rating: p.rating,
+              clubId: chosenPack.clubId,
+              clubName: chosenPack.clubName,
+              seasonLabel: chosenPack.seasonLabel,
+            ),
+          );
+        }
+      }
+    }
+
+    // Final guarantee that there are always 5 players from the spun club
+    const fallbackRoles = ['GK', 'DEF', 'MID', 'FWD', 'MID'];
+    const fallbackPos = ['KL', 'STP', 'OS', 'SNT', 'OOS'];
+    while (combined.length < 5) {
+      final idx = combined.length;
+      combined.add(
+        EraPlayerCandidate(
+          id: '${chosenPack.id}_star_$idx',
+          name: '${chosenPack.clubName} Yıldızı #${idx + 1}',
+          role: fallbackRoles[idx % fallbackRoles.length],
+          specificPosition: fallbackPos[idx % fallbackPos.length],
+          rating: 85 + (idx % 5),
+          clubId: chosenPack.clubId,
+          clubName: chosenPack.clubName,
+          seasonLabel: chosenPack.seasonLabel,
+        ),
+      );
+    }
+
+    _currentPlayerChoices = combined.take(5).toList();
   }
 
-  void selectPlayerForSquad(EraPlayerCandidate player) {
-    // Store with the active slot's needed role so the formation lines stay balanced
+  void selectPlayerForSquad(EraPlayerCandidate player, {int? targetSlotIndex}) {
+    final form = activeParticipant.formation ?? allFormations.first;
+    final roles = form.draftSlotRoles;
+    final labels = form.specificSlotLabels;
+
+    int slotIdx = targetSlotIndex ?? _selectedPitchSlotIndex;
+    slotIdx = slotIdx.clamp(0, 10);
+
+    // If the user didn't explicitly pass targetSlotIndex and the currently selected slot is already filled,
+    // or if the selected slot is empty, place into slotIdx.
+    if (targetSlotIndex == null && activeParticipant.pitchSlots[slotIdx] != null) {
+      final emptyMatching = <int>[];
+      final emptyAny = <int>[];
+      for (int i = 0; i < 11; i++) {
+        if (activeParticipant.pitchSlots[i] == null) {
+          emptyAny.add(i);
+          if (roles[i] == player.role) emptyMatching.add(i);
+        }
+      }
+      if (emptyMatching.isNotEmpty) {
+        slotIdx = emptyMatching.first;
+      } else if (emptyAny.isNotEmpty) {
+        slotIdx = emptyAny.first;
+      }
+    }
+
     final adaptedPlayer = EraPlayerCandidate(
       id: player.id,
       name: player.name,
-      role: currentNeededRole,
-      specificPosition: player.specificPosition,
+      role: roles[slotIdx],
+      specificPosition: labels[slotIdx],
       rating: player.rating,
       clubId: player.clubId,
       clubName: player.clubName,
       seasonLabel: player.seasonLabel,
     );
 
-    activeParticipant.squad.add(adaptedPlayer);
+    activeParticipant.pitchSlots[slotIdx] = adaptedPlayer;
+    activeParticipant.syncSquadFromPitchSlots();
 
     if (activeParticipant.squad.length >= 11) {
       _advanceToNextParticipantOrStartLeague();
     } else {
+      // Advance _selectedPitchSlotIndex to the next empty slot on the pitch
+      for (int step = 1; step <= 11; step++) {
+        final candidateIdx = (slotIdx + step) % 11;
+        if (activeParticipant.pitchSlots[candidateIdx] == null) {
+          _selectedPitchSlotIndex = candidateIdx;
+          break;
+        }
+      }
       _spinNextHistoricalClubForActive();
     }
     notifyListeners();
@@ -552,20 +655,30 @@ class LeagueDraftProvider extends ChangeNotifier {
         ? _currentFormationChoices.first
         : allFormations.first);
 
-    while (activeParticipant.squad.length < 11) {
-      _spinNextHistoricalClubForActive();
-      final pick = _currentPlayerChoices.first;
-      final adapted = EraPlayerCandidate(
-        id: pick.id,
-        name: pick.name,
-        role: currentNeededRole,
-        specificPosition: pick.specificPosition,
-        rating: pick.rating,
-        clubId: pick.clubId,
-        clubName: pick.clubName,
-        seasonLabel: pick.seasonLabel,
-      );
-      activeParticipant.squad.add(adapted);
+    final form = activeParticipant.formation!;
+    final roles = form.draftSlotRoles;
+    final labels = form.specificSlotLabels;
+
+    for (int i = 0; i < 11; i++) {
+      if (activeParticipant.pitchSlots[i] == null) {
+        _selectedPitchSlotIndex = i;
+        _spinNextHistoricalClubForActive();
+        final pick = _currentPlayerChoices.firstWhere(
+          (p) => p.role == roles[i],
+          orElse: () => _currentPlayerChoices.first,
+        );
+        activeParticipant.pitchSlots[i] = EraPlayerCandidate(
+          id: pick.id,
+          name: pick.name,
+          role: roles[i],
+          specificPosition: labels[i],
+          rating: pick.rating,
+          clubId: pick.clubId,
+          clubName: pick.clubName,
+          seasonLabel: pick.seasonLabel,
+        );
+        activeParticipant.syncSquadFromPitchSlots();
+      }
     }
 
     _advanceToNextParticipantOrStartLeague();
@@ -622,11 +735,13 @@ class LeagueDraftProvider extends ChangeNotifier {
     bot.squad.clear();
 
     final roles = bot.formation!.draftSlotRoles;
+    final labels = bot.formation!.specificSlotLabels;
     final pool = activePoolPacks.isNotEmpty ? activePoolPacks : allEraClubPacks;
     final packs = List<EraClubPack>.from(pool);
     final pickedPlayerIds = <String>{};
 
-    for (final role in roles) {
+    for (int idx = 0; idx < roles.length; idx++) {
+      final role = roles[idx];
       packs.shuffle(_rng);
       EraPlayerCandidate? chosen;
       for (final pack in packs) {
@@ -643,19 +758,18 @@ class LeagueDraftProvider extends ChangeNotifier {
         chosen = fallbackPack.roster[_rng.nextInt(fallbackPack.roster.length)];
       }
       pickedPlayerIds.add(chosen.id);
-      bot.squad.add(
-        EraPlayerCandidate(
-          id: chosen.id,
-          name: chosen.name,
-          role: role,
-          specificPosition: chosen.specificPosition,
-          rating: chosen.rating,
-          clubId: chosen.clubId,
-          clubName: chosen.clubName,
-          seasonLabel: chosen.seasonLabel,
-        ),
+      bot.pitchSlots[idx] = EraPlayerCandidate(
+        id: chosen.id,
+        name: chosen.name,
+        role: role,
+        specificPosition: labels[idx],
+        rating: chosen.rating,
+        clubId: chosen.clubId,
+        clubName: chosen.clubName,
+        seasonLabel: chosen.seasonLabel,
       );
     }
+    bot.syncSquadFromPitchSlots();
   }
 
   /// Generates a full home & away round-robin schedule (Çift Devreli Lig Fikstürü: 18 Takım=34 Hafta, 20 Takım=38 Hafta)
@@ -752,7 +866,7 @@ class LeagueDraftProvider extends ChangeNotifier {
     return match;
   }
 
-  /// Simulates all matches of the current matchday
+  /// Simulates all matches of the current matchday and focuses _latestSimulatedFixture on the user's match
   void simulateNextMatchday() {
     if (isAllFixturesPlayed) return;
 
@@ -760,9 +874,13 @@ class LeagueDraftProvider extends ChangeNotifier {
         .where((f) => f.matchday == _currentMatchday && !f.isPlayed)
         .toList();
 
+    LeagueMatchFixture? humanMatch;
     for (final match in dayMatches) {
       _simulateSingleMatch(match);
-      _latestSimulatedFixture = match;
+      if (!_participants[match.homeIndex].isBot || !_participants[match.awayIndex].isBot) {
+        humanMatch = match;
+      }
+      _latestSimulatedFixture = humanMatch ?? match;
     }
 
     if (_currentMatchday < _totalMatchdays) {
@@ -784,7 +902,9 @@ class LeagueDraftProvider extends ChangeNotifier {
     for (final match in _fixtures) {
       if (!match.isPlayed) {
         _simulateSingleMatch(match);
-        _latestSimulatedFixture = match;
+        if (!_participants[match.homeIndex].isBot || !_participants[match.awayIndex].isBot) {
+          _latestSimulatedFixture = match;
+        }
       }
     }
     _currentMatchday = _totalMatchdays;
@@ -807,12 +927,11 @@ class LeagueDraftProvider extends ChangeNotifier {
     }
   }
 
-  /// Resets the current league scores and replays the season with the same drafted squads
-  void replaySeasonWithSameSquads() {
-    _championshipAwardedForCurrentSeason = false;
-    _latestSimulatedFixture = null;
-    _generateLeagueFixtures();
-    notifyListeners();
+  /// Starts a brand new season and goes directly to drafting a new team (no continuing with the same squad)
+  void startNewSeasonWithNewTeam() {
+    _checkAndAwardChampionshipIfFinished();
+    _seasonNumber += 1;
+    startDraftFromLobby();
   }
 
   /// Returns to the same Online/Invite Lobby for the next season, keeping room code, friends, bots, and trophy counts

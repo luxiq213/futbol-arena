@@ -68,13 +68,14 @@ class FootballGridGameProvider extends ChangeNotifier {
     return count;
   }
 
-  bool get isGameOver => _guessesRemaining <= 0 || solvedCount == 9;
+  bool get isGameOver => solvedCount == 9;
 
   FootballGridGameProvider({
     this.playMode = PlayModeType.solo,
     this.difficulty = GameDifficulty.medium,
     this.opponent,
-  }) {
+    GridThemeType initialTheme = GridThemeType.mixed,
+  }) : _selectedTheme = initialTheme {
     startNewGrid();
   }
 

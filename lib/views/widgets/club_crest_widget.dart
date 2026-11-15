@@ -16,188 +16,117 @@ class ClubCrestWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final width = size;
-    final height = size * 1.18; // Traditional heraldic shield proportion
+    final radius = BorderRadius.circular(size * 0.28);
 
-    return SizedBox(
-      width: width,
-      height: height,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          // Shield Drop Shadow
-          Positioned.fill(
-            child: CustomPaint(
-              painter: _ShieldShadowPainter(
-                glowColor: club.primaryColor.withValues(alpha: 0.35),
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        borderRadius: radius,
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.32),
+          width: (size * 0.035).clamp(1.0, 2.0),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: club.primaryColor.withValues(alpha: 0.28),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular((size * 0.28) - 1.2),
+        child: Stack(
+          alignment: Alignment.center,
+          fit: StackFit.expand,
+          children: [
+            // Clean Club Pattern
+            CustomPaint(
+              painter: _ClubPatternPainter(
+                primary: club.primaryColor,
+                secondary: club.secondaryColor,
+                accent: club.accentColor,
+                pattern: club.pattern,
               ),
             ),
-          ),
 
-          // Main Clipped Shield Body with Club Patterns
-          ClipPath(
-            clipper: const ShieldClipper(),
-            child: SizedBox(
-              width: width,
-              height: height,
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  // Pattern Painter
-                  CustomPaint(
-                    painter: _ClubPatternPainter(
-                      primary: club.primaryColor,
-                      secondary: club.secondaryColor,
-                      accent: club.accentColor,
-                      pattern: club.pattern,
-                    ),
-                  ),
-
-                  // Gloss / Enamel Sheen (Diagonal highlight across upper shield)
-                  Positioned(
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    height: height * 0.45,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [
-                            Colors.white.withValues(alpha: 0.35),
-                            Colors.white.withValues(alpha: 0.05),
-                            Colors.transparent,
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-          // Center Emblem (Heraldic Medallion without abbreviation by default)
-          if (showShortName)
+            // Top Soft Gloss Highlight
             Positioned(
-              bottom: height * 0.22,
-              child: Container(
-                padding: EdgeInsets.symmetric(
-                  horizontal: size * 0.12,
-                  vertical: size * 0.04,
-                ),
+              top: 0,
+              left: 0,
+              right: 0,
+              height: size * 0.45,
+              child: DecoratedBox(
                 decoration: BoxDecoration(
-                  color: AppColors.background.withValues(alpha: 0.88),
-                  borderRadius: BorderRadius.circular(size * 0.16),
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.3),
-                    width: 1.2,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.5),
-                      blurRadius: 4,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: Text(
-                  club.shortName,
-                  style: TextStyle(
-                    fontSize: size * 0.21,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 0.8,
-                    color: Colors.white,
-                    shadows: const [
-                      Shadow(
-                        color: Colors.black,
-                        blurRadius: 2,
-                        offset: Offset(0, 1),
-                      ),
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.white.withValues(alpha: 0.26),
+                      Colors.transparent,
                     ],
                   ),
                 ),
               ),
-            )
-          else
-            Container(
-              width: size * 0.36,
-              height: size * 0.36,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: AppColors.background.withValues(alpha: 0.78),
-                border: Border.all(
-                  color: AppColors.gold.withValues(alpha: 0.75),
-                  width: 1.1,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.45),
-                    blurRadius: 3,
-                    offset: const Offset(0, 1),
-                  ),
-                ],
-              ),
-              child: Center(
-                child: Icon(
-                  club.isNationalTeam ? Icons.flag_rounded : Icons.sports_soccer,
-                  size: size * 0.22,
-                  color: club.isNationalTeam ? AppColors.greenLight : AppColors.gold,
-                ),
-              ),
             ),
 
-          // Outer Shield Rim / Metallic Border
-          Positioned.fill(
-            child: CustomPaint(
-              painter: _ShieldBorderPainter(
-                borderColor: Colors.white.withValues(alpha: 0.45),
-                accentColor: club.primaryColor,
-                strokeWidth: size * 0.04,
+            // Center Medallion or Short Name
+            if (showShortName)
+              Center(
+                child: Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: size * 0.12,
+                    vertical: size * 0.04,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.background.withValues(alpha: 0.86),
+                    borderRadius: BorderRadius.circular(size * 0.14),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.28),
+                      width: 1.0,
+                    ),
+                  ),
+                  child: Text(
+                    club.shortName,
+                    style: TextStyle(
+                      fontSize: size * 0.22,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 0.5,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              )
+            else
+              Center(
+                child: Container(
+                  width: size * 0.40,
+                  height: size * 0.40,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: AppColors.background.withValues(alpha: 0.80),
+                    border: Border.all(
+                      color: AppColors.gold.withValues(alpha: 0.75),
+                      width: 1.0,
+                    ),
+                  ),
+                  child: Center(
+                    child: Icon(
+                      club.isNationalTeam ? Icons.flag_rounded : Icons.sports_soccer,
+                      size: size * 0.23,
+                      color: club.isNationalTeam ? AppColors.greenLight : AppColors.gold,
+                    ),
+                  ),
+                ),
               ),
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 }
 
-/// Geometric Heraldic Shield Clipper
-class ShieldClipper extends CustomClipper<Path> {
-  const ShieldClipper();
-
-  @override
-  Path getClip(Size size) {
-    return _createShieldPath(size);
-  }
-
-  @override
-  bool shouldReclip(CustomClipper<Path> oldClipper) => false;
-}
-
-Path _createShieldPath(Size size) {
-  final path = Path();
-  final w = size.width;
-  final h = size.height;
-
-  // Top edge with slight crown curve
-  path.moveTo(0, 0);
-  path.lineTo(w, 0);
-
-  // Vertical straight edges down to 60%
-  path.lineTo(w, h * 0.60);
-
-  // Curving down symmetrically to pointed tip
-  path.quadraticBezierTo(w * 0.96, h * 0.88, w * 0.5, h);
-  path.quadraticBezierTo(w * 0.04, h * 0.88, 0, h * 0.60);
-
-  path.close();
-  return path;
-}
-
-/// Painter for the club's signature striping / halving pattern
 class _ClubPatternPainter extends CustomPainter {
   final Color primary;
   final Color secondary;
@@ -218,7 +147,6 @@ class _ClubPatternPainter extends CustomPainter {
 
     switch (pattern) {
       case BadgePattern.halves:
-        // Left half primary (e.g. Red), Right half secondary (e.g. Yellow)
         final pPaint = Paint()..color = primary;
         final sPaint = Paint()..color = secondary;
         canvas.drawRect(Rect.fromLTWH(0, 0, w / 2, h), pPaint);
@@ -226,7 +154,6 @@ class _ClubPatternPainter extends CustomPainter {
         break;
 
       case BadgePattern.stripesVertical:
-        // 5 alternating stripes (Primary, Secondary, Primary, Secondary, Primary)
         final stripeWidth = w / 5;
         for (int i = 0; i < 5; i++) {
           final paint = Paint()..color = (i % 2 == 0) ? primary : secondary;
@@ -235,7 +162,6 @@ class _ClubPatternPainter extends CustomPainter {
         break;
 
       case BadgePattern.diagonalSash:
-        // Background primary, diagonal sash secondary
         final bgPaint = Paint()..color = primary;
         canvas.drawRect(Rect.fromLTWH(0, 0, w, h), bgPaint);
 
@@ -252,22 +178,11 @@ class _ClubPatternPainter extends CustomPainter {
         break;
 
       case BadgePattern.solidWithTrim:
-        // Solid primary base with center accent stripe and side accents
-        final basePaint = Paint()..color = primary;
-        canvas.drawRect(Rect.fromLTWH(0, 0, w, h), basePaint);
+        final bgPaint = Paint()..color = primary;
+        canvas.drawRect(Rect.fromLTWH(0, 0, w, h), bgPaint);
 
-        // Center stripe
-        final centerPaint = Paint()..color = secondary;
-        final cWidth = w * 0.28;
-        canvas.drawRect(Rect.fromLTWH((w - cWidth) / 2, 0, cWidth, h), centerPaint);
-
-        // Thin accent lines if present
-        if (accent != null) {
-          final accPaint = Paint()..color = accent!;
-          final thin = w * 0.05;
-          canvas.drawRect(Rect.fromLTWH((w - cWidth) / 2 - thin, 0, thin, h), accPaint);
-          canvas.drawRect(Rect.fromLTWH((w + cWidth) / 2, 0, thin, h), accPaint);
-        }
+        final trimPaint = Paint()..color = secondary;
+        canvas.drawRect(Rect.fromLTWH(w * 0.38, 0, w * 0.24, h), trimPaint);
         break;
     }
   }
@@ -278,52 +193,4 @@ class _ClubPatternPainter extends CustomPainter {
         oldDelegate.secondary != secondary ||
         oldDelegate.pattern != pattern;
   }
-}
-
-/// Painter for outer shield rim
-class _ShieldBorderPainter extends CustomPainter {
-  final Color borderColor;
-  final Color accentColor;
-  final double strokeWidth;
-
-  _ShieldBorderPainter({
-    required this.borderColor,
-    required this.accentColor,
-    required this.strokeWidth,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final path = _createShieldPath(size);
-
-    // Outer bright edge
-    final outerPaint = Paint()
-      ..color = borderColor
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = strokeWidth;
-
-    canvas.drawPath(path, outerPaint);
-  }
-
-  @override
-  bool shouldRepaint(covariant _ShieldBorderPainter oldDelegate) => false;
-}
-
-/// Painter for shield drop glow
-class _ShieldShadowPainter extends CustomPainter {
-  final Color glowColor;
-
-  _ShieldShadowPainter({required this.glowColor});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final path = _createShieldPath(size);
-    final paint = Paint()
-      ..color = glowColor
-      ..maskFilter = const MaskFilter.blur(BlurStyle.outer, 8);
-    canvas.drawPath(path, paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant _ShieldShadowPainter oldDelegate) => false;
 }

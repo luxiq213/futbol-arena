@@ -16,12 +16,10 @@ class AnswerRevealSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-        border: Border(
-          top: BorderSide(color: AppColors.border, width: 1.0),
-        ),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        border: Border.all(color: AppColors.border, width: 1.0),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,

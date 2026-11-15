@@ -33,6 +33,7 @@ class _LeagueDraftView extends StatefulWidget {
 class _LeagueDraftViewState extends State<_LeagueDraftView> {
   Timer? _liveStreamTimer;
   bool _isFastStream = false;
+  int _autoStartedSeason = -1;
 
   @override
   void dispose() {
@@ -55,21 +56,8 @@ class _LeagueDraftViewState extends State<_LeagueDraftView> {
       return;
     }
 
-    final latest = provider.latestSimulatedFixture;
-    bool isHumanMatch = false;
-    if (latest != null &&
-        latest.homeIndex < provider.participants.length &&
-        latest.awayIndex < provider.participants.length) {
-      final h = provider.participants[latest.homeIndex];
-      final a = provider.participants[latest.awayIndex];
-      isHumanMatch = !h.isBot || !a.isBot;
-    }
-
-    // In 18/20-team leagues (306-380 matches), let AI matches flow briskly
-    // and pause slightly longer on human matches so the user clearly reads their score!
-    final delayMs = isHumanMatch
-        ? (_isFastStream ? 210 : 440)
-        : (_isFastStream ? 34 : 80);
+    // Step week by week (1. Hafta -> 34./38. Hafta) so each tick shows the user's match (Win / Lose / Draw + Score)
+    final delayMs = _isFastStream ? 200 : 420;
 
     _liveStreamTimer = Timer(Duration(milliseconds: delayMs), () {
       if (!mounted ||
@@ -79,7 +67,7 @@ class _LeagueDraftViewState extends State<_LeagueDraftView> {
         if (mounted) setState(() {});
         return;
       }
-      provider.simulateNextSingleFixture();
+      provider.simulateNextMatchday();
       if (provider.isAllFixturesPlayed) {
         _stopLiveStream();
         if (mounted) setState(() {});
@@ -100,8 +88,8 @@ class _LeagueDraftViewState extends State<_LeagueDraftView> {
     _stopLiveStream();
     if (provider.isAllFixturesPlayed) return;
 
-    // Immediately simulate 1 match so the user sees instant response
-    provider.simulateNextSingleFixture();
+    // Immediately simulate 1 matchday so the user sees instant response
+    provider.simulateNextMatchday();
     if (provider.isAllFixturesPlayed) {
       setState(() {});
       return;
@@ -388,6 +376,20 @@ class _LeagueDraftViewState extends State<_LeagueDraftView> {
       case LeagueDraftPhase.nextPlayerHandoff:
         return _buildHandoffPhase(context, provider);
       case LeagueDraftPhase.leagueSimulation:
+        if (!provider.isAllFixturesPlayed &&
+            provider.playedFixturesCount == 0 &&
+            _liveStreamTimer == null &&
+            _autoStartedSeason != provider.seasonNumber) {
+          _autoStartedSeason = provider.seasonNumber;
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted &&
+                provider.phase == LeagueDraftPhase.leagueSimulation &&
+                !provider.isAllFixturesPlayed &&
+                _liveStreamTimer == null) {
+              _toggleLiveMatchStream(provider);
+            }
+          });
+        }
         return _buildLeagueSimulationPhase(context, provider);
     }
   }
@@ -1125,26 +1127,31 @@ class _LeagueDraftViewState extends State<_LeagueDraftView> {
   }
 
   // ===========================================================================
-  // PHASE 3: PICK 11 PLAYERS BY RANDOM ERA / CLUB SPIN
+  // PHASE 3: VISUAL 11-SLOT FORMATION PITCH + 5 PLAYERS FROM SPUN HISTORICAL CLUB
   // ===========================================================================
   Widget _buildPickPlayersPhase(BuildContext context, LeagueDraftProvider provider) {
     final active = provider.activeParticipant;
     final pack = provider.currentSpunClubPack;
     if (pack == null) return const SizedBox.shrink();
 
+    final form = active.formation ?? LeagueDraftProvider.allFormations.first;
+    final labels = form.specificSlotLabels;
+    final selectedSlot = provider.selectedPitchSlotIndex.clamp(0, 10);
+    final selectedLabel = labels[selectedSlot];
+
     return SingleChildScrollView(
-      key: ValueKey('pick_${active.id}_${active.squad.length}'),
-      padding: const EdgeInsets.fromLTRB(16, 6, 16, 24),
+      key: ValueKey('pick_${active.id}_${active.squad.length}_$selectedSlot'),
+      padding: const EdgeInsets.fromLTRB(14, 4, 14, 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Top Progress & Fast-Fill Bar
+          // 1. Compact Header Strip: Manager, Formation, Squad Progress (X/11) & Auto-Fill
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
             decoration: BoxDecoration(
-              color: AppColors.surface.withValues(alpha: 0.90),
+              color: AppColors.surface.withValues(alpha: 0.92),
               borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: AppColors.borderGreen.withValues(alpha: 0.5)),
+              border: Border.all(color: AppColors.border),
             ),
             child: Row(
               children: [
@@ -1153,7 +1160,7 @@ class _LeagueDraftViewState extends State<_LeagueDraftView> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        '${active.name} • ${active.formation?.code ?? "4-3-3"} (${active.manager?.name ?? ""})',
+                        '${active.name} • ${form.code} (${active.manager?.name ?? ""})',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
@@ -1163,9 +1170,11 @@ class _LeagueDraftViewState extends State<_LeagueDraftView> {
                         ),
                       ),
                       Text(
-                        'Seçim: ${provider.currentSlotIndex + 1}/11 • Mevki: ${provider.currentNeededRoleLabel}',
+                        'Kadro: ${active.squad.length}/11 • Seçili Mevki: $selectedLabel (${provider.currentNeededRoleLabel})',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
-                          fontSize: 11.5,
+                          fontSize: 11,
                           fontWeight: FontWeight.w900,
                           color: Colors.white,
                         ),
@@ -1179,9 +1188,9 @@ class _LeagueDraftViewState extends State<_LeagueDraftView> {
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.08),
+                      color: AppColors.pitchGreen.withValues(alpha: 0.22),
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.white.withValues(alpha: 0.22)),
+                      border: Border.all(color: AppColors.pitchGreen),
                     ),
                     child: const Row(
                       mainAxisSize: MainAxisSize.min,
@@ -1189,7 +1198,7 @@ class _LeagueDraftViewState extends State<_LeagueDraftView> {
                         Icon(Icons.bolt_rounded, size: 12, color: AppColors.gold),
                         SizedBox(width: 3),
                         Text(
-                          'Hızlı Tamamla',
+                          'Kalanları Doldur',
                           style: TextStyle(
                             fontSize: 9.5,
                             fontWeight: FontWeight.w800,
@@ -1203,11 +1212,21 @@ class _LeagueDraftViewState extends State<_LeagueDraftView> {
               ],
             ),
           ),
+
           const SizedBox(height: 8),
 
-          // Spun Historical Club + Year Card
+          // 2. Interactive 11-Slot Tactical Pitch Open Right in Front of the User
+          _buildInteractiveFormationPitch(
+            provider: provider,
+            participant: active,
+            interactive: true,
+          ),
+
+          const SizedBox(height: 8),
+
+          // 3. Spun Historical Club + Year Header
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 9),
+            padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 8),
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
@@ -1217,7 +1236,7 @@ class _LeagueDraftViewState extends State<_LeagueDraftView> {
                   const Color(0xFF081F15).withValues(alpha: 0.96),
                 ],
               ),
-              borderRadius: BorderRadius.circular(13),
+              borderRadius: BorderRadius.circular(12),
               border: Border.all(color: AppColors.gold, width: 1.1),
             ),
             child: Row(
@@ -1225,7 +1244,7 @@ class _LeagueDraftViewState extends State<_LeagueDraftView> {
                 ClubCrestWidget(
                   club: FootballDatabase().getClub(pack.clubId) ??
                       FootballDatabase().getAllClubs().first,
-                  size: 40,
+                  size: 36,
                 ),
                 const SizedBox(width: 10),
                 Expanded(
@@ -1243,7 +1262,7 @@ class _LeagueDraftViewState extends State<_LeagueDraftView> {
                             child: Text(
                               '${pack.seasonLabel} SEZONU',
                               style: const TextStyle(
-                                fontSize: 9,
+                                fontSize: 8.5,
                                 fontWeight: FontWeight.w900,
                                 color: Color(0xFF06160F),
                               ),
@@ -1266,89 +1285,98 @@ class _LeagueDraftViewState extends State<_LeagueDraftView> {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        '${pack.seasonLabel} ${pack.clubName}',
+                        '${pack.seasonLabel} ${pack.clubName} (5 Oyuncu)',
                         style: const TextStyle(
-                          fontSize: 14.5,
+                          fontSize: 13.5,
                           fontWeight: FontWeight.w900,
                           color: Colors.white,
                         ),
                       ),
-                      if (provider.remainingRerolls > 0) ...[
-                        const SizedBox(height: 5),
-                        InkWell(
-                          borderRadius: BorderRadius.circular(7),
-                          onTap: provider.rerollCurrentClubPack,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: AppColors.gold.withValues(alpha: 0.16),
-                              borderRadius: BorderRadius.circular(7),
-                              border: Border.all(color: AppColors.gold, width: 0.8),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Icon(Icons.refresh_rounded, size: 12, color: AppColors.gold),
-                                const SizedBox(width: 4),
-                                Text(
-                                  'Başka Takım Çek (${provider.remainingRerolls})',
-                                  style: const TextStyle(
-                                    fontSize: 9.8,
-                                    fontWeight: FontWeight.w800,
-                                    color: AppColors.gold,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
                     ],
                   ),
                 ),
+                if (provider.remainingRerolls > 0)
+                  InkWell(
+                    borderRadius: BorderRadius.circular(8),
+                    onTap: provider.rerollCurrentClubPack,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: AppColors.gold.withValues(alpha: 0.16),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: AppColors.gold, width: 0.9),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.refresh_rounded, size: 12, color: AppColors.gold),
+                          const SizedBox(width: 4),
+                          Text(
+                            'Değiştir (${provider.remainingRerolls})',
+                            style: const TextStyle(
+                              fontSize: 9.5,
+                              fontWeight: FontWeight.w800,
+                              color: AppColors.gold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
               ],
             ),
           ),
-          const SizedBox(height: 9),
 
-          const Text(
-            'BU KADRODAN 1 OYUNCU SEÇ VE TAKIMINA EKLE:',
-            style: TextStyle(
-              fontSize: 10.5,
+          const SizedBox(height: 8),
+
+          Text(
+            'GELEN 5 OYUNCUDAN BİRİNE DOKUN VE "$selectedLabel" MEVKİSİNE YERLEŞTİR:',
+            style: const TextStyle(
+              fontSize: 10,
               fontWeight: FontWeight.w800,
-              letterSpacing: 0.7,
+              letterSpacing: 0.5,
               color: AppColors.greenLight,
             ),
           ),
           const SizedBox(height: 6),
 
-          // 3 Player Candidates from that Historical Club & Year
+          // 4. 5 Player Candidates from the Spun Historical Club
           ...provider.currentPlayerChoices.map((player) {
+            final isRoleMatch = player.role == provider.currentNeededRole;
             return Padding(
-              padding: const EdgeInsets.only(bottom: 8),
+              padding: const EdgeInsets.only(bottom: 6),
               child: InkWell(
-                borderRadius: BorderRadius.circular(13),
-                onTap: () => provider.selectPlayerForSquad(player),
+                borderRadius: BorderRadius.circular(12),
+                onTap: () => provider.selectPlayerForSquad(
+                  player,
+                  targetSlotIndex: selectedSlot,
+                ),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 11),
+                  padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 8),
                   decoration: BoxDecoration(
-                    color: AppColors.surface.withValues(alpha: 0.92),
-                    borderRadius: BorderRadius.circular(13),
+                    color: AppColors.surface.withValues(alpha: 0.94),
+                    borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: AppColors.borderGreen.withValues(alpha: 0.65),
-                      width: 1.0,
+                      color: isRoleMatch
+                          ? AppColors.gold.withValues(alpha: 0.85)
+                          : AppColors.border,
+                      width: isRoleMatch ? 1.2 : 0.9,
                     ),
                   ),
                   child: Row(
                     children: [
                       Container(
-                        width: 42,
-                        height: 42,
+                        width: 38,
+                        height: 38,
                         alignment: Alignment.center,
                         decoration: BoxDecoration(
-                          color: AppColors.pitchGreen.withValues(alpha: 0.20),
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: AppColors.pitchGreen),
+                          color: isRoleMatch
+                              ? AppColors.gold.withValues(alpha: 0.18)
+                              : AppColors.pitchGreen.withValues(alpha: 0.18),
+                          borderRadius: BorderRadius.circular(9),
+                          border: Border.all(
+                            color: isRoleMatch ? AppColors.gold : AppColors.pitchGreen,
+                          ),
                         ),
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -1356,7 +1384,7 @@ class _LeagueDraftViewState extends State<_LeagueDraftView> {
                             Text(
                               '${player.rating}',
                               style: const TextStyle(
-                                fontSize: 14,
+                                fontSize: 13,
                                 fontWeight: FontWeight.w900,
                                 color: AppColors.gold,
                               ),
@@ -1364,7 +1392,7 @@ class _LeagueDraftViewState extends State<_LeagueDraftView> {
                             Text(
                               player.specificPosition,
                               style: const TextStyle(
-                                fontSize: 8,
+                                fontSize: 7.5,
                                 fontWeight: FontWeight.w800,
                                 color: Colors.white,
                               ),
@@ -1372,24 +1400,50 @@ class _LeagueDraftViewState extends State<_LeagueDraftView> {
                           ],
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: 10),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              player.name,
-                              style: const TextStyle(
-                                fontSize: 14.5,
-                                fontWeight: FontWeight.w800,
-                                color: Colors.white,
-                              ),
+                            Row(
+                              children: [
+                                Flexible(
+                                  child: Text(
+                                    player.name,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                      fontSize: 13.5,
+                                      fontWeight: FontWeight.w800,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ),
+                                if (isRoleMatch) ...[
+                                  const SizedBox(width: 6),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.gold.withValues(alpha: 0.20),
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                    child: const Text(
+                                      'TAM MEVKİ',
+                                      style: TextStyle(
+                                        fontSize: 7.5,
+                                        fontWeight: FontWeight.w900,
+                                        color: AppColors.gold,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ],
                             ),
-                            const SizedBox(height: 2),
+                            const SizedBox(height: 1.5),
                             Text(
-                              '${player.seasonLabel} ${player.clubName} • ${player.specificPosition}',
+                              '${player.seasonLabel} ${player.clubName} • Orj. Mevki: ${player.specificPosition}',
                               style: const TextStyle(
-                                fontSize: 11,
+                                fontSize: 10.5,
                                 color: AppColors.textSecondary,
                               ),
                             ),
@@ -1399,13 +1453,14 @@ class _LeagueDraftViewState extends State<_LeagueDraftView> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
                         decoration: BoxDecoration(
-                          color: AppColors.pitchGreen.withValues(alpha: 0.22),
+                          color: AppColors.pitchGreen.withValues(alpha: 0.24),
                           borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: AppColors.pitchGreen.withValues(alpha: 0.7)),
                         ),
-                        child: const Text(
-                          'Kadrona Kat',
-                          style: TextStyle(
-                            fontSize: 10.5,
+                        child: Text(
+                          '$selectedLabel\'ye Koy',
+                          style: const TextStyle(
+                            fontSize: 10,
                             fontWeight: FontWeight.w800,
                             color: AppColors.greenLight,
                           ),
@@ -1417,71 +1472,192 @@ class _LeagueDraftViewState extends State<_LeagueDraftView> {
               ),
             );
           }),
+        ],
+      ),
+    );
+  }
 
-          const SizedBox(height: 10),
+  /// Renders the 2D tactical football pitch with all 11 formation slots open in front of the user
+  Widget _buildInteractiveFormationPitch({
+    required LeagueDraftProvider? provider,
+    required LeagueParticipant participant,
+    required bool interactive,
+  }) {
+    final form = participant.formation ?? LeagueDraftProvider.allFormations.first;
+    final labels = form.specificSlotLabels;
+    final defCount = form.defenders;
+    final midCount = form.midfielders;
 
-          // Live Drafted Squad Preview
-          if (active.squad.isNotEmpty)
-            Container(
-              padding: const EdgeInsets.all(12),
+    final gkIndices = <int>[0];
+    final defIndices = List<int>.generate(defCount, (i) => 1 + i);
+    final midIndices = List<int>.generate(midCount, (i) => 1 + defCount + i);
+    final fwdStart = 1 + defCount + midCount;
+    final fwdIndices = List<int>.generate(11 - fwdStart, (i) => fwdStart + i);
+
+    Widget buildSlotNode(int slotIdx) {
+      final assigned = participant.pitchSlots[slotIdx] ??
+          (slotIdx < participant.squad.length ? participant.squad[slotIdx] : null);
+      final isSelected = interactive && provider?.selectedPitchSlotIndex == slotIdx;
+      final posCode = slotIdx < labels.length ? labels[slotIdx] : 'OS';
+
+      return Expanded(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 2.5),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(9),
+            onTap: interactive && provider != null
+                ? () => provider.selectPitchSlot(slotIdx)
+                : null,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 160),
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 5),
               decoration: BoxDecoration(
-                color: Colors.black.withValues(alpha: 0.35),
-                borderRadius: BorderRadius.circular(13),
-                border: Border.all(color: AppColors.border),
+                color: assigned != null
+                    ? const Color(0xFF0A281B).withValues(alpha: 0.94)
+                    : (isSelected
+                        ? AppColors.gold.withValues(alpha: 0.22)
+                        : Colors.black.withValues(alpha: 0.38)),
+                borderRadius: BorderRadius.circular(9),
+                border: Border.all(
+                  color: isSelected
+                      ? AppColors.gold
+                      : (assigned != null
+                          ? AppColors.pitchGreen
+                          : Colors.white.withValues(alpha: 0.24)),
+                  width: isSelected ? 1.6 : 1.0,
+                ),
               ),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(
-                        'KURULAN İLK 11 (${active.squad.length}/11)',
-                        style: const TextStyle(
-                          fontSize: 10.5,
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.gold,
-                        ),
-                      ),
-                      Text(
-                        'Takım Gücü: ${active.overallTeamPower} OVR',
-                        style: const TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w900,
-                          color: AppColors.greenLight,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 6,
-                    runSpacing: 6,
-                    children: active.squad.map((p) {
-                      return Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
                         decoration: BoxDecoration(
-                          color: AppColors.surface,
-                          borderRadius: BorderRadius.circular(7),
-                          border: Border.all(color: AppColors.borderGreen.withValues(alpha: 0.45)),
+                          color: isSelected
+                              ? AppColors.gold
+                              : (assigned != null
+                                  ? AppColors.pitchGreen
+                                  : Colors.white.withValues(alpha: 0.14)),
+                          borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text(
-                          '${p.specificPosition}: ${p.name} (${p.rating})',
-                          style: const TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.white,
+                          posCode,
+                          style: TextStyle(
+                            fontSize: 8,
+                            fontWeight: FontWeight.w900,
+                            color: isSelected ? const Color(0xFF06160F) : Colors.white,
                           ),
                         ),
-                      );
-                    }).toList(),
+                      ),
+                      if (assigned != null) ...[
+                        const SizedBox(width: 3),
+                        Text(
+                          '${assigned.rating}',
+                          style: const TextStyle(
+                            fontSize: 9,
+                            fontWeight: FontWeight.w900,
+                            color: AppColors.gold,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    assigned != null
+                        ? _shortPlayerName(assigned.name)
+                        : (isSelected ? 'Buraya Seç' : 'Boş'),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 9.5,
+                      fontWeight: assigned != null || isSelected
+                          ? FontWeight.w800
+                          : FontWeight.w500,
+                      color: assigned != null
+                          ? Colors.white
+                          : (isSelected ? AppColors.gold : AppColors.textSecondary),
+                    ),
                   ),
                 ],
               ),
             ),
+          ),
+        ),
+      );
+    }
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(8, 10, 8, 10),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Color(0xFF145235),
+            Color(0xFF0E3D27),
+            Color(0xFF145235),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.pitchGreen.withValues(alpha: 0.75), width: 1.2),
+      ),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'SAHA DİZİLİŞİ (${form.code}) • ${participant.squad.length}/11 OYUNCU',
+                style: const TextStyle(
+                  fontSize: 9.5,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 0.5,
+                  color: AppColors.gold,
+                ),
+              ),
+              Text(
+                'Güç: ${participant.overallTeamPower} OVR',
+                style: const TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w900,
+                  color: Colors.white,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          // Forwards Line (Top of Pitch)
+          Row(children: fwdIndices.map(buildSlotNode).toList()),
+          const SizedBox(height: 7),
+          // Midfielders Line
+          Row(children: midIndices.map(buildSlotNode).toList()),
+          const SizedBox(height: 7),
+          // Defenders Line
+          Row(children: defIndices.map(buildSlotNode).toList()),
+          const SizedBox(height: 7),
+          // Goalkeeper Line (Bottom of Pitch)
+          Row(
+            children: [
+              const Spacer(),
+              ...gkIndices.map(buildSlotNode),
+              const Spacer(),
+            ],
+          ),
         ],
       ),
     );
+  }
+
+  String _shortPlayerName(String fullName) {
+    final parts = fullName.trim().split(' ');
+    if (parts.length <= 1) return fullName;
+    return parts.last;
   }
 
   // ===========================================================================
@@ -1560,20 +1736,25 @@ class _LeagueDraftViewState extends State<_LeagueDraftView> {
   }
 
   // ===========================================================================
-  // PHASE 4: LIVE FLOWING LEAGUE SIMULATION & RETURN TO LOBBY FOR NEXT SEASON
+  // PHASE 4: LIVE FLOWING LEAGUE SIMULATION & END-OF-SEASON SUMMARY
   // ===========================================================================
   Widget _buildLeagueSimulationPhase(BuildContext context, LeagueDraftProvider provider) {
     final table = provider.standings;
     final champion = provider.champion;
     final latestMatch = provider.latestSimulatedFixture;
     final isStreaming = _liveStreamTimer != null;
-    final totalMatches = provider.fixtures.isEmpty ? 1 : provider.fixtures.length;
-    final playedCount = provider.playedFixturesCount;
-    final progress = (playedCount / totalMatches).clamp(0.0, 1.0);
-    final recentPlayed = provider.playedFixturesReverse.take(6).toList();
+    final totalWeeks = provider.totalMatchdays <= 0 ? 1 : provider.totalMatchdays;
+    final playedDays = provider.fixtures.where((f) => f.isPlayed).map((f) => f.matchday).toSet();
+    final playedWeekCount = playedDays.length;
+    final progress = (playedWeekCount / totalWeeks).clamp(0.0, 1.0);
+    final userHistory = provider.userPlayedFixturesReverse;
 
-    // Show matches of the latest played matchday (or matchday 1 if none played yet)
-    final playedDays = provider.fixtures.where((f) => f.isPlayed).map((f) => f.matchday).toList();
+    final myTeam = provider.participants.firstWhere(
+      (p) => !p.isBot,
+      orElse: () => provider.participants.first,
+    );
+    final myRank = table.indexWhere((p) => p.id == myTeam.id) + 1;
+
     final displayMatchday = playedDays.isNotEmpty
         ? playedDays.reduce((a, b) => a > b ? a : b)
         : provider.currentMatchday;
@@ -1585,11 +1766,11 @@ class _LeagueDraftViewState extends State<_LeagueDraftView> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // 1. LIVE MATCH STREAM TICKER (ÖNÜNDEN AKARAK GEÇEN MAÇ SONUÇLARI EKRANI)
+          // 1. LIVE WEEK-BY-WEEK MATCH STREAM TICKER
           if (!provider.isAllFixturesPlayed)
             Container(
               margin: const EdgeInsets.only(bottom: 12),
-              padding: const EdgeInsets.all(14),
+              padding: const EdgeInsets.all(13),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
@@ -1599,10 +1780,10 @@ class _LeagueDraftViewState extends State<_LeagueDraftView> {
                     const Color(0xFF071B12).withValues(alpha: 0.96),
                   ],
                 ),
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(15),
                 border: Border.all(
                   color: isStreaming ? AppColors.gold : AppColors.pitchGreen,
-                  width: 1.4,
+                  width: 1.3,
                 ),
               ),
               child: Column(
@@ -1623,29 +1804,27 @@ class _LeagueDraftViewState extends State<_LeagueDraftView> {
                           ),
                           const SizedBox(width: 6),
                           Text(
-                            isStreaming
-                                ? 'CANLI MAÇ AKIŞI • HAFTA ${latestMatch?.matchday ?? provider.currentMatchday}/${provider.totalMatchdays}'
-                                : 'SİMÜLASYON MERKEZİ • HAFTA ${provider.currentMatchday}/${provider.totalMatchdays}',
+                            'CANLI LİG SİMÜLASYONU • HAFTA $playedWeekCount / $totalWeeks',
                             style: const TextStyle(
                               fontSize: 10.5,
                               fontWeight: FontWeight.w900,
-                              letterSpacing: 0.6,
+                              letterSpacing: 0.5,
                               color: AppColors.gold,
                             ),
                           ),
                         ],
                       ),
                       Text(
-                        '$playedCount / $totalMatches Maç',
+                        'Sıran: $myRank. (${myTeam.points} P)',
                         style: const TextStyle(
                           fontSize: 10.5,
-                          fontWeight: FontWeight.w800,
+                          fontWeight: FontWeight.w900,
                           color: AppColors.greenLight,
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 7),
                   ClipRRect(
                     borderRadius: BorderRadius.circular(6),
                     child: LinearProgressIndicator(
@@ -1655,11 +1834,11 @@ class _LeagueDraftViewState extends State<_LeagueDraftView> {
                       valueColor: const AlwaysStoppedAnimation<Color>(AppColors.gold),
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 10),
 
                   // Animated Live Match Scoreboard Passing in Front of the User
                   AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 240),
+                    duration: const Duration(milliseconds: 220),
                     child: latestMatch == null
                         ? Container(
                             key: const ValueKey('waiting_kickoff'),
@@ -1669,28 +1848,21 @@ class _LeagueDraftViewState extends State<_LeagueDraftView> {
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
                             ),
-                            child: const Column(
-                              children: [
-                                Icon(Icons.play_circle_fill_rounded, color: AppColors.gold, size: 32),
-                                SizedBox(height: 6),
-                                Text(
-                                  'Kadrolar ve Fikstür Hazır! Başlat\'a dokun, maçların sonuçları önünden canlı akarak geçsin!',
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    fontSize: 11.5,
-                                    color: AppColors.textSecondary,
-                                    height: 1.35,
-                                  ),
-                                ),
-                              ],
+                            child: const Text(
+                              'Kadro tamamlandı! Lig maçları hafta hafta simüle ediliyor...',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 11.5,
+                                color: AppColors.textSecondary,
+                              ),
                             ),
                           )
                         : _buildFlowingMatchHighlightCard(provider, latestMatch),
                   ),
 
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 10),
 
-                  // Stream Controls: Canlı Akışı Başlat / Duraklat / Hız / Tek Hafta / Tümünü Bitir
+                  // Stream Controls: Duraklat/Devam, 2x Hız, +1 Hafta, Sonuca Geç
                   Row(
                     children: [
                       Expanded(
@@ -1699,7 +1871,7 @@ class _LeagueDraftViewState extends State<_LeagueDraftView> {
                           style: ElevatedButton.styleFrom(
                             backgroundColor: isStreaming ? AppColors.gold : AppColors.pitchGreen,
                             foregroundColor: isStreaming ? const Color(0xFF06160F) : Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 11),
+                            padding: const EdgeInsets.symmetric(vertical: 10),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(11),
                             ),
@@ -1707,12 +1879,10 @@ class _LeagueDraftViewState extends State<_LeagueDraftView> {
                           onPressed: () => _toggleLiveMatchStream(provider),
                           icon: Icon(
                             isStreaming ? Icons.pause_rounded : Icons.play_arrow_rounded,
-                            size: 18,
+                            size: 17,
                           ),
                           label: Text(
-                            isStreaming
-                                ? 'Akışı Duraklat'
-                                : (playedCount == 0 ? 'Maçları Canlı Akıt' : 'Akışa Devam Et'),
+                            isStreaming ? 'Duraklat' : 'Devam Et',
                             style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w900),
                           ),
                         ),
@@ -1722,7 +1892,7 @@ class _LeagueDraftViewState extends State<_LeagueDraftView> {
                         borderRadius: BorderRadius.circular(11),
                         onTap: () => _toggleLiveMatchStream(provider, fastMode: !_isFastStream),
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 11),
+                          padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 10),
                           decoration: BoxDecoration(
                             color: _isFastStream
                                 ? AppColors.gold.withValues(alpha: 0.22)
@@ -1750,7 +1920,7 @@ class _LeagueDraftViewState extends State<_LeagueDraftView> {
                           provider.simulateNextMatchday();
                         },
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 11),
+                          padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 10),
                           decoration: BoxDecoration(
                             color: AppColors.pitchGreen.withValues(alpha: 0.20),
                             borderRadius: BorderRadius.circular(11),
@@ -1775,7 +1945,7 @@ class _LeagueDraftViewState extends State<_LeagueDraftView> {
                           style: OutlinedButton.styleFrom(
                             foregroundColor: AppColors.gold,
                             side: const BorderSide(color: AppColors.gold),
-                            padding: const EdgeInsets.symmetric(vertical: 11),
+                            padding: const EdgeInsets.symmetric(vertical: 10),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(11),
                             ),
@@ -1786,8 +1956,8 @@ class _LeagueDraftViewState extends State<_LeagueDraftView> {
                           },
                           icon: const Icon(Icons.fast_forward_rounded, size: 15),
                           label: const Text(
-                            'Sonuca Geç',
-                            style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800),
+                            'Sezon Sonu',
+                            style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w800),
                           ),
                         ),
                       ),
@@ -1797,145 +1967,35 @@ class _LeagueDraftViewState extends State<_LeagueDraftView> {
               ),
             ),
 
-          // 2. SEASON CHAMPION & CONTINUE TO LOBBY CARD (WHEN ALL MATCHES FINISH)
+          // 2. END-OF-SEASON SUMMARY REPORT ("LİG SONU: BU OLDU, ŞU OLDU") + VIEW/SHARE SQUAD + NEW TEAM
           if (champion != null)
-            Container(
-              margin: const EdgeInsets.only(bottom: 12),
-              padding: const EdgeInsets.all(15),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    AppColors.gold.withValues(alpha: 0.28),
-                    const Color(0xFF0E2D20).withValues(alpha: 0.96),
-                  ],
-                ),
-                borderRadius: BorderRadius.circular(18),
-                border: Border.all(color: AppColors.gold, width: 1.6),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: AppColors.gold.withValues(alpha: 0.20),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: const Icon(Icons.emoji_events_rounded, color: AppColors.gold, size: 36),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              '${provider.seasonNumber}. SEZON SONUCU • LİG ŞAMPİYONU!',
-                              style: const TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w900,
-                                letterSpacing: 0.8,
-                                color: AppColors.gold,
-                              ),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              champion.name,
-                              style: const TextStyle(
-                                fontSize: 19,
-                                fontWeight: FontWeight.w900,
-                                color: Colors.white,
-                              ),
-                            ),
-                            Text(
-                              'Hoca: ${champion.manager?.name ?? ""} (${champion.formation?.code ?? ""}) • ${champion.points} Puan (${champion.goalsFor} Gol)',
-                              style: const TextStyle(
-                                fontSize: 11.5,
-                                color: AppColors.greenLight,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                            if (provider.topScorers.isNotEmpty)
-                              Padding(
-                                padding: const EdgeInsets.only(top: 2),
-                                child: Text(
-                                  'Gol Kralı: ${provider.topScorers.first.key} (${provider.topScorers.first.value} Gol)',
-                                  style: const TextStyle(
-                                    fontSize: 11,
-                                    color: AppColors.gold,
-                                    fontWeight: FontWeight.w800,
-                                  ),
-                                ),
-                              ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 14),
-                  CustomButton(
-                    text: 'Devam Et • Lobiye Dön (${provider.seasonNumber + 1}. Sezonu Oyna)',
-                    icon: Icons.meeting_room_rounded,
-                    backgroundColor: AppColors.pitchGreen,
-                    textColor: Colors.white,
-                    onPressed: () {
-                      _stopLiveStream();
-                      provider.continueToLobbyForNextSeason();
-                    },
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton.icon(
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: AppColors.gold,
-                            side: const BorderSide(color: AppColors.gold),
-                            padding: const EdgeInsets.symmetric(vertical: 10),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(11),
-                            ),
-                          ),
-                          onPressed: () {
-                            _stopLiveStream();
-                            provider.replaySeasonWithSameSquads();
-                            _toggleLiveMatchStream(provider);
-                          },
-                          icon: const Icon(Icons.replay_rounded, size: 16),
-                          label: const Text(
-                            'Aynı Kadrolarla Tekrar Akıt',
-                            style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w800),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
+            _buildEndOfSeasonSummaryCard(
+              context: context,
+              provider: provider,
+              champion: champion,
+              myTeam: myTeam,
+              myRank: myRank,
+              totalTeams: table.length,
             ),
 
-          // 3. RECENT FLOWING RESULTS RIBBON (ÖNÜNDEN GEÇEN SON MAÇLAR ŞERİDİ)
-          if (recentPlayed.isNotEmpty) ...[
+          // 3. USER'S WEEK-BY-WEEK MATCH RESULTS (GALİBİYET / BERABERLİK / MAĞLUBİYET + SKOR)
+          if (userHistory.isNotEmpty) ...[
             Container(
               margin: const EdgeInsets.only(bottom: 12),
               padding: const EdgeInsets.all(11),
               decoration: BoxDecoration(
-                color: Colors.black.withValues(alpha: 0.34),
+                color: AppColors.surface.withValues(alpha: 0.92),
                 borderRadius: BorderRadius.circular(13),
-                border: Border.all(color: AppColors.gold.withValues(alpha: 0.35)),
+                border: Border.all(color: AppColors.border),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Row(
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Icon(Icons.bolt_rounded, size: 14, color: AppColors.gold),
-                      SizedBox(width: 4),
-                      Text(
-                        'ÖNÜNDEN GEÇEN SON MAÇ SONUÇLARI (CANLI AKIŞ)',
+                      const Text(
+                        'TAKIMININ HAFTA HAFTA MAÇ GEÇMİŞİ',
                         style: TextStyle(
                           fontSize: 10,
                           fontWeight: FontWeight.w900,
@@ -1943,46 +2003,79 @@ class _LeagueDraftViewState extends State<_LeagueDraftView> {
                           letterSpacing: 0.5,
                         ),
                       ),
+                      Text(
+                        '${myTeam.won}G • ${myTeam.drawn}B • ${myTeam.lost}M (${myTeam.points} P)',
+                        style: const TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.greenLight,
+                        ),
+                      ),
                     ],
                   ),
-                  const SizedBox(height: 7),
-                  SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      children: recentPlayed.map((m) {
+                  const SizedBox(height: 8),
+                  SizedBox(
+                    height: 36,
+                    child: ListView.separated(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: userHistory.length,
+                      separatorBuilder: (context, index) => const SizedBox(width: 6),
+                      itemBuilder: (context, index) {
+                        final m = userHistory[index];
                         final h = provider.participants[m.homeIndex];
                         final a = provider.participants[m.awayIndex];
+                        final isHome = h.id == myTeam.id;
+                        final myGoals = isHome ? m.homeGoals : m.awayGoals;
+                        final oppGoals = isHome ? m.awayGoals : m.homeGoals;
+                        final oppName = isHome ? a.name : h.name;
+
+                        final bool isWin = myGoals > oppGoals;
+                        final bool isDraw = myGoals == oppGoals;
+                        final Color badgeColor = isWin
+                            ? AppColors.pitchGreen
+                            : (isDraw ? AppColors.gold : AppColors.error);
+                        final String badgeCode = isWin ? 'G' : (isDraw ? 'B' : 'M');
+
                         return Container(
-                          margin: const EdgeInsets.only(right: 8),
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                           decoration: BoxDecoration(
-                            color: AppColors.surface.withValues(alpha: 0.92),
-                            borderRadius: BorderRadius.circular(9),
-                            border: Border.all(color: AppColors.borderGreen.withValues(alpha: 0.45)),
+                            color: Colors.black.withValues(alpha: 0.32),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: badgeColor.withValues(alpha: 0.7)),
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Text(
-                                'H${m.matchday}: ',
-                                style: const TextStyle(
-                                  fontSize: 9.5,
-                                  fontWeight: FontWeight.w900,
-                                  color: AppColors.gold,
+                              Container(
+                                width: 18,
+                                height: 18,
+                                alignment: Alignment.center,
+                                decoration: BoxDecoration(
+                                  color: badgeColor,
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: Text(
+                                  badgeCode,
+                                  style: TextStyle(
+                                    fontSize: 9.5,
+                                    fontWeight: FontWeight.w900,
+                                    color: isDraw ? const Color(0xFF06160F) : Colors.white,
+                                  ),
                                 ),
                               ),
+                              const SizedBox(width: 6),
                               Text(
-                                '${h.name} ${m.homeGoals}-${m.awayGoals} ${a.name}',
+                                'H${m.matchday}: $myGoals-$oppGoals $oppName',
                                 style: const TextStyle(
                                   fontSize: 10.5,
-                                  fontWeight: FontWeight.w800,
+                                  fontWeight: FontWeight.w700,
                                   color: Colors.white,
                                 ),
                               ),
                             ],
                           ),
                         );
-                      }).toList(),
+                      },
                     ),
                   ),
                 ],
@@ -2331,29 +2424,49 @@ class _LeagueDraftViewState extends State<_LeagueDraftView> {
   ) {
     final home = provider.participants[match.homeIndex];
     final away = provider.participants[match.awayIndex];
+    final isHumanInMatch = !home.isBot || !away.isBot;
+    final userIsHome = !home.isBot;
+
+    String outcomeLabel = '${match.matchday}. HAFTA MAÇ SONUCU';
+    Color outcomeColor = AppColors.gold;
+    if (isHumanInMatch) {
+      final myGoals = userIsHome ? match.homeGoals : match.awayGoals;
+      final oppGoals = userIsHome ? match.awayGoals : match.homeGoals;
+      if (myGoals > oppGoals) {
+        outcomeLabel = '${match.matchday}. HAFTA • GALİBİYET (+3 PUAN)';
+        outcomeColor = AppColors.pitchGreen;
+      } else if (myGoals == oppGoals) {
+        outcomeLabel = '${match.matchday}. HAFTA • BERABERLİK (+1 PUAN)';
+        outcomeColor = AppColors.gold;
+      } else {
+        outcomeLabel = '${match.matchday}. HAFTA • MAĞLUBİYET (0 PUAN)';
+        outcomeColor = AppColors.error;
+      }
+    }
 
     return Container(
       key: ValueKey('flow_${match.matchday}_${match.homeIndex}_${match.awayIndex}'),
-      padding: const EdgeInsets.all(13),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Colors.black.withValues(alpha: 0.42),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.gold.withValues(alpha: 0.65), width: 1.1),
+        border: Border.all(color: outcomeColor.withValues(alpha: 0.85), width: 1.3),
       ),
       child: Column(
         children: [
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
             decoration: BoxDecoration(
-              color: AppColors.gold.withValues(alpha: 0.20),
+              color: outcomeColor.withValues(alpha: 0.22),
               borderRadius: BorderRadius.circular(6),
+              border: Border.all(color: outcomeColor.withValues(alpha: 0.7)),
             ),
             child: Text(
-              '${match.matchday}. HAFTA MAÇ SONUCU (90\' BİTTİ)',
-              style: const TextStyle(
-                fontSize: 9.5,
+              outcomeLabel,
+              style: TextStyle(
+                fontSize: 10,
                 fontWeight: FontWeight.w900,
-                color: AppColors.gold,
+                color: outcomeColor == AppColors.pitchGreen ? AppColors.greenLight : outcomeColor,
               ),
             ),
           ),
@@ -2369,10 +2482,10 @@ class _LeagueDraftViewState extends State<_LeagueDraftView> {
                       textAlign: TextAlign.right,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 13.5,
                         fontWeight: FontWeight.w900,
-                        color: Colors.white,
+                        color: !home.isBot ? AppColors.gold : Colors.white,
                       ),
                     ),
                     Text(
@@ -2387,16 +2500,16 @@ class _LeagueDraftViewState extends State<_LeagueDraftView> {
                 margin: const EdgeInsets.symmetric(horizontal: 12),
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                 decoration: BoxDecoration(
-                  color: AppColors.pitchGreen.withValues(alpha: 0.30),
+                  color: outcomeColor.withValues(alpha: 0.26),
                   borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: AppColors.gold, width: 1.1),
+                  border: Border.all(color: outcomeColor, width: 1.2),
                 ),
                 child: Text(
                   '${match.homeGoals} - ${match.awayGoals}',
                   style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w900,
-                    color: AppColors.gold,
+                    color: Colors.white,
                   ),
                 ),
               ),
@@ -2409,10 +2522,10 @@ class _LeagueDraftViewState extends State<_LeagueDraftView> {
                       textAlign: TextAlign.left,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 13.5,
                         fontWeight: FontWeight.w900,
-                        color: Colors.white,
+                        color: !away.isBot ? AppColors.gold : Colors.white,
                       ),
                     ),
                     Text(
@@ -2448,79 +2561,341 @@ class _LeagueDraftViewState extends State<_LeagueDraftView> {
     );
   }
 
+  Widget _buildEndOfSeasonSummaryCard({
+    required BuildContext context,
+    required LeagueDraftProvider provider,
+    required LeagueParticipant champion,
+    required LeagueParticipant myTeam,
+    required int myRank,
+    required int totalTeams,
+  }) {
+    final isUserChampion = champion.id == myTeam.id;
+    String statusSummary;
+    Color statusColor;
+    if (myRank == 1) {
+      statusSummary = 'LİG ŞAMPİYONU OLDUN! Kupayı kaldırdın!';
+      statusColor = AppColors.gold;
+    } else if (myRank <= 4) {
+      statusSummary = 'Ligi $myRank. sırada bitirerek Şampiyonlar Ligi potasına girdin!';
+      statusColor = AppColors.greenLight;
+    } else if (myRank <= 6) {
+      statusSummary = 'Ligi $myRank. sırada tamamlayarak Avrupa Kupası bileti aldın.';
+      statusColor = AppColors.greenLight;
+    } else if (totalTeams >= 16 && myRank >= totalTeams - 2) {
+      statusSummary = 'Ligi $myRank. sırada tamamladın ve küme düşme hattında kaldın.';
+      statusColor = AppColors.error;
+    } else {
+      statusSummary = 'Ligi $myRank. sırada orta sıralarda tamamladın.';
+      statusColor = Colors.white;
+    }
+
+    final topScorerText = provider.topScorers.isNotEmpty
+        ? '${provider.topScorers.first.key} (${provider.topScorers.first.value} Gol)'
+        : 'Belirlenmedi';
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            AppColors.gold.withValues(alpha: 0.24),
+            const Color(0xFF0E2D20).withValues(alpha: 0.96),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.gold, width: 1.5),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(9),
+                decoration: BoxDecoration(
+                  color: AppColors.gold.withValues(alpha: 0.20),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(Icons.emoji_events_rounded, color: AppColors.gold, size: 32),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '${provider.seasonNumber}. SEZON SONU RAPORU • NELER OLDU?',
+                      style: const TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 0.7,
+                        color: AppColors.gold,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      isUserChampion
+                          ? 'ŞAMPİYON: ${myTeam.name}!'
+                          : 'Şampiyon: ${champion.name} (${champion.points} P)',
+                      style: const TextStyle(
+                        fontSize: 16.5,
+                        fontWeight: FontWeight.w900,
+                        color: Colors.white,
+                      ),
+                    ),
+                    Text(
+                      statusSummary,
+                      style: TextStyle(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w800,
+                        color: statusColor,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+
+          // Season Breakdown Box ("Bu oldu, şu oldu")
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: Colors.black.withValues(alpha: 0.34),
+              borderRadius: BorderRadius.circular(11),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '• Senin Derecen: $myRank / $totalTeams Takım • ${myTeam.points} Puan (${myTeam.overallTeamPower} OVR)',
+                  style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w800, color: Colors.white),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  '• Karnen: ${myTeam.played} Maçta ${myTeam.won} Galibiyet, ${myTeam.drawn} Beraberlik, ${myTeam.lost} Mağlubiyet',
+                  style: const TextStyle(fontSize: 11, color: AppColors.greenLight, fontWeight: FontWeight.w700),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  '• Gol İstatistiğin: ${myTeam.goalsFor} Gol Attın, ${myTeam.goalsAgainst} Gol Yedin (Averaj: ${myTeam.goalDifference >= 0 ? "+${myTeam.goalDifference}" : myTeam.goalDifference})',
+                  style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  '• Sezonun Gol Kralı: $topScorerText',
+                  style: const TextStyle(fontSize: 11, color: AppColors.gold, fontWeight: FontWeight.w800),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 10),
+
+          // View Squad & Share Squad Buttons
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.white,
+                    side: const BorderSide(color: AppColors.pitchGreen, width: 1.2),
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(11)),
+                  ),
+                  onPressed: () => _showTeamSquadSheet(context, myTeam),
+                  icon: const Icon(Icons.stadium_outlined, size: 16, color: AppColors.greenLight),
+                  label: const Text(
+                    'Kadromu Gör',
+                    style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w800),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: OutlinedButton.icon(
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.gold,
+                    side: const BorderSide(color: AppColors.gold, width: 1.2),
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(11)),
+                  ),
+                  onPressed: () => _shareSquadAndSeasonResult(
+                    context,
+                    provider: provider,
+                    team: myTeam,
+                    rank: myRank,
+                    totalTeams: totalTeams,
+                  ),
+                  icon: const Icon(Icons.share_outlined, size: 16, color: AppColors.gold),
+                  label: const Text(
+                    'Kadroyu Paylaş',
+                    style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w800),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+
+          // Next Season: Always Build a Brand New Team (No Continuing with Same Squad!)
+          CustomButton(
+            text: '${provider.seasonNumber + 1}. Sezon İçin Yeni Takım Kur',
+            icon: Icons.autorenew_rounded,
+            backgroundColor: AppColors.pitchGreen,
+            textColor: Colors.white,
+            onPressed: () {
+              _stopLiveStream();
+              provider.startNewSeasonWithNewTeam();
+            },
+          ),
+          const SizedBox(height: 6),
+          CustomButton(
+            text: 'Lobiye Dön (${provider.seasonNumber + 1}. Sezon Ayarları)',
+            icon: Icons.meeting_room_outlined,
+            isOutlined: true,
+            height: 42,
+            onPressed: () {
+              _stopLiveStream();
+              provider.continueToLobbyForNextSeason();
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _shareSquadAndSeasonResult(
+    BuildContext context, {
+    required LeagueDraftProvider provider,
+    required LeagueParticipant team,
+    required int rank,
+    required int totalTeams,
+  }) {
+    final squadLines = team.squad
+        .map((p) => '${p.specificPosition}: ${p.name} (${p.rating} - ${p.seasonLabel} ${p.clubName})')
+        .join('\n');
+    final shareText = '''
+Futbol Party • Lig Draft (${provider.seasonNumber}. Sezon)
+Takım: ${team.name} (${team.overallTeamPower} OVR)
+Hoca: ${team.manager?.name ?? "-"} • Diziliş: ${team.formation?.code ?? "-"}
+Lig Sonucu: $rank / $totalTeams Takım • ${team.points} Puan (${team.won}G ${team.drawn}B ${team.lost}M)
+İlk 11 Kadrom:
+$squadLines
+'''.trim();
+
+    Clipboard.setData(ClipboardData(text: shareText));
+    AppNotification.show(
+      context,
+      title: 'Kadro & Sezon Özeti Kopyalandı',
+      message: 'İlk 11 kadron ve lig derecen panoya kopyalandı, istediğin yerde paylaşabilirsin!',
+      type: AppNotificationType.success,
+      icon: Icons.share_rounded,
+    );
+  }
+
   void _showTeamSquadSheet(BuildContext context, LeagueParticipant team) {
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       backgroundColor: const Color(0xFF0A2419),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
       ),
       builder: (ctx) {
-        return Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                '${team.name} • ${team.overallTeamPower} OVR',
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w900,
-                  color: Colors.white,
-                ),
-              ),
-              Text(
-                'Hoca: ${team.manager?.name ?? ""} (${team.manager?.styleTitle ?? ""}) • Diziliş: ${team.formation?.code ?? ""}',
-                style: const TextStyle(fontSize: 11.5, color: AppColors.gold),
-              ),
-              const Divider(height: 18, color: AppColors.border),
-              Flexible(
-                child: ListView.builder(
-                  shrinkWrap: true,
-                  itemCount: team.squad.length,
-                  itemBuilder: (_, i) {
-                    final p = team.squad[i];
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 4),
-                      child: Row(
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          SizedBox(
-                            width: 34,
-                            child: Text(
-                              p.specificPosition,
-                              style: const TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w800,
-                                color: AppColors.greenLight,
-                              ),
-                            ),
-                          ),
-                          Expanded(
-                            child: Text(
-                              '${p.name} (${p.seasonLabel} ${p.clubName})',
-                              style: const TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w700,
-                                color: Colors.white,
-                              ),
+                          Text(
+                            '${team.name} • ${team.overallTeamPower} OVR',
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w900,
+                              color: Colors.white,
                             ),
                           ),
                           Text(
-                            '${p.rating} OVR',
-                            style: const TextStyle(
-                              fontSize: 11.5,
-                              fontWeight: FontWeight.w900,
-                              color: AppColors.gold,
-                            ),
+                            'Hoca: ${team.manager?.name ?? ""} • Diziliş: ${team.formation?.code ?? ""}',
+                            style: const TextStyle(fontSize: 11.5, color: AppColors.gold),
                           ),
                         ],
                       ),
-                    );
-                  },
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close_rounded, color: Colors.white70),
+                      onPressed: () => Navigator.pop(ctx),
+                    ),
+                  ],
                 ),
-              ),
-            ],
+                const SizedBox(height: 8),
+                _buildInteractiveFormationPitch(
+                  provider: null,
+                  participant: team,
+                  interactive: false,
+                ),
+                const SizedBox(height: 10),
+                Flexible(
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: team.squad.length,
+                    itemBuilder: (_, i) {
+                      final p = team.squad[i];
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 3.5),
+                        child: Row(
+                          children: [
+                            SizedBox(
+                              width: 36,
+                              child: Text(
+                                p.specificPosition,
+                                style: const TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w800,
+                                  color: AppColors.greenLight,
+                                ),
+                              ),
+                            ),
+                            Expanded(
+                              child: Text(
+                                '${p.name} (${p.seasonLabel} ${p.clubName})',
+                                style: const TextStyle(
+                                  fontSize: 11.5,
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                            Text(
+                              '${p.rating} OVR',
+                              style: const TextStyle(
+                                fontSize: 11.5,
+                                fontWeight: FontWeight.w900,
+                                color: AppColors.gold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
           ),
         );
       },

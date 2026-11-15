@@ -52,6 +52,33 @@ class FormationOption {
       ...List.filled(forwards, 'FWD'),
     ];
   }
+
+  /// Returns the 11 specific Turkish position codes on the visual pitch (index 0 = KL, 1..defenders = DEF, etc.)
+  List<String> get specificSlotLabels {
+    switch (code) {
+      case '4-3-3':
+        return ['KL', 'SLB', 'STP', 'STP', 'SĞB', 'DOS', 'OS', 'OOS', 'SLK', 'SNT', 'SĞK'];
+      case '4-2-3-1':
+        return ['KL', 'SLB', 'STP', 'STP', 'SĞB', 'DOS', 'DOS', 'SLK', 'OOS', 'SĞK', 'SNT'];
+      case '3-5-2':
+        return ['KL', 'STP', 'STP', 'STP', 'SLK', 'OS', 'DOS', 'OOS', 'SĞK', 'SNT', 'SNT'];
+      case '4-4-2':
+        return ['KL', 'SLB', 'STP', 'STP', 'SĞB', 'SLO', 'OS', 'OS', 'SĞO', 'SNT', 'SNT'];
+      case '3-4-3':
+        return ['KL', 'STP', 'STP', 'STP', 'SLO', 'OS', 'OS', 'SĞO', 'SLK', 'SNT', 'SĞK'];
+      case '5-3-2':
+        return ['KL', 'SLB', 'STP', 'STP', 'STP', 'SĞB', 'DOS', 'OS', 'OOS', 'SNT', 'SNT'];
+      case '4-1-4-1':
+        return ['KL', 'SLB', 'STP', 'STP', 'SĞB', 'DOS', 'SLO', 'OS', 'OS', 'SĞO', 'SNT'];
+      default:
+        return [
+          'KL',
+          ...List.filled(defenders, 'DEF'),
+          ...List.filled(midfielders, 'OS'),
+          ...List.filled(forwards, 'SNT'),
+        ];
+    }
+  }
 }
 
 class EraPlayerCandidate {
@@ -120,6 +147,7 @@ class LeagueParticipant {
   ManagerOption? manager;
   FormationOption? formation;
   final List<EraPlayerCandidate> squad;
+  final List<EraPlayerCandidate?> pitchSlots = List<EraPlayerCandidate?>.filled(11, null);
 
   int played = 0;
   int won = 0;
@@ -167,6 +195,12 @@ class LeagueParticipant {
         ? averagePlayerRating.round()
         : (defs.fold<int>(0, (a, b) => a + b.rating) / defs.length).round();
     return base + (manager?.defenseBonus ?? 0) + (formation?.defenseBonus ?? 0);
+  }
+
+  void syncSquadFromPitchSlots() {
+    squad
+      ..clear()
+      ..addAll(pitchSlots.whereType<EraPlayerCandidate>());
   }
 
   void resetLeagueStats() {

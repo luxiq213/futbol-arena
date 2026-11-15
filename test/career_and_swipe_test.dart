@@ -175,10 +175,16 @@ void main() {
 
       final auctionProvider = AuctionDuelGameProvider(
         difficulty: GameDifficulty.medium,
+        playMode: PlayModeType.solo,
       );
+      expect(auctionProvider.isDuelMode, isFalse);
       expect(auctionProvider.phase, AuctionPhase.bidding);
-      expect(auctionProvider.currentBid, 2);
-      expect(auctionProvider.canUserCallProve, isTrue);
+      final initialTarget = auctionProvider.currentBid;
+      expect(initialTarget, inInclusiveRange(3, 8));
+      auctionProvider.adjustSoloTarget(2);
+      expect(auctionProvider.currentBid, initialTarget + 2);
+      auctionProvider.startSoloProving();
+      expect(auctionProvider.phase, AuctionPhase.provingByUser);
     });
 
     test('Ad-Free Mode requires a registered account and cannot be activated by guest user', () async {
@@ -249,7 +255,7 @@ void main() {
         expect(draftProvider.phase, LeagueDraftPhase.pickPlayers);
         for (int slot = 0; slot < 11; slot++) {
           expect(draftProvider.currentSpunClubPack, isNotNull);
-          expect(draftProvider.currentPlayerChoices.length, 3);
+          expect(draftProvider.currentPlayerChoices.length, 5);
           draftProvider.selectPlayerForSquad(
             draftProvider.currentPlayerChoices.first,
           );
