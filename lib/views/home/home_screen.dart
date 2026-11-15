@@ -62,6 +62,7 @@ class _HomeScreenState extends State<HomeScreen> {
       backgroundColor: AppColors.background,
       body: StadiumBackground(
         showFieldLines: true,
+        showLiveMatch: _activeTab == 0,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [

@@ -11,7 +11,7 @@ class StadiumBackground extends StatefulWidget {
     super.key,
     required this.child,
     this.showFieldLines = true,
-    this.showLiveMatch = true,
+    this.showLiveMatch = false,
   });
 
   @override
@@ -28,7 +28,20 @@ class _StadiumBackgroundState extends State<StadiumBackground>
     _matchController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 18000),
-    )..repeat();
+    );
+    if (widget.showLiveMatch) {
+      _matchController.repeat();
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant StadiumBackground oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.showLiveMatch && !_matchController.isAnimating) {
+      _matchController.repeat();
+    } else if (!widget.showLiveMatch && _matchController.isAnimating) {
+      _matchController.stop();
+    }
   }
 
   @override
