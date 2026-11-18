@@ -1,5 +1,7 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../core/config/app_config.dart';
 import '../../core/constants/app_colors.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/locale_provider.dart';
@@ -19,6 +21,9 @@ class AdBannerWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (!AppConfig.enableAdsAndIapInStoreBuild) {
+      return const SizedBox.shrink();
+    }
     final user = context.watch<AuthProvider>().currentUser;
     final loc = context.watch<LocaleProvider>();
     if (user != null && user.isAdFree) {
@@ -391,7 +396,7 @@ class _AdFreePurchaseSheetContent extends StatelessWidget {
                 ),
               ),
               onPressed: () async {
-                final ok = await auth.setAdFreeMode(true);
+                final ok = await auth.purchaseAdFree();
                 if (ok && context.mounted) {
                   Navigator.pop(context);
                   AppNotification.show(
@@ -465,29 +470,31 @@ class _AdFreePurchaseSheetContent extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(height: 8),
-            TextButton(
-              onPressed: () async {
-                await auth.setAdFreeMode(false);
-                if (context.mounted) {
-                  Navigator.pop(context);
-                  AppNotification.show(
-                    context,
-                    title: 'Reklamlı Görünüme Dönüldü (Test)',
-                    subtitle: 'Reklam alanları tekrar görünür hale getirildi.',
-                    type: AppNotificationType.highlight,
-                    icon: Icons.visibility_outlined,
-                  );
-                }
-              },
-              child: const Text(
-                'Test İçin Reklamlı Görünüme Geri Dön',
-                style: TextStyle(
-                  fontSize: 11,
-                  color: AppColors.textMuted,
+            if (kDebugMode) ...[
+              const SizedBox(height: 8),
+              TextButton(
+                onPressed: () async {
+                  await auth.setAdFreeMode(false);
+                  if (context.mounted) {
+                    Navigator.pop(context);
+                    AppNotification.show(
+                      context,
+                      title: 'Reklamlı Görünüme Dönüldü (Test)',
+                      subtitle: 'Reklam alanları tekrar görünür hale getirildi.',
+                      type: AppNotificationType.highlight,
+                      icon: Icons.visibility_outlined,
+                    );
+                  }
+                },
+                child: const Text(
+                  'Test İçin Reklamlı Görünüme Geri Dön',
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: AppColors.textMuted,
+                  ),
                 ),
               ),
-            ),
+            ],
           ],
         ],
       ),

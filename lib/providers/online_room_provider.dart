@@ -1,5 +1,7 @@
+import 'dart:async';
 import 'dart:math';
 import 'package:flutter/foundation.dart';
+import '../core/services/supabase_service.dart';
 import '../data/models/game_room_model.dart';
 import '../data/models/play_mode_model.dart';
 import '../data/models/user_model.dart';
@@ -8,6 +10,7 @@ class OnlineRoomProvider extends ChangeNotifier {
   GameRoomModel? _activeRoom;
   bool _isCreatingRoom = false;
   String? _errorMessage;
+  StreamSubscription<List<Map<String, dynamic>>>? _roomSubscription;
 
   GameRoomModel? get activeRoom => _activeRoom;
   bool get isCreatingRoom => _isCreatingRoom;
@@ -22,7 +25,15 @@ class OnlineRoomProvider extends ChangeNotifier {
     return 'F$randomPart';
   }
 
-  /// Create a new lobby for the selected game mode
+  void _listenToRoomStream(String code) {
+    _roomSubscription?.cancel();
+    _roomSubscription = SupabaseService.instance.subscribeToRoom(code, (updatedRoom) {
+      _activeRoom = updatedRoom;
+      notifyListeners();
+    });
+  }
+
+  /// Create a new lobby for the selected game mode (Supabase Realtime + Local Fallback)
   Future<void> createRoom(
     UserModel hostUser, {
     GameTargetType targetGame = GameTargetType.commonPlayer,
@@ -30,8 +41,6 @@ class OnlineRoomProvider extends ChangeNotifier {
     _isCreatingRoom = true;
     _errorMessage = null;
     notifyListeners();
-
-    await Future.delayed(const Duration(milliseconds: 500));
 
     final code = _generateRoomCode();
     final hostParticipant = RoomParticipant(
@@ -42,7 +51,28 @@ class OnlineRoomProvider extends ChangeNotifier {
       isReady: true,
     );
 
-    // Mock friend joining the invite lobby
+    if (SupabaseService.instance.isReady) {
+      final initialRoom = GameRoomModel(
+        code: code,
+        hostId: hostUser.id,
+        gameTitle: targetGame.title,
+        targetGame: targetGame,
+        participants: [hostParticipant],
+        status: GameRoomStatus.waiting,
+      );
+      final ok = await SupabaseService.instance.createOnlineRoom(initialRoom);
+      if (ok) {
+        _activeRoom = initialRoom;
+        _listenToRoomStream(code);
+        _isCreatingRoom = false;
+        notifyListeners();
+        return;
+      }
+    }
+
+    await Future.delayed(const Duration(milliseconds: 500));
+
+    // Local fallback when Supabase credentials are not yet set
     const friend1 = RoomParticipant(
       id: 'mock_friend_1',
       name: 'Burak',
@@ -64,7 +94,7 @@ class OnlineRoomProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Join existing room
+  /// Join existing room (Supabase Realtime + Local Fallback)
   Future<bool> joinRoom(
     String code,
     UserModel user, {
@@ -73,8 +103,6 @@ class OnlineRoomProvider extends ChangeNotifier {
     _isCreatingRoom = true;
     _errorMessage = null;
     notifyListeners();
-
-    await Future.delayed(const Duration(milliseconds: 500));
 
     final cleanCode = code.trim().toUpperCase();
     if (cleanCode.length < 4) {
@@ -91,6 +119,27 @@ class OnlineRoomProvider extends ChangeNotifier {
       isHost: false,
       isReady: true,
     );
+
+    if (SupabaseService.instance.isReady) {
+      final joinedRoom = await SupabaseService.instance.joinOnlineRoom(
+        code: cleanCode,
+        participant: newParticipant,
+      );
+      if (joinedRoom != null) {
+        _activeRoom = joinedRoom;
+        _listenToRoomStream(cleanCode);
+        _isCreatingRoom = false;
+        notifyListeners();
+        return true;
+      } else {
+        _errorMessage = 'Bu davet koduyla aktif bir oda bulunamadı.';
+        _isCreatingRoom = false;
+        notifyListeners();
+        return false;
+      }
+    }
+
+    await Future.delayed(const Duration(milliseconds: 500));
 
     const mockHost = RoomParticipant(
       id: 'mock_host',
@@ -124,12 +173,21 @@ class OnlineRoomProvider extends ChangeNotifier {
     }).toList();
 
     _activeRoom = _activeRoom!.copyWith(participants: updatedParticipants);
+    SupabaseService.instance.updateOnlineRoom(_activeRoom!);
     notifyListeners();
   }
 
   void leaveRoom() {
+    _roomSubscription?.cancel();
+    _roomSubscription = null;
     _activeRoom = null;
     _errorMessage = null;
     notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _roomSubscription?.cancel();
+    super.dispose();
   }
 }

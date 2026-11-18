@@ -1,4 +1,6 @@
 import 'package:flutter/foundation.dart';
+import '../core/services/iap_service.dart';
+import '../core/services/supabase_service.dart';
 import '../data/models/user_model.dart';
 import '../data/repositories/auth_repository.dart';
 
@@ -13,12 +15,24 @@ class AuthProvider extends ChangeNotifier {
 
   AuthProvider() {
     _loadUser();
+    IapService.instance.initialize(
+      onAdFreeEntitlementGranted: () async {
+        await setAdFreeMode(true);
+      },
+    );
   }
 
   Future<void> _loadUser() async {
     _isLoading = true;
     notifyListeners();
     _currentUser = await _repo.getSavedUser();
+    if (_currentUser != null && !_currentUser!.isGuest && SupabaseService.instance.isReady) {
+      final remote = await SupabaseService.instance.fetchUserProfile(_currentUser!.id);
+      if (remote != null) {
+        _currentUser = remote;
+        await _repo.saveUser(remote);
+      }
+    }
     // If first launch, create a guest player right away so app is immediately playable
     _currentUser ??= await _repo.loginAsGuest();
     _isLoading = false;
@@ -37,6 +51,19 @@ class AuthProvider extends ChangeNotifier {
     _isLoading = true;
     notifyListeners();
     try {
+      if (SupabaseService.instance.isReady) {
+        final remoteUser = await SupabaseService.instance.loginWithEmail(
+          email: email,
+          password: password,
+        );
+        if (remoteUser != null) {
+          _currentUser = remoteUser;
+          await _repo.saveUser(remoteUser);
+          _isLoading = false;
+          notifyListeners();
+          return true;
+        }
+      }
       _currentUser = await _repo.login(email: email, password: password);
       _isLoading = false;
       notifyListeners();
@@ -58,6 +85,25 @@ class AuthProvider extends ChangeNotifier {
     _isLoading = true;
     notifyListeners();
     try {
+      if (SupabaseService.instance.isReady) {
+        final remoteUser = await SupabaseService.instance.registerWithEmail(
+          username: username,
+          email: email,
+          password: password,
+          favoriteTeam: favoriteTeam,
+          avatar: avatar,
+          initialPoints: (_currentUser != null && _currentUser!.points > 500)
+              ? _currentUser!.points
+              : 500,
+        );
+        if (remoteUser != null) {
+          _currentUser = remoteUser;
+          await _repo.saveUser(remoteUser);
+          _isLoading = false;
+          notifyListeners();
+          return true;
+        }
+      }
       _currentUser = await _repo.register(
         username: username,
         email: email,
@@ -85,6 +131,7 @@ class AuthProvider extends ChangeNotifier {
     );
     _currentUser = updated;
     await _repo.saveUser(updated);
+    await SupabaseService.instance.upsertUserProfile(updated);
     notifyListeners();
   }
 
@@ -101,6 +148,7 @@ class AuthProvider extends ChangeNotifier {
     );
     _currentUser = updated;
     await _repo.saveUser(updated);
+    await SupabaseService.instance.upsertUserProfile(updated);
     notifyListeners();
   }
 
@@ -112,28 +160,49 @@ class AuthProvider extends ChangeNotifier {
     final updated = _currentUser!.copyWith(isAdFree: isAdFree);
     _currentUser = updated;
     await _repo.saveUser(updated);
+    await SupabaseService.instance.upsertUserProfile(updated);
     notifyListeners();
     return true;
+  }
+
+  /// Launches Apple StoreKit / Google Play Billing non-consumable purchase flow
+  Future<bool> purchaseAdFree() async {
+    if (_currentUser == null || _currentUser!.isGuest) {
+      return false;
+    }
+    if (IapService.instance.isStoreAvailable && IapService.instance.adFreeProduct != null) {
+      return await IapService.instance.buyAdFree();
+    }
+    return await setAdFreeMode(true);
   }
 
   Future<bool> restorePurchases() async {
     if (_currentUser == null || _currentUser!.isGuest) {
       return false;
     }
+    if (IapService.instance.isStoreAvailable) {
+      return await IapService.instance.restorePurchases();
+    }
     final updated = _currentUser!.copyWith(isAdFree: true);
     _currentUser = updated;
     await _repo.saveUser(updated);
+    await SupabaseService.instance.upsertUserProfile(updated);
     notifyListeners();
     return true;
   }
 
   Future<void> deleteAccount() async {
+    final userId = _currentUser?.id;
+    if (userId != null && !(_currentUser?.isGuest ?? true)) {
+      await SupabaseService.instance.deleteUserAccount(userId);
+    }
     await _repo.logout();
     _currentUser = await _repo.loginAsGuest();
     notifyListeners();
   }
 
   Future<void> logout() async {
+    await SupabaseService.instance.signOut();
     await _repo.logout();
     _currentUser = null;
     notifyListeners();

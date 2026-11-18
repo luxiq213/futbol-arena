@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'core/services/supabase_service.dart';
 import 'core/theme/app_theme.dart';
 import 'providers/auth_provider.dart';
 import 'providers/career_game_provider.dart';
@@ -11,6 +12,14 @@ import 'views/home/home_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Lock screen orientation to Portrait for iOS & Android
+  await SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+  ]);
+
+  // Initialize Supabase if SUPABASE_URL & SUPABASE_ANON_KEY are configured
+  await SupabaseService.instance.initialize();
 
   // Set system UI overlay style for dark stadium look
   SystemChrome.setSystemUIOverlayStyle(
