@@ -1,0 +1,1175 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Futbol Arena - 20 Dil App Store Vitrin & Metin Stüdyosu</title>
+  <style>
+    :root {
+      --bg: #071710;
+      --surface: #0d291e;
+      --gold: #f6b93b;
+      --gold-light: #ffe082;
+      --green: #16a34a;
+      --green-bright: #22c55e;
+      --cream: #fff8eb;
+      --dark-ink: #081c13;
+      --text: #f8fafc;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
+      background: #05100b;
+      color: var(--text);
+      padding: 20px 16px 80px;
+    }
+    .studio-header {
+      max-width: 1480px;
+      margin: 0 auto 22px;
+      background: linear-gradient(135deg, #0f3526, #071a12);
+      border: 1.5px solid rgba(246, 185, 59, 0.55);
+      border-radius: 20px;
+      padding: 20px 24px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .studio-header h1 {
+      font-size: 1.45rem;
+      font-weight: 900;
+      color: var(--gold);
+    }
+    .studio-header p {
+      font-size: 0.9rem;
+      color: #a7f3d0;
+      margin-top: 4px;
+    }
+    .lang-bar {
+      max-width: 1480px;
+      margin: 0 auto 24px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .lang-btn {
+      background: #0d281d;
+      color: #cbd5e1;
+      border: 1px solid #1e4d38;
+      border-radius: 10px;
+      padding: 8px 13px;
+      font-size: 0.84rem;
+      font-weight: 800;
+      cursor: pointer;
+      transition: all 0.16s ease;
+    }
+    .lang-btn:hover {
+      border-color: var(--gold);
+      color: #fff;
+    }
+    .lang-btn.active {
+      background: var(--gold);
+      color: #06150e;
+      border-color: var(--gold);
+      box-shadow: 0 4px 14px rgba(246, 185, 59, 0.35);
+    }
+
+    /* 5-PANEL APP STORE VITRIN SHOWCASE (MATCHING REFERENCE STYLE) */
+    .showcase-strip {
+      max-width: 1480px;
+      margin: 0 auto 36px;
+      display: grid;
+      grid-template-columns: repeat(5, minmax(265px, 1fr));
+      gap: 18px;
+      overflow-x: auto;
+      padding-bottom: 12px;
+    }
+    .poster-card {
+      position: relative;
+      height: 590px;
+      border-radius: 28px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 22px 16px 18px;
+      box-shadow: 0 18px 40px rgba(0, 0, 0, 0.55);
+      user-select: none;
+    }
+    /* Alternating Rich Gradients Like the Reference Image */
+    .poster-1, .poster-3, .poster-5 {
+      background: radial-gradient(circle at 50% 18%, #1e824c 0%, #0d4227 52%, #062114 100%);
+      border: 2px solid rgba(246, 185, 59, 0.55);
+    }
+    .poster-2, .poster-4 {
+      background: linear-gradient(180deg, #fff9ec 0%, #fde8bd 55%, #f9d58b 100%);
+      color: var(--dark-ink);
+      border: 2px solid #f6b93b;
+    }
+
+    .poster-top-pill {
+      background: linear-gradient(135deg, #113e29, #082216);
+      color: #fff;
+      border: 2px solid var(--gold);
+      border-radius: 18px;
+      padding: 11px 14px;
+      text-align: center;
+      font-weight: 900;
+      font-size: 0.96rem;
+      line-height: 1.25;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.22);
+      position: relative;
+      z-index: 3;
+    }
+    .poster-headline {
+      text-align: center;
+      font-size: 1.72rem;
+      font-weight: 900;
+      line-height: 1.08;
+      letter-spacing: -0.5px;
+      color: #ffffff;
+      text-shadow: 0 4px 16px rgba(0,0,0,0.35);
+      z-index: 3;
+    }
+    .poster-headline.gold-accent span {
+      color: var(--gold);
+      display: block;
+    }
+    .poster-2 .poster-headline, .poster-4 .poster-headline {
+      color: #0b3b24;
+      text-shadow: none;
+    }
+
+    /* Floating Angled Stickers / Badges Like Reference */
+    .floating-sticker {
+      position: absolute;
+      padding: 6px 12px;
+      border-radius: 12px;
+      font-size: 0.78rem;
+      font-weight: 900;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.28);
+      z-index: 5;
+      white-space: nowrap;
+    }
+    .sticker-gold {
+      background: linear-gradient(135deg, #ffe082, #f6b93b);
+      color: #071f14;
+      border: 1.5px solid #fff;
+    }
+    .sticker-green {
+      background: linear-gradient(135deg, #22c55e, #15803d);
+      color: #ffffff;
+      border: 1.5px solid #bbf7d0;
+    }
+    .sticker-dark {
+      background: #082015;
+      color: var(--gold);
+      border: 1.5px solid var(--gold);
+    }
+
+    /* iPhone Mockup Frame Inside Poster */
+    .phone-frame {
+      width: 218px;
+      height: 365px;
+      margin: 8px auto 0;
+      background: #071912;
+      border-radius: 32px;
+      border: 6px solid #1c2826;
+      box-shadow: 0 16px 34px rgba(0,0,0,0.48), inset 0 0 0 1.5px rgba(246,185,59,0.4);
+      padding: 10px 9px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+      z-index: 2;
+      overflow: hidden;
+    }
+    .phone-notch {
+      width: 68px;
+      height: 15px;
+      background: #000;
+      border-radius: 10px;
+      margin: 0 auto 6px;
+    }
+
+    /* Mini Pitch & Game UI Inside Phone Frame */
+    .mini-pitch {
+      background: linear-gradient(180deg, #155d3a, #0e4228);
+      border: 1.5px solid rgba(255,255,255,0.28);
+      border-radius: 14px;
+      padding: 8px 6px;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      flex: 1;
+      justify-content: space-around;
+    }
+    .pitch-row {
+      display: flex;
+      justify-content: center;
+      gap: 5px;
+    }
+    .pitch-node {
+      background: #082216;
+      border: 1.2px solid var(--gold);
+      border-radius: 7px;
+      padding: 3px 5px;
+      text-align: center;
+      min-width: 40px;
+    }
+    .pitch-node .pos {
+      font-size: 0.56rem;
+      font-weight: 900;
+      color: var(--gold);
+      display: block;
+    }
+    .pitch-node .name {
+      font-size: 0.58rem;
+      font-weight: 800;
+      color: #fff;
+      display: block;
+    }
+
+    /* Mini 3x3 Grid UI Inside Phone */
+    .mini-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 5px;
+      margin-top: 6px;
+      flex: 1;
+    }
+    .mini-cell {
+      background: #0d3322;
+      border: 1.2px solid #22c55e;
+      border-radius: 9px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 4px;
+      text-align: center;
+    }
+    .mini-cell.gold {
+      background: rgba(246,185,59,0.22);
+      border-color: var(--gold);
+    }
+    .mini-cell span {
+      font-size: 0.6rem;
+      font-weight: 800;
+      color: #fff;
+    }
+
+    /* Callout Speech Bubble Overlapping Phone */
+    .speech-bubble {
+      position: absolute;
+      right: 10px;
+      top: 195px;
+      background: linear-gradient(135deg, #fff3c4, #f6b93b);
+      color: #061810;
+      font-weight: 900;
+      font-size: 0.82rem;
+      line-height: 1.2;
+      padding: 10px 13px;
+      border-radius: 16px 16px 4px 16px;
+      box-shadow: 0 10px 24px rgba(0,0,0,0.38);
+      z-index: 6;
+      max-width: 175px;
+      border: 2px solid #fff;
+    }
+
+    .poster-bottom-card {
+      background: rgba(255, 255, 255, 0.95);
+      color: #071e14;
+      border-radius: 18px;
+      padding: 11px 13px;
+      text-align: center;
+      font-size: 0.85rem;
+      font-weight: 800;
+      line-height: 1.28;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+      z-index: 4;
+      border: 2px solid var(--gold);
+    }
+
+    /* METADATA COPY-PASTE SECTION */
+    .meta-container {
+      max-width: 1480px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+    @media (max-width: 960px) {
+      .meta-container { grid-template-columns: 1fr; }
+    }
+    .meta-box {
+      background: var(--surface);
+      border: 1px solid #1f513b;
+      border-radius: 16px;
+      padding: 20px;
+    }
+    .meta-box h2 {
+      color: var(--gold);
+      font-size: 1.1rem;
+      margin-bottom: 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .field-group {
+      margin-bottom: 14px;
+    }
+    .field-label {
+      font-size: 0.78rem;
+      font-weight: 800;
+      color: #86efac;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 5px;
+      display: flex;
+      justify-content: space-between;
+    }
+    .field-value {
+      background: #06150f;
+      border: 1px solid #1b4332;
+      border-radius: 10px;
+      padding: 11px 13px;
+      font-size: 0.9rem;
+      color: #f1f5f9;
+      white-space: pre-wrap;
+      line-height: 1.5;
+    }
+    .copy-btn {
+      background: rgba(246, 185, 59, 0.18);
+      color: var(--gold);
+      border: 1px solid var(--gold);
+      border-radius: 7px;
+      padding: 3px 9px;
+      font-size: 0.74rem;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .copy-btn:hover {
+      background: var(--gold);
+      color: #06150f;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="studio-header">
+    <div>
+      <h1>Futbol Arena: 20 Dil App Store Vitrin &amp; Metin Stüdyosu</h1>
+      <p>Gönderdiğin örnek vitrin tasarımına birebir uygun 5'li App Store vitrin kartları ve 20 dilde kısa/uzun mağaza açıklamaları</p>
+    </div>
+    <div id="active-lang-badge" style="background:var(--gold);color:#06150f;padding:8px 16px;border-radius:12px;font-weight:900;font-size:0.9rem;">
+      Aktif Dil: Türkçe (TR)
+    </div>
+  </div>
+
+  <!-- 20 LANGUAGE SELECTOR -->
+  <div class="lang-bar" id="lang-bar"></div>
+
+  <!-- 5-CARD APP STORE SHOWCASE (MATCHING UPLOADED TANNING BUDDY LAYOUT STYLE) -->
+  <div class="showcase-strip" id="showcase-strip">
+    <!-- CARD 1: HERO / YOUR FOOTBALL BUDDY -->
+    <div class="poster-card poster-1">
+      <div class="poster-headline gold-accent" id="c1-title">
+        Senin Futbol<span>Arenan</span>
+      </div>
+
+      <div class="floating-sticker sticker-gold" style="top:138px;right:14px;transform:rotate(6deg);" id="c1-tag1">
+        Efsane Kadro Kur
+      </div>
+      <div class="floating-sticker sticker-green" style="top:208px;left:14px;transform:rotate(-7deg);" id="c1-tag2">
+        18-20 Takım Lig
+      </div>
+      <div class="floating-sticker sticker-gold" style="bottom:118px;right:16px;transform:rotate(5deg);" id="c1-tag3">
+        Online &amp; Parti
+      </div>
+
+      <!-- Center Emblem & Stadium Visual -->
+      <div style="margin:auto;text-align:center;position:relative;z-index:2;">
+        <div style="width:136px;height:136px;margin:0 auto;border-radius:34px;background:radial-gradient(circle,#f6b93b 0%,#b45309 100%);border:4px solid #fff;box-shadow:0 0 38px rgba(246,185,59,0.65);display:flex;flex-direction:column;align-items:center;justify-content:center;">
+          <div style="font-size:2.4rem;font-weight:900;color:#06150f;line-height:1;">11</div>
+          <div style="font-size:0.75rem;font-weight:900;color:#06150f;letter-spacing:1px;margin-top:3px;">FUTBOL ARENA</div>
+        </div>
+      </div>
+
+      <div class="poster-bottom-card" id="c1-bottom">
+        Hazır mısın Kaptan? Futbol bilgini şampiyonluğa dönüştür!
+      </div>
+    </div>
+
+    <!-- CARD 2: LEAGUE DRAFT & 11-SLOT PITCH -->
+    <div class="poster-card poster-2">
+      <div class="poster-top-pill" id="c2-top">
+        30 Saniyede Efsane 11'ini Sahaya Diz...
+      </div>
+
+      <div class="floating-sticker sticker-gold" style="top:102px;left:12px;transform:rotate(-11deg);" id="c2-sticker">
+        5 YILDIZ GELİR!
+      </div>
+
+      <div class="phone-frame" style="transform:rotate(-1.5deg);">
+        <div class="phone-notch"></div>
+        <div style="font-size:0.62rem;font-weight:900;color:var(--gold);text-align:center;margin-bottom:4px;">
+          4-3-3 TAKTİK SAHA • 11/11
+        </div>
+        <div class="mini-pitch">
+          <div class="pitch-row">
+            <div class="pitch-node"><span class="pos">SLK</span><span class="name">Ronaldinho</span></div>
+            <div class="pitch-node"><span class="pos">SNT</span><span class="name">Ronaldo 9</span></div>
+            <div class="pitch-node"><span class="pos">SĞK</span><span class="name">Messi 99</span></div>
+          </div>
+          <div class="pitch-row">
+            <div class="pitch-node"><span class="pos">DOS</span><span class="name">Zidane</span></div>
+            <div class="pitch-node"><span class="pos">OS</span><span class="name">Hagi 10</span></div>
+            <div class="pitch-node"><span class="pos">OOS</span><span class="name">Modric</span></div>
+          </div>
+          <div class="pitch-row">
+            <div class="pitch-node"><span class="pos">SLB</span><span class="name">R.Carlos</span></div>
+            <div class="pitch-node"><span class="pos">STP</span><span class="name">Maldini</span></div>
+            <div class="pitch-node"><span class="pos">STP</span><span class="name">Ramos</span></div>
+            <div class="pitch-node"><span class="pos">SĞB</span><span class="name">Cafu</span></div>
+          </div>
+          <div class="pitch-row">
+            <div class="pitch-node"><span class="pos">KL</span><span class="name">Buffon 95</span></div>
+          </div>
+        </div>
+        <div style="margin-top:6px;background:#16a34a;color:#fff;border-radius:8px;padding:5px;text-align:center;font-size:0.62rem;font-weight:900;">
+          38 HAFTA LİGİ SİMÜLE ET
+        </div>
+      </div>
+
+      <div style="text-align:center;font-weight:900;font-size:1.15rem;color:#0b3b24;margin-top:6px;" id="c2-bottom">
+        LİG ŞAMPİYONU KİM?
+      </div>
+    </div>
+
+    <!-- CARD 3: 3x3 FOOTBALL GRID & 3-2-1 COMMON PLAYER -->
+    <div class="poster-card poster-3">
+      <div class="poster-headline gold-accent" id="c3-title">
+        Kesişimi<span>Bul &amp; Çöz</span>
+      </div>
+
+      <div class="speech-bubble" id="c3-bubble">
+        Hem Galatasaray hem Real Madrid'de kim oynadı?
+      </div>
+
+      <div class="phone-frame" style="margin-top:14px;">
+        <div class="phone-notch"></div>
+        <div style="font-size:0.65rem;font-weight:900;color:#86efac;text-align:center;">
+          FUTBOL GRİD 3x3 • SINIRSIZ HAK
+        </div>
+        <div class="mini-grid">
+          <div class="mini-cell gold"><span>Hagi 10</span></div>
+          <div class="mini-cell"><span>Sneijder</span></div>
+          <div class="mini-cell gold"><span>Drogba</span></div>
+          <div class="mini-cell"><span>Arda Turan</span></div>
+          <div class="mini-cell gold"><span>Anelka</span></div>
+          <div class="mini-cell"><span>R.Carlos</span></div>
+          <div class="mini-cell gold"><span>İlkay G.</span></div>
+          <div class="mini-cell"><span>Mesut Özil</span></div>
+          <div class="mini-cell gold"><span>9/9 TAMAM</span></div>
+        </div>
+        <div style="margin-top:6px;background:#0d281d;border:1px solid var(--gold);border-radius:8px;padding:6px;text-align:center;font-size:0.62rem;color:var(--gold);font-weight:800;">
+          3-2-1 Ortak Oyuncu &amp; 5 Takım 1 Oyuncu
+        </div>
+      </div>
+    </div>
+
+    <!-- CARD 4: FOOTBALLER CAREER & PENALTY SHOOTOUT -->
+    <div class="poster-card poster-4">
+      <div class="poster-top-pill" id="c4-top">
+        17 Yaşından Jübileye 10 Dönemlik Kariyer
+      </div>
+
+      <div class="phone-frame" style="height:325px;">
+        <div class="phone-notch"></div>
+        <div style="font-size:0.62rem;font-weight:900;color:var(--gold);text-align:center;">
+          TRANSFER MASASI &amp; KADER PENALTISI
+        </div>
+        <div style="background:#0d3322;border:1px solid #22c55e;border-radius:11px;padding:8px;margin-top:6px;">
+          <div style="font-size:0.6rem;color:#86efac;font-weight:800;">TEKLİF 1 • İSPANYA DEVİ</div>
+          <div style="font-size:0.8rem;color:#fff;font-weight:900;">Real Madrid • Sözleşme İmzala</div>
+        </div>
+        <div style="background:#0d3322;border:1px solid var(--gold);border-radius:11px;padding:8px;margin-top:5px;">
+          <div style="font-size:0.6rem;color:var(--gold);font-weight:800;">90+4' ŞAMPİYONLUK PENALTISI</div>
+          <div style="font-size:0.75rem;color:#fff;font-weight:900;">Köşeyi Seç &amp; Topu Doksana As!</div>
+        </div>
+        <div style="background:rgba(246,185,59,0.18);border:1px dashed var(--gold);border-radius:11px;padding:8px;margin-top:auto;text-align:center;">
+          <div style="font-size:0.65rem;color:var(--gold);font-weight:900;">JÜBİLEDE GİZLİ İSTATİSTİKLER AÇILIR</div>
+          <div style="font-size:0.75rem;color:#fff;font-weight:900;">96 OVR Efsane Kartını Paylaş</div>
+        </div>
+      </div>
+
+      <div class="poster-headline" style="font-size:1.45rem;margin-top:6px;" id="c4-bottom">
+        Kariyerini Yönet
+      </div>
+    </div>
+
+    <!-- CARD 5: ONLINE LOBBY, AUCTION & PARTY DUEL -->
+    <div class="poster-card poster-5">
+      <div class="poster-headline gold-accent" id="c5-title">
+        Canlı Lobi<span>&amp; Açık Artırma</span>
+      </div>
+
+      <div class="phone-frame" style="height:315px;">
+        <div class="phone-notch"></div>
+        <div style="background:rgba(246,185,59,0.2);border:1px solid var(--gold);border-radius:10px;padding:7px;text-align:center;">
+          <div style="font-size:0.58rem;color:var(--gold);font-weight:800;">6 HANELİ DAVET KODU</div>
+          <div style="font-size:1.05rem;color:#fff;font-weight:900;letter-spacing:2px;">#FTB742</div>
+        </div>
+        <div style="background:#0d3322;border-radius:10px;padding:8px;margin-top:6px;text-align:center;">
+          <div style="font-size:0.6rem;color:#86efac;font-weight:800;">AÇIK ARTIRMA &amp; KENDİNİ SINA</div>
+          <div style="font-size:0.78rem;color:#fff;font-weight:900;margin-top:2px;">"Şampiyonlar Ligi Golcüleri: 8 Oyuncu Sayarım!"</div>
+        </div>
+        <div style="background:#0d3322;border-radius:10px;padding:8px;margin-top:6px;text-align:center;">
+          <div style="font-size:0.6rem;color:var(--gold);font-weight:800;">FUTBOL KÖPRÜSÜ</div>
+          <div style="font-size:0.72rem;color:#fff;font-weight:800;">Ortak takım arkadaşlarıyla yıldızları birbirine bağla!</div>
+        </div>
+      </div>
+
+      <div class="poster-bottom-card" id="c5-bottom">
+        Arkadaşını Davet Et veya Tek Telefondan Parti Turnuvası Aç!
+      </div>
+    </div>
+  </div>
+
+  <!-- COPY-PASTE APP STORE METADATA FOR SELECTED LANGUAGE -->
+  <div class="meta-container">
+    <div class="meta-box">
+      <h2>
+        <span>App Store Kısa Metinler &amp; Anahtar Kelimeler</span>
+      </h2>
+      <div class="field-group">
+        <div class="field-label">
+          <span>App Name / Uygulama Adı (Max 30 Karakter)</span>
+          <button class="copy-btn" onclick="copyField('m-name')">Kopyala</button>
+        </div>
+        <div class="field-value" id="m-name"></div>
+      </div>
+      <div class="field-group">
+        <div class="field-label">
+          <span>Subtitle / Alt Başlık (Max 30 Karakter)</span>
+          <button class="copy-btn" onclick="copyField('m-sub')">Kopyala</button>
+        </div>
+        <div class="field-value" id="m-sub"></div>
+      </div>
+      <div class="field-group">
+        <div class="field-label">
+          <span>Promotional Text / Tanıtım Metni (Max 170 Karakter)</span>
+          <button class="copy-btn" onclick="copyField('m-promo')">Kopyala</button>
+        </div>
+        <div class="field-value" id="m-promo"></div>
+      </div>
+      <div class="field-group">
+        <div class="field-label">
+          <span>Keywords / Anahtar Kelimeler (Max 100 Karakter)</span>
+          <button class="copy-btn" onclick="copyField('m-kw')">Kopyala</button>
+        </div>
+        <div class="field-value" id="m-kw"></div>
+      </div>
+    </div>
+
+    <div class="meta-box">
+      <h2>
+        <span>App Store Uzun Açıklama Metni (Description)</span>
+        <button class="copy-btn" onclick="copyField('m-desc')">Tamamını Kopyala</button>
+      </h2>
+      <div class="field-value" id="m-desc" style="max-height:365px;overflow-y:auto;"></div>
+    </div>
+  </div>
+
+  <script>
+    const STORE_DATA = {
+      tr: {
+        langName: "Türkçe (TR)",
+        name: "Futbol Arena: Quiz & Lig Draft",
+        sub: "Futbolcu Kariyer, Grid & Lobi",
+        promo: "Efsane kulüplerden 11'ini sahaya dizip 20 takımlı ligi simüle et, 17 yaşından jübileye kariyer yap, 3x3 Grid ve Ortak Oyuncu düellolarında futbol bilgini kanıtla!",
+        kw: "futbol,quiz,trivia,kadro,draft,kariyer,grid,futbolcu,tahmin,bilgi,yarışması,lig,menajer,online,parti",
+        c1Title: "Senin Futbol<span>Arenan</span>",
+        c1Tag1: "Efsane Kadro Kur",
+        c1Tag2: "18-20 Takım Lig",
+        c1Tag3: "Online & Parti",
+        c1Bottom: "Hazır mısın Kaptan? Futbol bilgini şampiyonluğa dönüştür!",
+        c2Top: "30 Saniyede Efsane 11'ini Sahaya Diz...",
+        c2Sticker: "5 YILDIZ GELİR!",
+        c2Bottom: "LİG ŞAMPİYONU KİM?",
+        c3Title: "Kesişimi<span>Bul & Çöz</span>",
+        c3Bubble: "Hem Galatasaray hem Real Madrid'de kim oynadı?",
+        c4Top: "17 Yaşından Jübileye 10 Dönemlik Kariyer",
+        c4Bottom: "Kariyerini Yönet",
+        c5Title: "Canlı Lobi<span>& Açık Artırma</span>",
+        c5Bottom: "Arkadaşını Davet Et veya Tek Telefondan Parti Turnuvası Aç!",
+        desc: `Futbol bilgini kanıtlamaya, kendi efsane 11'ini sahaya dizip lig şampiyonluğu yaşamaya ve 17 yaşından jübileye kadar unutulmaz bir futbolcu kariyeri yazmaya hazır mısın?
+
+Futbol Arena: Quiz & Lig Draft; 7 farklı oyun modunu tek çatı altında buluşturan en kapsamlı futbol bilgi, taktik kadro ve kariyer simülasyonu oyunudur!
+
+ÖNE ÇIKAN OYUN MODLARI:
+
+1. LİG DRAFT (KADRO KUR & LİG SİMÜLE ET)
+• 30 efsane teknik direktör ve taktik diziliş arasından seçimini yap.
+• Çekilen tarihi kulüp ve sezon paketlerinden gelen 5 yıldız futbolcudan istediğini doğrudan önündeki 2B taktik sahada mevkisine yerleştir!
+• Kadron tamamlandığı anda 18 veya 20 takımlı (34-38 haftalık) lig otomatik başlasın; her hafta maçların Galibiyet, Beraberlik ve Mağlubiyet skorlarıyla canlı aksın.
+• Sezon sonunda detaylı karne raporunu incele, kadronu gör ve arkadaşlarınla paylaş!
+
+2. FUTBOLCU KARİYERİ SİMÜLASYONU
+• 17 yaşında genç bir yetenek olarak başla; 10 dönem boyunca dev kulüplerden gelen transfer tekliflerini değerlendir.
+• Kritik sezonlarda tam ekran penaltı kader anlarında topu doksana gönder.
+• Kariyer boyunca gizli kalan gol, asist, kupa ve OVR istatistiklerin jübile töreninde açılsın!
+
+3. FUTBOL GRİD (3x3) & ORTAK OYUNCU (3-2-1)
+• Kulüp × Kulüp, Kulüp × Milli Takım ve Kupa × Kulüp kesişimlerinde oynayan yıldız futbolcuları sınırsız tahmin hakkıyla bul.
+
+4. 5 TAKIM 1 OYUNCU & FUTBOL KÖPRÜSÜ
+• Kariyer geçmişindeki 5 kulüpten gizemli futbolcuyu tahmin et veya iki yıldızı ortak takım arkadaşlarıyla birbirine bağla.
+
+5. AÇIK ARTIRMA & ONLINE DAVET LOBİSİ
+• "Kendini Sına" modunda kendi hedefini belirleyip süreye karşı yarış veya 6 haneli davet koduyla arkadaşlarınla canlı lobi kur!`
+      },
+      en: {
+        langName: "English (EN)",
+        name: "Futbol Arena: Quiz & Draft",
+        sub: "Soccer Career, 3x3 Grid & Club",
+        promo: "Build your dream XI on the tactical pitch, simulate a 20-team league season live, live a 10-stage footballer career, and master 3x3 Football Grid trivia!",
+        kw: "football,soccer,quiz,trivia,draft,lineup,career,grid, immaculate,player,guess,manager,league,duel",
+        c1Title: "Your Football<span>Trivia Arena</span>",
+        c1Tag1: "Draft Dream XI",
+        c1Tag2: "20-Team League",
+        c1Tag3: "Online & Party",
+        c1Bottom: "Ready Captain? Turn your football knowledge into trophies!",
+        c2Top: "Build Your Historic XI on the Pitch...",
+        c2Sticker: "5 STARS PER CLUB!",
+        c2Bottom: "WHO WINS THE LEAGUE?",
+        c3Title: "Solve the<span>3x3 Football Grid</span>",
+        c3Bubble: "Who played for both Real Madrid and Galatasaray?",
+        c4Top: "10-Stage Career from Age 17 to Retirement",
+        c4Bottom: "Live Your Career",
+        c5Title: "Live Lobby<span>& Auction Challenge</span>",
+        c5Bottom: "Invite Friends with a 6-Digit Code or Play Local Party Mode!",
+        desc: `Are you ready to test your football knowledge, place your dream XI directly on the tactical pitch, simulate a full 20-team league season, and live a footballer's career from age 17 to retirement?
+
+Futbol Arena: Quiz & Draft brings 7 deep football trivia and simulation modes together in one stadium experience:
+
+1. LEAGUE DRAFT (BUILD XI & SIMULATE SEASON)
+• Pick your manager and formation, then choose from 5 iconic players per spun historical club and place them directly into positions on the open tactical pitch.
+• Once your 11 is ready, the 18- or 20-team league automatically simulates week by week with live Win, Draw, and Loss scorelines, goalscorers, and an end-of-season report card you can view and share!
+
+2. FOOTBALLER CAREER SIMULATION
+• Start at age 17, sign transfer contracts across 10 career stages, score clutch full-screen penalty kicks, and unlock your hidden career stats at your retirement ceremony.
+
+3. 3x3 FOOTBALL GRID & 3-2-1 COMMON PLAYER
+• Solve Club x Club, Club x Country, and Trophy x Club intersections with unlimited guesses.
+
+4. 5 CLUBS 1 PLAYER & FOOTBALL BRIDGE
+• Identify the mystery star from 5 career clubs or connect two footballers through shared teammates.
+
+5. AUCTION CHALLENGE & ONLINE INVITE LOBBY
+• Set your own target in Solo Challenge or invite friends with a 6-digit room code!`
+      },
+      es: {
+        langName: "Español (ES)",
+        name: "Futbol Arena: Quiz y Liga",
+        sub: "Draft 11, Carrera y Grid 3x3",
+        promo: "¡Arma tu 11 histórico en la cancha táctica, simula una liga de 20 equipos semana a semana, vive tu carrera desde los 17 años y domina el Grid 3x3 de fútbol!",
+        kw: "futbol,quiz,trivia,once,draft,carrera,grid,jugador,adivinar,liga,entrenador,online,duelo,partido",
+        c1Title: "Tu Arena de<span>Fútbol Total</span>",
+        c1Tag1: "Arma tu 11 Ideal",
+        c1Tag2: "Liga 20 Equipos",
+        c1Tag3: "Online y Amigos",
+        c1Bottom: "¿Listo Capitán? ¡Convierte tu saber de fútbol en títulos!",
+        c2Top: "Coloca tu 11 Histórico en la Cancha...",
+        c2Sticker: "¡5 CRACKS POR CLUB!",
+        c2Bottom: "¿QUIÉN SERÁ CAMPEÓN?",
+        c3Title: "Resuelve el<span>Grid 3x3 y Cruces</span>",
+        c3Bubble: "¿Quién jugó tanto en el Real Madrid como en el Barça?",
+        c4Top: "Carrera de 10 Etapas hasta el Retiro",
+        c4Bottom: "Forja tu Leyenda",
+        c5Title: "Sala Online<span>y Subasta Fútbol</span>",
+        c5Bottom: "¡Invita amigos con código de 6 dígitos o juega en grupo!",
+        desc: `¡Pon a prueba cuánto sabes de fútbol en Futbol Arena: Quiz y Liga!
+
+• LIGA DRAFT (ARMA TU 11 Y SIMULA LA LIGA): Elige entrenador y formación, recibe 5 jugadores de clubes históricos, ubícalos en la cancha táctica y mira cómo se simula la liga de 18 o 20 equipos jornada a jornada con victorias, empates, derrotas y resumen final.
+• CARRERA DE FUTBOLISTA: Empieza a los 17 años, firma traspasos, patea penales decisivos a pantalla completa y descubre tus estadísticas ocultas en tu partido de despedida.
+• FUTBOL GRID 3x3, JUGADOR COMÚN (3-2-1), 5 CLUBES 1 JUGADOR, PUENTE DE FÚTBOL Y SUBASTA.`
+      },
+      pt: {
+        langName: "Português (PT)",
+        name: "Futbol Arena: Quiz e Draft",
+        sub: "Carreira, Escalação e Grid 3x3",
+        promo: "Monte seu 11 histórico no campo tático, simule uma liga de 20 times rodada a rodada, viva uma carreira dos 17 anos à aposentadoria e domine o Grid 3x3!",
+        kw: "futebol,quiz,trivia,escalacao,draft,carreira,grid,jogador,adivinhar,liga,tecnico,online,duelo",
+        c1Title: "Sua Arena de<span>Futebol Total</span>",
+        c1Tag1: "Monte seu 11",
+        c1Tag2: "Liga 20 Times",
+        c1Tag3: "Online e Festa",
+        c1Bottom: "Pronto Capitão? Transforme seu conhecimento em taças!",
+        c2Top: "Escale seu Time Histórico no Campo...",
+        c2Sticker: "5 CRAQUES POR CLUBE!",
+        c2Bottom: "QUEM VENCE A LIGA?",
+        c3Title: "Resolva o<span>Grid 3x3 e Clubes</span>",
+        c3Bubble: "Quem jogou no Real Madrid e na Seleção Brasileira?",
+        c4Top: "Carreira de 10 Temporadas com Pênaltis",
+        c4Bottom: "Viva sua Carreira",
+        c5Title: "Lobby Online<span>e Leilão de Craques</span>",
+        c5Bottom: "Convide amigos com código de 6 dígitos ou jogue em grupo!",
+        desc: `Mostre que você sabe tudo de futebol em Futbol Arena: Quiz e Draft!
+
+• LIGA DRAFT (MONTE SEU 11 E SIMULE A LIGA): Escolha técnico e formação, receba 5 jogadores por clube histórico, posicione cada um no campo tático e acompanhe a simulação automática da liga rodada a rodada com vitórias, empates, derrotas e relatório final para compartilhar sua escalação!
+• CARREIRA DE JOGADOR: Comece aos 17 anos, assine transferências, bata pênaltis decisivos em tela cheia e revele seus números secretos na aposentadoria.
+• GRID 3x3, JOGADOR EM COMUM (3-2-1), 5 CLUBES 1 JOGADOR, PONTE DO FUTEBOL E LEILÃO.`
+      },
+      de: {
+        langName: "Deutsch (DE)",
+        name: "Futbol Arena: Fußball Quiz",
+        sub: "Liga Draft, Karriere & Grid",
+        promo: "Stelle deine Traum-Elf auf dem Taktikfeld auf, simuliere eine 18/20-Team-Liga Spieltag für Spieltag, erlebe deine Profikarriere und löse das 3x3 Fußball-Grid!",
+        kw: "fussball,quiz,trivia,aufstellung,draft,karriere,grid,spieler,raten,liga,trainer,online,duell",
+        c1Title: "Deine Fußball<span>Quiz Arena</span>",
+        c1Tag1: "Traum-Elf Bauen",
+        c1Tag2: "18-20 Team Liga",
+        c1Tag3: "Online & Party",
+        c1Bottom: "Bereit Kapitän? Mach dein Fußballwissen zum Meistertitel!",
+        c2Top: "Platziere deine Elf direkt auf dem Feld...",
+        c2Sticker: "5 STARS PRO KLUB!",
+        c2Bottom: "WER WIRD MEISTER?",
+        c3Title: "Löse das<span>3x3 Fußball-Grid</span>",
+        c3Bubble: "Wer spielte für Bayern München und Real Madrid?",
+        c4Top: "Profikarriere von 17 bis zum Abschied",
+        c4Bottom: "Deine Karriere",
+        c5Title: "Online-Lobby<span>& Auktions-Challenge</span>",
+        c5Bottom: "Lade Freunde per 6-stelligem Code ein oder spiele im Party-Modus!",
+        desc: `Beweise dein Fußballwissen in Futbol Arena: Fußball Quiz!
+
+• LIGA DRAFT (ELF BAUEN & LIGA SIMULIEREN): Wähle Trainer und Formation, platziere aus 5 historischen Klubspielern deine Startelf auf dem Taktikfeld und verfolge die automatische Liga-Simulation Spieltag für Spieltag mit Siegen, Unentschieden, Niederlagen und Saisonbericht!
+• SPIELERKARRIERE: Starte mit 17 Jahren, unterschreibe Transfers, verwandle entscheidende Elfmeter und enthülle deine geheimen Karrieredaten beim Abschiedsspiel.
+• 3x3 FUSSBALL-GRID, GEMEINSAMER SPIELER (3-2-1), 5 KLUBS 1 SPIELER, FUSSBALL-BRÜCKE & AUKTION.`
+      },
+      fr: {
+        langName: "Français (FR)",
+        name: "Futbol Arena: Quiz & Draft",
+        sub: "Carrière Foot, 11 & Grid 3x3",
+        promo: "Compose ton 11 de légende sur le terrain tactique, simule un championnat à 20 équipes journée par journée, vis une carrière pro et résous la Grille 3x3 !",
+        kw: "football,foot,quiz,trivia,compo,draft,carriere,grille,joueur,deviner,ligue,coach,online,duel",
+        c1Title: "Ton Arène<span>Quiz Football</span>",
+        c1Tag1: "Compose ton 11",
+        c1Tag2: "Ligue 20 Clubs",
+        c1Tag3: "En Ligne & Soirée",
+        c1Bottom: "Prêt Capitaine ? Transforme ta culture foot en trophées !",
+        c2Top: "Place ton 11 Historique sur le Terrain...",
+        c2Sticker: "5 STARS PAR CLUB !",
+        c2Bottom: "QUI SERA CHAMPION ?",
+        c3Title: "Résous la<span>Grille Foot 3x3</span>",
+        c3Bubble: "Qui a joué au PSG et au Real Madrid ?",
+        c4Top: "Carrière en 10 Étapes jusqu'au Jubilé",
+        c4Bottom: "Gère ta Carrière",
+        c5Title: "Salon Online<span>& Défi Enchères</span>",
+        c5Bottom: "Invite tes amis avec un code à 6 chiffres ou joue en mode soirée !",
+        desc: `Prouve ta culture foot dans Futbol Arena: Quiz & Draft !
+
+• LIGUE DRAFT (COMPOSE TON 11 & SIMULE LA SAISON) : Choisis ton coach et ta tactique, sélectionne parmi 5 joueurs de clubs historiques pour chaque poste sur le terrain et regarde la saison se simuler journée par journée avec victoires, nuls, défaites et bilan de fin de saison à partager !
+• CARRIÈRE DE FOOTBALLEUR : Débute à 17 ans, signe tes transferts, tire des penaltys décisifs plein écran et découvre tes statistiques secrètes lors de ton jubilé.
+• GRILLE 3x3, JOUEUR COMMUN (3-2-1), 5 CLUBS 1 JOUEUR, PONT DU FOOT & ENCHÈRES.`
+      },
+      it: {
+        langName: "Italiano (IT)",
+        name: "Futbol Arena: Quiz & Draft",
+        sub: "Carriera Calcio, 11 e Grid 3x3",
+        promo: "Schiera la tua Top 11 sul campo tattico, simula un campionato a 20 squadre giornata per giornata, vivi la tua carriera da calciatore e risolvi la Griglia 3x3!",
+        kw: "calcio,quiz,trivia,formazione,draft,carriera,griglia,calciatore,indovina,lega,allenatore,duello",
+        c1Title: "La Tua Arena<span>Quiz sul Calcio</span>",
+        c1Tag1: "Schiera la Top 11",
+        c1Tag2: "Lega 20 Squadre",
+        c1Tag3: "Online e Amici",
+        c1Bottom: "Pronto Capitano? Trasforma la tua cultura calcistica in trofei!",
+        c2Top: "Posiziona la tua Top 11 sul Campo...",
+        c2Sticker: "5 CAMPIONI A CLUB!",
+        c2Bottom: "CHI VINCE LO SCUDETTO?",
+        c3Title: "Risolvi la<span>Griglia Calcio 3x3</span>",
+        c3Bubble: "Chi ha giocato sia nel Milan che nel Real Madrid?",
+        c4Top: "Carriera da 17 Anni alla Partita d'Addio",
+        c4Bottom: "Vivi la Carriera",
+        c5Title: "Lobby Online<span>e Sfida all'Asta</span>",
+        c5Bottom: "Invita gli amici con codice a 6 cifre o gioca in modalità gruppo!",
+        desc: `Metti alla prova la tua conoscenza del calcio in Futbol Arena: Quiz & Draft!
+
+• LEGA DRAFT (CREA LA TOP 11 & SIMULA IL CAMPIONATO): Scegli mister e modulo, ricevi 5 campioni dai club storici, posizionali sul campo tattico e segui la simulazione automatica del campionato a 18 o 20 squadre giornata dopo giornata con vittorie, pareggi, sconfitte e pagella finale!
+• CARRIERA CALCIATORE: Inizia a 17 anni, firma i trasferimenti, calcia i rigori decisivi a tutto schermo e scopri le tue statistiche segrete al ritiro.
+• GRIGLIA 3x3, GIOCATORE IN COMUNE (3-2-1), 5 CLUB 1 GIOCATORE, PONTE DEL CALCIO E ASTA.`
+      },
+      nl: {
+        langName: "Nederlands (NL)",
+        name: "Futbol Arena: Voetbal Quiz",
+        sub: "Draft 11, Carrière & Grid 3x3",
+        promo: "Stel jouw droomelftal op het veld samen, simuleer een competitie met 20 clubs speelronde voor speelronde, beleef een profcarrière en los de 3x3 Voetbal Grid op!",
+        kw: "voetbal,quiz,trivia,opstelling,draft,carriere,grid,speler,raden,competitie,coach,online,duel",
+        c1Title: "Jouw Voetbal<span>Quiz Arena</span>",
+        c1Tag1: "Bouw je Elftal",
+        c1Tag2: "20-Club Competitie",
+        c1Tag3: "Online & Party",
+        c1Bottom: "Klaar Aanvoerder? Vertaal je voetbalkennis naar kampioenschappen!",
+        c2Top: "Zet je Historische 11 op het Veld...",
+        c2Sticker: "5 STERREN PER CLUB!",
+        c2Bottom: "WIE WORDT KAMPIOEN?",
+        c3Title: "Los het<span>3x3 Voetbal Grid Op</span>",
+        c3Bubble: "Wie speelde voor zowel Ajax als Real Madrid?",
+        c4Top: "10-Delige Carrière met Penalty's",
+        c4Bottom: "Jouw Profcarrière",
+        c5Title: "Online Lobby<span>& Veiling Challenge</span>",
+        c5Bottom: "Nodig vrienden uit met een 6-cijferige code of speel samen!",
+        desc: `Bewijs je voetbalkennis in Futbol Arena: Voetbal Quiz!
+• COMPETITIE DRAFT: Kies je trainer en formatie, plaats uit 5 historische clubspelers jouw 11 op het tactische veld en volg de automatische competitiesimulatie week na week!
+• SPELERSCARRIÈRE, 3x3 VOETBAL GRID, GEDEELDE SPELER (3-2-1), 5 CLUBS 1 SPELER & VEILING.`
+      },
+      pl: {
+        langName: "Polski (PL)",
+        name: "Futbol Arena: Quiz Piłkarski",
+        sub: "Draft 11, Kariera i Grid 3x3",
+        promo: "Ustaw swoją jedenastkę na boisku taktycznym, symuluj ligę 20 drużyn kolejka po kolejce, przeżyj karierę piłkarza i rozwiąż Piłkarski Grid 3x3!",
+        kw: "pilka,nozna,quiz,trivia,sklad,draft,kariera,grid,pilkarz,zgadnij,liga,trener,online,pojedynek",
+        c1Title: "Twoja Piłkarska<span>Arena Quizowa</span>",
+        c1Tag1: "Zbuduj Jedenastkę",
+        c1Tag2: "Liga 20 Drużyn",
+        c1Tag3: "Online i Impreza",
+        c1Bottom: "Gotowy Kapitanie? Zamień wiedzę piłkarską na mistrzowskie puchary!",
+        c2Top: "Ustaw Historyczną 11 na Boisku...",
+        c2Sticker: "5 GWIAZD Z KLUBU!",
+        c2Bottom: "KTO WYGRA LIGĘ?",
+        c3Title: "Rozwiąż<span>Piłkarski Grid 3x3</span>",
+        c3Bubble: "Kto grał zarówno w Barcelonie, jak i w Bayernie?",
+        c4Top: "Kariera od 17 Lat do Meczu Pożegnalnego",
+        c4Bottom: "Kieruj Karierą",
+        c5Title: "Pokój Online<span>i Licytacja Piłkarska</span>",
+        c5Bottom: "Zaproś znajomych kodem 6-cyfrowym lub grajcie na jednym telefonie!",
+        desc: `Sprawdź swoją wiedzę o piłce nożnej w Futbol Arena: Quiz Piłkarski!
+• LIGA DRAFT: Wybierz trenera i ustawienie, rozmieść piłkarzy z 5 gwiazd historycznych klubów na boisku i oglądaj symulację ligi kolejka po kolejce z raportem końcowym i udostępnianiem składu!
+• KARIERA PIŁKARZA, GRID 3x3, WSPÓLNY PIŁKARZ (3-2-1), 5 KLUBÓW 1 PIŁKARZ I LICYTACJA.`
+      },
+      ar: {
+        langName: "العربية (AR)",
+        name: "Futbol Arena: مسابقة كرة القدم",
+        sub: "درافت الدوري، مسيرة لاعب وشبكة",
+        promo: "شكّل فريقك التاريخي على الملعب التكتيكي، حاكِ دوري من 20 فريقاً جولة بجولة، عِش مسيرة لاعب محترف وحل شبكة كرة القدم 3x3!",
+        kw: "كرة,قدم,مسابقة,تشكيلة,درافت,دوري,لاعب,تخمين,شبكة,مهنة,مدرب,اونلاين,تحدي,مباراة",
+        c1Title: "ساحة أساطير<span>كرة القدم</span>",
+        c1Tag1: "شكّل فريقك 11",
+        c1Tag2: "دوري 20 فريقاً",
+        c1Tag3: "أونلاين وتحدي",
+        c1Bottom: "هل أنت جاهز يا كابتن؟ حوّل معرفتك الكروية إلى بطولات!",
+        c2Top: "ضع تشكيلتك التاريخية في الملعب...",
+        c2Sticker: "5 نجوم لكل نادٍ!",
+        c2Bottom: "من سيفوز بالدوري؟",
+        c3Title: "حل شبكة<span>كرة القدم 3x3</span>",
+        c3Bubble: "من لعب لريال مدريد وبرشلونة معاً؟",
+        c4Top: "مسيرة احترافية من عمر 17 حتى الاعتزال",
+        c4Bottom: "اصنع مسيرتك",
+        c5Title: "غرف أونلاين<span>ومزاد التحدي</span>",
+        c5Bottom: "ادعُ أصدقاءك برمز من 6 أرقام أو العبوا في وضع الحفلة!",
+        desc: `اختبر معلوماتك الكروية في Futbol Arena!
+• درافت الدوري: اختر المدرب والخطة، ضع اللاعبين في مراكزهم على الملعب من بين 5 نجوم لكل نادٍ تاريخي، وتابع محاكاة الدوري أسبوعاً بأسبوع مع ملخص الموسم ومشاركة التشكيلة!
+• مسيرة لاعب كرة قدم، شبكة 3x3، اللاعب المشترك (3-2-1)، 5 أندية لاعب واحد، وتحدي المزاد.`
+      },
+      ru: {
+        langName: "Русский (RU)",
+        name: "Futbol Arena: Футбольный Квиз",
+        sub: "Лига Драфт, Карьера и Грид 3x3",
+        promo: "Собери свой состав на тактическом поле, симулируй лигу из 20 команд тур за туром, пройди карьеру футболиста и разгадай Футбольный Грид 3x3!",
+        kw: "футбол,квиз,викторина,состав,драфт,карьера,грид,игрок,угадай,лига,тренер,онлайн,дуэль",
+        c1Title: "Твоя Футбольная<span>Квиз Арена</span>",
+        c1Tag1: "Собери Состав 11",
+        c1Tag2: "Лига 20 Клубов",
+        c1Tag3: "Онлайн и Вечеринка",
+        c1Bottom: "Готов, Капитан? Преврати свои знания футбола в кубки!",
+        c2Top: "Расставь Легендарные 11 на Поле...",
+        c2Sticker: "5 ЗВЕЗД ИЗ КЛУБА!",
+        c2Bottom: "КТО СТАНЕТ ЧЕМПИОНОМ?",
+        c3Title: "Разгадай<span>Футбольный Грид 3x3</span>",
+        c3Bubble: "Кто играл и за Реал Мадрид, и за Милан?",
+        c4Top: "Карьера из 10 Этапов с Пенальти",
+        c4Bottom: "Твоя Карьера",
+        c5Title: "Онлайн-Лобби<span>и Футбольный Аукцион</span>",
+        c5Bottom: "Приглашай друзей по 6-значному коду или играй на одном экране!",
+        desc: `Проверь свои знания о футболе в Futbol Arena: Футбольный Квиз!
+• ЛИГА ДРАФТ: Выбери тренера и схему, расставь 11 игроков из 5 звезд исторических клубов по позициям на поле и следи за автоматической симуляцией сезона тур за туром с итоговым отчетом!
+• КАРЬЕРА ФУТБОЛИСТА, ГРИД 3x3, ОБЩИЙ ИГРОК (3-2-1), 5 КЛУБОВ 1 ИГРОК И АУКЦИОН.`
+      },
+      ja: {
+        langName: "日本語 (JA)",
+        name: "Futbol Arena: サッカークイズ",
+        sub: "ドラフト11・キャリア・3x3グリッド",
+        promo: "戦術ピッチに歴代ベスト11を配置して20チームのリーグ戦を自動シミュレート！17歳からの選手キャリアや3x3サッカーグリッドに挑戦しよう！",
+        kw: "サッカー,クイズ,ドラフト,イレブン,キャリア,グリッド,選手,予想,リーグ,監督,オンライン,トリビア",
+        c1Title: "究極のサッカー<span>クイズアリーナ</span>",
+        c1Tag1: "ベスト11編成",
+        c1Tag2: "20クラブリーグ",
+        c1Tag3: "オンライン対戦",
+        c1Bottom: "準備はいいかキャプテン？サッカー知識で王者に輝こう！",
+        c2Top: "戦術ピッチに伝説の11人を配置...",
+        c2Sticker: "各クラブ5選手登場！",
+        c2Bottom: "リーグ優勝は誰の手に？",
+        c3Title: "3x3グリッド<span>&共通選手クイズ</span>",
+        c3Bubble: "レアルとミランの両方でプレーした選手は？",
+        c4Top: "17歳から引退まで10期の選手キャリア",
+        c4Bottom: "キャリアを体験",
+        c5Title: "オンライン部屋<span>&オークション挑戦</span>",
+        c5Bottom: "6桁コードで友達を招待、またはパーティーモードで対戦！",
+        desc: `サッカー知識と戦術眼を試す7つのゲームモードが集結！
+• リーグドラフト：監督とフォーメーションを選び、歴代名門クラブから登場する5人の選手をピッチ上のポジションに配置。11人が揃うと自動でリーグ戦が毎節シミュレートされ、シーズン結果や布陣をシェアできます！
+• 選手キャリアモード、3x3サッカーグリッド、共通選手(3-2-1)、5クラブ1選手、オークション。`
+      },
+      ko: {
+        langName: "한국어 (KO)",
+        name: "Futbol Arena: 축구 퀴즈 & 드래프트",
+        sub: "베스트11 리그, 선수 커리어 & 3x3 그리드",
+        promo: "전술 피치 위에 레전드 베스트 11을 배치하고 20개 팀 리그를 매 라운드 시뮬레이션하세요! 선수 커리어 모드와 3x3 축구 그리드까지 한 번에 즐기세요!",
+        kw: "축구,퀴즈,드래프트,라인업,커리어,그리드,선수,맞히기,리그,감독,온라인,파티,상식",
+        c1Title: "나만의 축구<span>퀴즈 아레나</span>",
+        c1Tag1: "레전드 11 구성",
+        c1Tag2: "20팀 리그 시뮬",
+        c1Tag3: "온라인 & 파티",
+        c1Bottom: "준비됐나요 캡틴? 축구 상식으로 우승 트로피를 들어올리세요!",
+        c2Top: "전술 피치 위에 나만의 11명을 배치...",
+        c2Sticker: "클럽당 5명 등장!",
+        c2Bottom: "리그 우승팀은 누구?",
+        c3Title: "3x3 축구 그리드<span>& 공통 선수 찾기</span>",
+        c3Bubble: "레알 마드리드와 맨유에서 모두 뛴 선수는?",
+        c4Top: "17세 유망주부터 은퇴식까지 10단계 커리어",
+        c4Bottom: "선수 커리어 도전",
+        c5Title: "온라인 로비<span>& 경매 챌린지</span>",
+        c5Bottom: "6자리 코드로 친구를 초대하거나 파티 모드로 대결하세요!",
+        desc: `축구 팬을 위한 7가지 퀴즈 및 시뮬레이션 모드!
+• 리그 드래프트: 감독과 포메이션을 고르고 역사적인 클럽에서 등장하는 5명의 선수 중 원하는 포지션에 배치하세요. 11명이 완성되면 매주 승/무/패 스코어가 자동 시뮬레이션되며 시즌 리포트와 스쿼드를 공유할 수 있습니다!
+• 축구선수 커리어, 3x3 축구 그리드, 공통 선수(3-2-1), 5클럽 1선수, 축구 브릿지 & 경매.`
+      },
+      id: {
+        langName: "Indonesia (ID)",
+        name: "Futbol Arena: Kuis & Liga",
+        sub: "Draft 11, Karier & Grid 3x3",
+        promo: "Susun 11 pemain legendaris di lapangan taktis, simulasikan liga 20 klub pekan demi pekan, jalani karier pemain sepak bola, dan taklukkan Grid 3x3!",
+        kw: "sepakbola,bola,kuis,trivia,formasi,draft,karier,grid,pemain,tebak,liga,manajer,online,duel",
+        c1Title: "Arena Kuis<span>Sepak Bola</span>",
+        c1Tag1: "Susun 11 Impian",
+        c1Tag2: "Liga 20 Klub",
+        c1Tag3: "Online & Party",
+        c1Bottom: "Siap Kapten? Ubah pengetahuan bolamu menjadi trofi juara!",
+        c2Top: "Tempatkan 11 Legenda di Lapangan...",
+        c2Sticker: "5 BINTANG PER KLUB!",
+        c2Bottom: "SIAPA JUARA LIGA?",
+        c3Title: "Pecahkan<span>Grid Bola 3x3</span>",
+        c3Bubble: "Siapa yang pernah bermain di Real Madrid dan Milan?",
+        c4Top: "Karier 10 Musim & Penalti Penentu",
+        c4Bottom: "Jalani Kariermu",
+        c5Title: "Lobi Online<span>& Tantangan Lelang</span>",
+        c5Bottom: "Undang teman dengan kode 6 digit atau main mode party!",
+        desc: `Uji pengetahuan sepak bolamu di Futbol Arena: Kuis & Liga!
+• LIGA DRAFT: Pilih pelatih dan formasi, tempatkan pemain dari 5 bintang klub bersejarah langsung ke posisi di lapangan, lalu saksikan simulasi liga otomatis pekan demi pekan lengkap dengan rapor akhir musim!
+• KARIER PEMAIN, GRID 3x3, PEMAIN BERSAMA (3-2-1), 5 KLUB 1 PEMAIN & LELANG.`
+      },
+      el: {
+        langName: "Ελληνικά (EL)",
+        name: "Futbol Arena: Κουίζ Ποδοσφαίρου",
+        sub: "Λίγκα Draft, Καριέρα & Grid",
+        promo: "Στήσε την ενδεκάδα σου στο γήπεδο, προσομοίωσε πρωτάθλημα 20 ομάδων αγωνιστική-αγωνιστική, ζήσε καριέρα ποδοσφαιριστή και λύσε το 3x3 Grid!",
+        kw: "ποδοσφαιρο,κουιζ,ενδεκαδα,ντραφτ,καριερα,γκριντ,παικτης,πρωταθλημα,προπονητης,ονλαιν",
+        c1Title: "Η Ποδοσφαιρική<span>Σου Αρένα</span>",
+        c1Tag1: "Φτιάξε 11άδα",
+        c1Tag2: "Λίγκα 20 Ομάδων",
+        c1Tag3: "Online & Παρέα",
+        c1Bottom: "Έτοιμος Αρχηγέ; Κάνε τις γνώσεις σου πρωτάθλημα!",
+        c2Top: "Τοποθέτησε τους 11 στο Γήπεδο...",
+        c2Sticker: "5 ΑΣΤΕΡΙΑ ΑΝΑ ΟΜΑΔΑ!",
+        c2Bottom: "ΠΟΙΟΣ ΘΑ ΠΑΡΕΙ ΤΟΝ ΤΙΤΛΟ;",
+        c3Title: "Λύσε το<span>3x3 Football Grid</span>",
+        c3Bubble: "Ποιος έπαιξε και σε Ρεάλ και σε Μίλαν;",
+        c4Top: "Καριέρα 10 Σταδίων με Πέναλτι",
+        c4Bottom: "Ζήσε την Καριέρα",
+        c5Title: "Online Δωμάτιο<span>& Δημοπρασία</span>",
+        c5Bottom: "Κάλεσε φίλους με 6ψήφιο κωδικό ή παίξτε μαζί!",
+        desc: `Απόδειξε τις γνώσεις σου στο ποδόσφαιρο με το Futbol Arena!
+• ΛΙΓΚΑ DRAFT: Διάλεξε προπονητή και σύστημα, τοποθέτησε παίκτες από 5 αστέρια ιστορικών ομάδων στις θέσεις του γηπέδου και δες την αυτόματη προσομοίωση του πρωταθλήματος αγωνιστική-αγωνιστική!
+• ΚΑΡΙΕΡΑ ΠΟΔΟΣΦΑΙΡΙΣΤΗ, 3x3 GRID, ΚΟΙΝΟΣ ΠΑΙΚΤΗΣ (3-2-1), 5 ΟΜΑΔΕΣ 1 ΠΑΙΚΤΗΣ & ΔΗΜΟΠΡΑΣΙΑ.`
+      },
+      ro: {
+        langName: "Română (RO)",
+        name: "Futbol Arena: Quiz & Draft",
+        sub: "Carieră Fotbal, 11 și Grid 3x3",
+        promo: "Așază-ți primul 11 pe terenul tactic, simulează un campionat de 20 de echipe etapă cu etapă, trăiește o carieră de fotbalist și rezolvă Gridul 3x3!",
+        kw: "fotbal,quiz,trivia,echipa,draft,cariera,grid,jucator,ghiceste,liga,antrenor,online,duel",
+        c1Title: "Arena Ta de<span>Quiz Fotbal</span>",
+        c1Tag1: "Creează Primul 11",
+        c1Tag2: "Ligă 20 Echipe",
+        c1Tag3: "Online & Party",
+        c1Bottom: "Pregătit Căpitane? Transformă-ți cunoștințele în trofee!",
+        c2Top: "Așază Primul 11 Istoric pe Teren...",
+        c2Sticker: "5 VEDETE PE CLUB!",
+        c2Bottom: "CINE CÂȘTIGĂ TITLUL?",
+        c3Title: "Rezolvă<span>Gridul Fotbal 3x3</span>",
+        c3Bubble: "Cine a jucat și la Galatasaray și la Real Madrid?",
+        c4Top: "Carieră în 10 Etape cu Penalty-uri",
+        c4Bottom: "Cariera Ta Pro",
+        c5Title: "Lobby Online<span>și Licitație Fotbal</span>",
+        c5Bottom: "Invită prietenii cu un cod din 6 cifre sau jucați în grup!",
+        desc: `Testează-ți cultura fotbalistică în Futbol Arena: Quiz & Draft!
+• LIGA DRAFT: Alege antrenorul și modulul tactic, plasează jucătorii dintre cei 5extrași pe club istoric direct pe teren și urmărește simularea campionatului etapă cu etapă!
+• CARIERĂ DE FOTBALIST, GRID 3x3, JUCĂTOR COMUN (3-2-1), 5 CLUBURI 1 JUCĂTOR & LICITAȚIE.`
+      },
+      hr: {
+        langName: "Hrvatski (HR)",
+        name: "Futbol Arena: Nogometni Kviz",
+        sub: "Liga Draft, Karijera i Grid",
+        promo: "Postavi svojih idealnih 11 na taktički teren, simuliraj ligu od 20 klubova kolo po kolo, odigraj igračku karijeru i riješi 3x3 Nogometni Grid!",
+        kw: "nogomet,kviz,trivia,postava,draft,karijera,grid,igrac,pogodi,liga,trener,online,dvoboj",
+        c1Title: "Tvoja Nogometna<span>Kviz Arena</span>",
+        c1Tag1: "Složi Idealnih 11",
+        c1Tag2: "Liga 20 Klubova",
+        c1Tag3: "Online i Ekipa",
+        c1Bottom: "Spreman Kapetane? Pretvori nogometno znanje u naslov prvaka!",
+        c2Top: "Postavi Povijesnih 11 na Teren...",
+        c2Sticker: "5 ZVIJEZDA PO KLUBU!",
+        c2Bottom: "TKO OSVAJA LIGU?",
+        c3Title: "Riješi<span>3x3 Nogometni Grid</span>",
+        c3Bubble: "Tko je igrao i za Real Madrid i za Milan?",
+        c4Top: "Karijera u 10 Faza uz Ključne Penale",
+        c4Bottom: "Vodi Karijeru",
+        c5Title: "Online Soba<span>i Izazov Aukcije</span>",
+        c5Bottom: "Pozovi prijatelje 6-znamenkastim kodom ili igrajte turnir!",
+        desc: `Pokaži svoje nogometno znanje u igri Futbol Arena: Nogometni Kviz!
+• LIGA DRAFT: Odaberi trenera i formaciju, postavi igrače iz 5 ponuđenih zvijezda povijesnih klubova na pozicije na terenu i prati simulaciju lige kolo po kolo!
+• KARIJERA NOGOMETAŠA, 3x3 GRID, ZAJEDNIČKI IGRAČ (3-2-1), 5 KLUBOVA 1 IGRAČ I AUKCIJA.`
+      },
+      sv: {
+        langName: "Svenska (SV)",
+        name: "Futbol Arena: Fotbollsquiz",
+        sub: "Liga Draft, Karriär & Grid 3x3",
+        promo: "Ställ upp din drömelva på taktikplanen, simulera en liga med 20 lag omgång för omgång, lev en spelarkarriär och lös 3x3 Fotbollsgriden!",
+        kw: "fotboll,quiz,trivia,startelva,draft,karriar,grid,spelare,gissa,liga,tranare,online,duell",
+        c1Title: "Din Fotbolls<span>Quiz Arena</span>",
+        c1Tag1: "Bygg Din Drömelva",
+        c1Tag2: "20-Lagsliga",
+        c1Tag3: "Online & Fest",
+        c1Bottom: "Redo Kapten? Förvandla din fotbollskunskap till pokaler!",
+        c2Top: "Placera Din Historiska 11 på Planen...",
+        c2Sticker: "5 STJÄRNOR PER KLUBB!",
+        c2Bottom: "VEM VINNER LIGAN?",
+        c3Title: "Lös<span>3x3 Fotbollsgriden</span>",
+        c3Bubble: "Vem har spelat i både Barcelona och Milan?",
+        c4Top: "10-Stegskarriär med Avgörande Straffar",
+        c4Bottom: "Lev Din Karriär",
+        c5Title: "Onlinelobby<span>& Auktionsutmaning</span>",
+        c5Bottom: "Bjud in vänner med 6-siffrig kod eller spela partyläge!",
+        desc: `Testa dina fotbollskunskaper i Futbol Arena: Fotbollsquiz!
+• LIGA DRAFT: Välj tränare och formation, placera spelare bland 5 historiska klubbstjärnor direkt på planen och följ ligasimuleringen omgång för omgång!
+• SPELARKARRIÄR, 3x3 GRID, GEMENSAM SPELARE (3-2-1), 5 KLUBBAR 1 SPELARE & AUKTION.`
+      },
+      uk: {
+        langName: "Українська (UK)",
+        name: "Futbol Arena: Футбольний Квіз",
+        sub: "Ліга Драфт, Кар'єра і Грід 3x3",
+        promo: "Розстав свою одинадцятку на тактичному полі, симулюй лігу з 20 клубів тур за туром, проживи кар'єру футболіста та розгадай Футбольний Грід 3x3!",
+        kw: "футбол,квіз,вікторина,склад,драфт,карєра,грід,гравець,вгадай,ліга,тренер,онлайн,дуель",
+        c1Title: "Твоя Футбольна<span>Квіз Арена</span>",
+        c1Tag1: "Збери Склад 11",
+        c1Tag2: "Ліга 20 Клубів",
+        c1Tag3: "Онлайн і Компанія",
+        c1Bottom: "Готовий, Капітане? Перетвори футбольні знання на трофеї!",
+        c2Top: "Розстав Легендарні 11 на Полі...",
+        c2Sticker: "5 ЗІРОК ІЗ КЛУБУ!",
+        c2Bottom: "ХТО ВИГРАЄ ЛІГУ?",
+        c3Title: "Розгадай<span>Футбольний Грід 3x3</span>",
+        c3Bubble: "Хто грав і за Реал Мадрид, і за Мілан?",
+        c4Top: "Кар'єра з 17 Років до Прощального Матчу",
+        c4Bottom: "Твоя Кар'єра",
+        c5Title: "Онлайн-Лобі<span>та Футбольний Аукціон</span>",
+        c5Bottom: "Запрошуй друзів за 6-значним кодом або грайте разом!",
+        desc: `Перевір свої футбольні знання у Futbol Arena: Футбольний Квіз!
+• ЛІГА ДРАФТ: Обирай тренера та схему, розставляй гравців із 5 зірок історичних клубів на полі та спостерігай за симуляцією сезону тур за туром!
+• КАР'ЄРА ФУТБОЛІСТА, ГРІД 3x3, СПІЛЬНИЙ ГРАВЕЦЬ (3-2-1), 5 КЛУБІВ 1 ГРАВЕЦЬ ТА АУКЦІОН.`
+      },
+      zh: {
+        langName: "简体中文 (ZH)",
+        name: "Futbol Arena: 足球竞猜与阵容联赛",
+        sub: "传奇11人选秀、球员生涯与九宫格",
+        promo: "在战术球场上排布你的传奇11人阵容，逐轮模拟20支球队的完整联赛，体验从17岁到退役的球员生涯，挑战3x3足球九宫格！",
+        kw: "足球,竞猜,问答,阵容,选秀,生涯,九宫格,球员,猜人,联赛,教练,联机,派对,绿茵",
+        c1Title: "你的绿茵<span>足球竞猜竞技场</span>",
+        c1Tag1: "打造传奇11人",
+        c1Tag2: "20队联赛模拟",
+        c1Tag3: "好友联机与派对",
+        c1Bottom: "准备好了吗队长？用你的足球知识赢得冠军奖杯！",
+        c2Top: "在战术球场上排布你的历史最佳11人...",
+        c2Sticker: "每队5位球星可选！",
+        c2Bottom: "谁能夺得联赛冠军？",
+        c3Title: "破解3x3<span>足球九宫格</span>",
+        c3Bubble: "谁曾同时效力于皇马与AC米兰？",
+        c4Top: "从17岁新星到退役仪式的10阶段生涯",
+        c4Bottom: "书写球员生涯",
+        c5Title: "实时联机房间<span>与竞拍挑战</span>",
+        c5Bottom: "使用6位房间码邀请好友，或同屏开启派对锦标赛！",
+        desc: `在《Futbol Arena: 足球竞猜与阵容联赛》中全方位检验你的足球知识！
+
+• 联赛选秀 (LEAGUE DRAFT)：选择主教练与战术阵型，从每支历史豪门随机出现的5名球星中挑选球员并直接放入球场位置。11人集结完毕后自动逐轮模拟18或20队联赛，查看胜平负比分、赛季总结报告并分享你的阵容！
+• 球员生涯模拟：17岁出道，经历10个阶段签约豪门、主罚关键全屏点球，在退役仪式揭晓隐藏生涯总评！
+• 3x3足球九宫格、共同效力球员(3-2-1)、5队猜1人、足球桥梁与竞拍挑战。`
+      }
+    };
+
+    let currentLang = 'tr';
+
+    function renderLanguageButtons() {
+      const bar = document.getElementById('lang-bar');
+      bar.innerHTML = '';
+      Object.keys(STORE_DATA).forEach(code => {
+        const btn = document.createElement('button');
+        btn.className = 'lang-btn' + (code === currentLang ? ' active' : '');
+        btn.textContent = STORE_DATA[code].langName;
+        btn.onclick = () => selectLanguage(code);
+        bar.appendChild(btn);
+      });
+    }
+
+    function selectLanguage(code) {
+      currentLang = code;
+      const d = STORE_DATA[code];
+      document.getElementById('active-lang-badge').textContent = 'Aktif Dil: ' + d.langName;
+
+      document.getElementById('c1-title').innerHTML = d.c1Title;
+      document.getElementById('c1-tag1').textContent = d.c1Tag1;
+      document.getElementById('c1-tag2').textContent = d.c1Tag2;
+      document.getElementById('c1-tag3').textContent = d.c1Tag3;
+      document.getElementById('c1-bottom').textContent = d.c1Bottom;
+
+      document.getElementById('c2-top').textContent = d.c2Top;
+      document.getElementById('c2-sticker').textContent = d.c2Sticker;
+      document.getElementById('c2-bottom').textContent = d.c2Bottom;
+
+      document.getElementById('c3-title').innerHTML = d.c3Title;
+      document.getElementById('c3-bubble').textContent = d.c3Bubble;
+
+      document.getElementById('c4-top').textContent = d.c4Top;
+      document.getElementById('c4-bottom').textContent = d.c4Bottom;
+
+      document.getElementById('c5-title').innerHTML = d.c5Title;
+      document.getElementById('c5-bottom').textContent = d.c5Bottom;
+
+      document.getElementById('m-name').textContent = d.name;
+      document.getElementById('m-sub').textContent = d.sub;
+      document.getElementById('m-promo').textContent = d.promo;
+      document.getElementById('m-kw').textContent = d.kw;
+      document.getElementById('m-desc').textContent = d.desc;
+
+      renderLanguageButtons();
+    }
+
+    function copyField(id) {
+      const text = document.getElementById(id).textContent;
+      navigator.clipboard.writeText(text);
+    }
+
+    selectLanguage('tr');
+  </script>
+</body>
+</html>

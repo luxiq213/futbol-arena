@@ -121,7 +121,7 @@ class AppStrings {
       'open_perm_account': 'Kalıcı Hesap Aç / Giriş Yap',
     },
     'en': {
-      'app_title': 'Football Trivia',
+      'app_title': 'Futbol Arena',
       'tab_games': 'Games',
       'tab_leaderboard': 'Rankings',
       'tab_profile': 'Profile',
@@ -199,7 +199,7 @@ class AppStrings {
       'open_perm_account': 'Create Permanent Account / Sign In',
     },
     'es': {
-      'app_title': 'Fútbol Trivia',
+      'app_title': 'Futbol Arena',
       'tab_games': 'Juegos',
       'tab_leaderboard': 'Ranking',
       'tab_profile': 'Perfil',
@@ -274,7 +274,7 @@ class AppStrings {
       'open_perm_account': 'Crear Cuenta Permanente / Entrar',
     },
     'pt': {
-      'app_title': 'Futebol Trivia',
+      'app_title': 'Futbol Arena',
       'tab_games': 'Jogos',
       'tab_leaderboard': 'Ranking',
       'tab_profile': 'Perfil',
@@ -349,7 +349,7 @@ class AppStrings {
       'open_perm_account': 'Criar Conta Permanente / Entrar',
     },
     'de': {
-      'app_title': 'Fußball Trivia',
+      'app_title': 'Futbol Arena',
       'tab_games': 'Spiele',
       'tab_leaderboard': 'Rangliste',
       'tab_profile': 'Profil',
@@ -424,7 +424,7 @@ class AppStrings {
       'open_perm_account': 'Dauerhaftes Konto erstellen / Login',
     },
     'fr': {
-      'app_title': 'Football Trivia',
+      'app_title': 'Futbol Arena',
       'tab_games': 'Jeux',
       'tab_leaderboard': 'Classement',
       'tab_profile': 'Profil',
@@ -499,7 +499,7 @@ class AppStrings {
       'open_perm_account': 'Créer un Compte Permanent / Connexion',
     },
     'it': {
-      'app_title': 'Calcio Trivia',
+      'app_title': 'Futbol Arena',
       'tab_games': 'Giochi',
       'tab_leaderboard': 'Classifica',
       'tab_profile': 'Profilo',
@@ -574,7 +574,7 @@ class AppStrings {
       'open_perm_account': 'Crea Account Permanente / Accedi',
     },
     'nl': {
-      'app_title': 'Voetbal Trivia',
+      'app_title': 'Futbol Arena',
       'tab_games': 'Spellen',
       'tab_leaderboard': 'Ranglijst',
       'tab_profile': 'Profiel',
@@ -649,7 +649,7 @@ class AppStrings {
       'open_perm_account': 'Permanent Account Maken / Inloggen',
     },
     'pl': {
-      'app_title': 'Piłkarski Quiz',
+      'app_title': 'Futbol Arena',
       'tab_games': 'Gry',
       'tab_leaderboard': 'Ranking',
       'tab_profile': 'Profil',
@@ -724,7 +724,7 @@ class AppStrings {
       'open_perm_account': 'Załóż Stałe Konto / Zaloguj',
     },
     'ar': {
-      'app_title': 'تحدي كرة القدم',
+      'app_title': 'Futbol Arena',
       'tab_games': 'الألعاب',
       'tab_leaderboard': 'الترتيب',
       'tab_profile': 'الملف',
@@ -799,7 +799,7 @@ class AppStrings {
       'open_perm_account': 'إنشاء حساب دائم / دخول',
     },
     'ru': {
-      'app_title': 'Футбол Тривиа',
+      'app_title': 'Futbol Arena',
       'tab_games': 'Игры',
       'tab_leaderboard': 'Рейтинг',
       'tab_profile': 'Профиль',
@@ -874,7 +874,7 @@ class AppStrings {
       'open_perm_account': 'Создать постоянный аккаунт / Войти',
     },
     'ja': {
-      'app_title': 'サッカートリビア',
+      'app_title': 'Futbol Arena',
       'tab_games': 'ゲーム',
       'tab_leaderboard': 'ランキング',
       'tab_profile': 'プロフィール',
@@ -949,7 +949,7 @@ class AppStrings {
       'open_perm_account': '本アカウント作成 / ログイン',
     },
     'ko': {
-      'app_title': '축구 트리비아',
+      'app_title': 'Futbol Arena',
       'tab_games': '게임',
       'tab_leaderboard': '랭킹',
       'tab_profile': '프로필',
@@ -1024,7 +1024,7 @@ class AppStrings {
       'open_perm_account': '영구 계정 생성 / 로그인',
     },
     'id': {
-      'app_title': 'Kuis Sepak Bola',
+      'app_title': 'Futbol Arena',
       'tab_games': 'Game',
       'tab_leaderboard': 'Peringkat',
       'tab_profile': 'Profil',
@@ -1099,7 +1099,7 @@ class AppStrings {
       'open_perm_account': 'Buat Akun Permanen / Masuk',
     },
     'el': {
-      'app_title': 'Ποδόσφαιρο Trivia',
+      'app_title': 'Futbol Arena',
       'tab_games': 'Παιχνίδια',
       'tab_leaderboard': 'Κατάταξη',
       'tab_profile': 'Προφίλ',
@@ -1174,7 +1174,7 @@ class AppStrings {
       'open_perm_account': 'Μόνιμος Λογαριασμός / Σύνδεση',
     },
     'ro': {
-      'app_title': 'Fotbal Trivia',
+      'app_title': 'Futbol Arena',
       'tab_games': 'Jocuri',
       'tab_leaderboard': 'Clasament',
       'tab_profile': 'Profil',
@@ -1249,7 +1249,7 @@ class AppStrings {
       'open_perm_account': 'Cont Permanent / Autentificare',
     },
     'hr': {
-      'app_title': 'Nogometni Kviz',
+      'app_title': 'Futbol Arena',
       'tab_games': 'Igre',
       'tab_leaderboard': 'Ljestvica',
       'tab_profile': 'Profil',
@@ -1324,7 +1324,7 @@ class AppStrings {
       'open_perm_account': 'Izradi Trajni Račun / Prijava',
     },
     'sv': {
-      'app_title': 'Fotboll Trivia',
+      'app_title': 'Futbol Arena',
       'tab_games': 'Spel',
       'tab_leaderboard': 'Topplista',
       'tab_profile': 'Profil',
@@ -1399,7 +1399,7 @@ class AppStrings {
       'open_perm_account': 'Skapa Permanent Konto / Logga in',
     },
     'uk': {
-      'app_title': 'Футбол Трівіа',
+      'app_title': 'Futbol Arena',
       'tab_games': 'Ігри',
       'tab_leaderboard': 'Рейтинг',
       'tab_profile': 'Профіль',
@@ -1474,7 +1474,7 @@ class AppStrings {
       'open_perm_account': 'Створити постійний акаунт / Увійти',
     },
     'zh': {
-      'app_title': '足球问答竞技场',
+      'app_title': 'Futbol Arena',
       'tab_games': '游戏',
       'tab_leaderboard': '排行榜',
       'tab_profile': '个人主页',
