@@ -29,7 +29,7 @@ class PrivacyAndTermsScreen extends StatelessWidget {
                 icon: Icons.shield_outlined,
                 title: '1. Genel Bilgilendirme ve Veri Sorumlusu',
                 body:
-                    'Futbol Trivia ("Uygulama"), futbol bilgi yarışması ve kariyer simülasyonu deneyimi sunan bir mobil oyundur. Kullanıcı gizliliği hem KVKK hem GDPR hem de Apple App Store ve Google Play Store mağaza standartlarına uygun olarak korunmaktadır.',
+                    'Futbol Arena ("Uygulama"), futbol bilgi yarışması ve kariyer simülasyonu deneyimi sunan bir mobil oyundur. Kullanıcı gizliliği hem KVKK hem GDPR hem de Apple App Store ve Google Play Store mağaza standartlarına uygun olarak korunmaktadır.',
               ),
               const SizedBox(height: 10),
               _buildSectionCard(

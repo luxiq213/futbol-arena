@@ -43,7 +43,7 @@ class AppStrings {
 
   static const Map<String, Map<String, String>> _translations = {
     'tr': {
-      'app_title': 'Futbol Trivia',
+      'app_title': 'Futbol Arena',
       'tab_games': 'Oyunlar',
       'tab_leaderboard': 'Sıralama',
       'tab_profile': 'Profil',

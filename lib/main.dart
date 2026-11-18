@@ -48,7 +48,7 @@ class FutbolPartyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => LeaderboardProvider()),
       ],
       child: MaterialApp(
-        title: 'Futbol Party',
+        title: 'Futbol Arena',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.darkTheme,
         home: const HomeScreen(),

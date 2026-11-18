@@ -2780,7 +2780,7 @@ class _LeagueDraftViewState extends State<_LeagueDraftView> {
         .map((p) => '${p.specificPosition}: ${p.name} (${p.rating} - ${p.seasonLabel} ${p.clubName})')
         .join('\n');
     final shareText = '''
-Futbol Party • Lig Draft (${provider.seasonNumber}. Sezon)
+Futbol Arena • Lig Draft (${provider.seasonNumber}. Sezon)
 Takım: ${team.name} (${team.overallTeamPower} OVR)
 Hoca: ${team.manager?.name ?? "-"} • Diziliş: ${team.formation?.code ?? "-"}
 Lig Sonucu: $rank / $totalTeams Takım • ${team.points} Puan (${team.won}G ${team.drawn}B ${team.lost}M)

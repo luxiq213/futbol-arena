@@ -30,7 +30,7 @@
 		<string>zh</string>
 	</array>
 	<key>CFBundleDisplayName</key>
-	<string>Futbol Trivia</string>
+	<string>Futbol Arena</string>
 	<key>GADApplicationIdentifier</key>
 	<string>ca-app-pub-3940256099942544~1458002511</string>
 	<key>NSUserTrackingUsageDescription</key>
