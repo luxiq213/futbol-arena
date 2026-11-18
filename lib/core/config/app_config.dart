@@ -3,17 +3,18 @@ class AppConfig {
   AppConfig._();
 
   /// Supabase Project URL (e.g. 'https://xyzcompany.supabase.co')
-  /// Can be passed via `--dart-define=SUPABASE_URL=...` or pasted directly here.
+  /// Can be passed via `--dart-define=SUPABASE_URL=...` or configured directly here.
   static const String supabaseUrl = String.fromEnvironment(
     'SUPABASE_URL',
-    defaultValue: '',
+    defaultValue: 'https://mwzbervvtxtzpnuvzuih.supabase.co',
   );
 
-  /// Supabase Anonymous Public Key
-  /// Can be passed via `--dart-define=SUPABASE_ANON_KEY=...` or pasted directly here.
+  /// Supabase Anonymous / Publishable Public Key
+  /// Can be passed via `--dart-define=SUPABASE_ANON_KEY=...` or configured directly here.
   static const String supabaseAnonKey = String.fromEnvironment(
     'SUPABASE_ANON_KEY',
-    defaultValue: '',
+    defaultValue:
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im13emJlcnZ2dHh0enBudXZ6dWloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTUwMTc4NzcsImV4cCI6MjExMDU5Mzg3N30.bO4TN7VhCxf7CW88m1erfpLNGQGzpa5FFLNAbG_Dda4',
   );
 
   /// True when valid Supabase project credentials are provided.
