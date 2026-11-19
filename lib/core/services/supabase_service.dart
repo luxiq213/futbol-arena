@@ -22,7 +22,8 @@ class SupabaseService {
     try {
       await Supabase.initialize(
         url: AppConfig.supabaseUrl,
-        publishableKey: AppConfig.supabaseAnonKey,
+        // ignore: deprecated_member_use
+        anonKey: AppConfig.supabaseAnonKey,
       );
       _initialized = true;
     } catch (e) {
