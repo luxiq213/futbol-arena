@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../core/config/app_config.dart';
 import '../../core/constants/app_colors.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/locale_provider.dart';
@@ -323,106 +324,108 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         ),
 
-        const SizedBox(height: 10),
+        if (AppConfig.enableAdsAndIapInStoreBuild) ...[
+          const SizedBox(height: 10),
 
-        // Single Monetization Option: Ad-Free Mode Card
-        Container(
-          padding: const EdgeInsets.all(13),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                const Color(0xFF133626).withValues(alpha: 0.90),
-                const Color(0xFF081B13).withValues(alpha: 0.92),
+          // Single Monetization Option: Ad-Free Mode Card
+          Container(
+            padding: const EdgeInsets.all(13),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  const Color(0xFF133626).withValues(alpha: 0.90),
+                  const Color(0xFF081B13).withValues(alpha: 0.92),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: user.isAdFree
+                    ? AppColors.pitchGreen.withValues(alpha: 0.65)
+                    : AppColors.gold.withValues(alpha: 0.55),
+                width: 1.0,
+              ),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: (user.isAdFree ? AppColors.pitchGreen : AppColors.gold)
+                        .withValues(alpha: 0.16),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: user.isAdFree ? AppColors.pitchGreen : AppColors.gold,
+                      width: 0.9,
+                    ),
+                  ),
+                  child: Icon(
+                    user.isAdFree ? Icons.verified_rounded : Icons.workspace_premium_rounded,
+                    color: user.isAdFree ? AppColors.greenLight : AppColors.gold,
+                    size: 21,
+                  ),
+                ),
+                const SizedBox(width: 11),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        user.isAdFree
+                            ? 'Reklamsız Mod Aktif'
+                            : 'Reklamsız Mod (Tek Satın Alım)',
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        user.isAdFree
+                            ? 'Uygulamadaki tüm reklamlar kalıcı olarak kapatıldı.'
+                            : user.isGuest
+                                ? 'Reklamsız Modu satın almak için önce ücretsiz kalıcı hesap oluşturmalısınız.'
+                                : 'Oyun içi paket satışı yoktur; tek seferlik ödeme ile tüm reklamları kaldır.',
+                        style: const TextStyle(
+                          fontSize: 10.5,
+                          color: AppColors.textSecondary,
+                          height: 1.2,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                InkWell(
+                  borderRadius: BorderRadius.circular(9),
+                  onTap: () => showAdFreePurchaseSheet(context),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                    decoration: BoxDecoration(
+                      color: user.isAdFree
+                          ? AppColors.pitchGreen.withValues(alpha: 0.20)
+                          : AppColors.gold,
+                      borderRadius: BorderRadius.circular(9),
+                    ),
+                    child: Text(
+                      user.isAdFree
+                          ? 'Yönet'
+                          : user.isGuest
+                              ? 'Hesap Aç'
+                              : 'Satın Al',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w900,
+                        color: user.isAdFree ? AppColors.greenLight : const Color(0xFF071A12),
+                      ),
+                    ),
+                  ),
+                ),
               ],
             ),
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(
-              color: user.isAdFree
-                  ? AppColors.pitchGreen.withValues(alpha: 0.65)
-                  : AppColors.gold.withValues(alpha: 0.55),
-              width: 1.0,
-            ),
           ),
-          child: Row(
-            children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: (user.isAdFree ? AppColors.pitchGreen : AppColors.gold)
-                      .withValues(alpha: 0.16),
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(
-                    color: user.isAdFree ? AppColors.pitchGreen : AppColors.gold,
-                    width: 0.9,
-                  ),
-                ),
-                child: Icon(
-                  user.isAdFree ? Icons.verified_rounded : Icons.workspace_premium_rounded,
-                  color: user.isAdFree ? AppColors.greenLight : AppColors.gold,
-                  size: 21,
-                ),
-              ),
-              const SizedBox(width: 11),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      user.isAdFree
-                          ? 'Reklamsız Mod Aktif'
-                          : 'Reklamsız Mod (Tek Satın Alım)',
-                      style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w800,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      user.isAdFree
-                          ? 'Uygulamadaki tüm reklamlar kalıcı olarak kapatıldı.'
-                          : user.isGuest
-                              ? 'Reklamsız Modu satın almak için önce ücretsiz kalıcı hesap oluşturmalısınız.'
-                              : 'Oyun içi paket satışı yoktur; tek seferlik ödeme ile tüm reklamları kaldır.',
-                      style: const TextStyle(
-                        fontSize: 10.5,
-                        color: AppColors.textSecondary,
-                        height: 1.2,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 8),
-              InkWell(
-                borderRadius: BorderRadius.circular(9),
-                onTap: () => showAdFreePurchaseSheet(context),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-                  decoration: BoxDecoration(
-                    color: user.isAdFree
-                        ? AppColors.pitchGreen.withValues(alpha: 0.20)
-                        : AppColors.gold,
-                    borderRadius: BorderRadius.circular(9),
-                  ),
-                  child: Text(
-                    user.isAdFree
-                        ? 'Yönet'
-                        : user.isGuest
-                            ? 'Hesap Aç'
-                            : '₺49,99',
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w900,
-                      color: user.isAdFree ? AppColors.greenLight : const Color(0xFF071A12),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
+        ],
 
         const SizedBox(height: 18),
 

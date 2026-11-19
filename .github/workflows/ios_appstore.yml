@@ -1,0 +1,59 @@
+name: Build and Upload iOS IPA to App Store Connect
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - master
+
+jobs:
+  ios-release:
+    name: Build & Publish iOS IPA
+    runs-on: macos-14
+    timeout-minutes: 45
+    env:
+      BUNDLE_ID: com.futbol.party.futbolParty
+      APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+      APP_STORE_CONNECT_KEY_IDENTIFIER: ${{ secrets.APP_STORE_CONNECT_KEY_IDENTIFIER }}
+      APP_STORE_CONNECT_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY }}
+      CERTIFICATE_PRIVATE_KEY: ${{ secrets.CERTIFICATE_PRIVATE_KEY }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - name: Install Codemagic CLI Signing Tools
+        run: pip3 install codemagic-cli-tools
+
+      - name: Initialize macOS Keychain & Fetch/Create Apple Signing Files
+        run: |
+          keychain initialize
+          app-store-connect fetch-signing-files "$BUNDLE_ID" \
+            --platform IOS \
+            --type IOS_APP_STORE \
+            --create
+          keychain add-certificates
+          xcode-project use-profiles
+
+      - name: Install Flutter & CocoaPods Dependencies
+        run: |
+          flutter pub get
+          cd ios && pod install && cd ..
+
+      - name: Build Signed Release iOS IPA
+        run: |
+          flutter build ipa --release \
+            --build-name=1.0.0 \
+            --build-number=1 \
+            --export-options-plist=$HOME/export_options.plist
+
+      - name: Upload IPA to App Store Connect
+        run: |
+          app-store-connect publish \
+            --path build/ios/ipa/*.ipa

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../core/config/app_config.dart';
 import '../../core/constants/app_colors.dart';
 import '../../data/models/play_mode_model.dart';
 import '../../data/models/user_model.dart';
@@ -240,45 +241,47 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
           ),
-          const SizedBox(width: 4),
-          // Ad-Free Single Purchase Badge
-          GestureDetector(
-            onTap: () => showAdFreePurchaseSheet(context),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3.5),
-              decoration: BoxDecoration(
-                color: (user?.isAdFree ?? false)
-                    ? AppColors.pitchGreen.withValues(alpha: 0.20)
-                    : Colors.white.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(7),
-                border: Border.all(
+          if (AppConfig.enableAdsAndIapInStoreBuild) ...[
+            const SizedBox(width: 4),
+            // Ad-Free Single Purchase Badge
+            GestureDetector(
+              onTap: () => showAdFreePurchaseSheet(context),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3.5),
+                decoration: BoxDecoration(
                   color: (user?.isAdFree ?? false)
-                      ? AppColors.pitchGreen.withValues(alpha: 0.55)
-                      : Colors.white.withValues(alpha: 0.22),
-                  width: 0.8,
+                      ? AppColors.pitchGreen.withValues(alpha: 0.20)
+                      : Colors.white.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(7),
+                  border: Border.all(
+                    color: (user?.isAdFree ?? false)
+                        ? AppColors.pitchGreen.withValues(alpha: 0.55)
+                        : Colors.white.withValues(alpha: 0.22),
+                    width: 0.8,
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      (user?.isAdFree ?? false) ? Icons.verified_rounded : Icons.block_flipped,
+                      size: 10.5,
+                      color: (user?.isAdFree ?? false) ? AppColors.greenLight : AppColors.gold,
+                    ),
+                    const SizedBox(width: 2.5),
+                    Text(
+                      (user?.isAdFree ?? false) ? loc.t('pro_badge') : loc.t('ad_free_badge'),
+                      style: TextStyle(
+                        fontSize: 9,
+                        fontWeight: FontWeight.w800,
+                        color: (user?.isAdFree ?? false) ? AppColors.greenLight : Colors.white,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    (user?.isAdFree ?? false) ? Icons.verified_rounded : Icons.block_flipped,
-                    size: 10.5,
-                    color: (user?.isAdFree ?? false) ? AppColors.greenLight : AppColors.gold,
-                  ),
-                  const SizedBox(width: 2.5),
-                  Text(
-                    (user?.isAdFree ?? false) ? loc.t('pro_badge') : loc.t('ad_free_badge'),
-                    style: TextStyle(
-                      fontSize: 9,
-                      fontWeight: FontWeight.w800,
-                      color: (user?.isAdFree ?? false) ? AppColors.greenLight : Colors.white,
-                    ),
-                  ),
-                ],
-              ),
             ),
-          ),
+          ],
           const SizedBox(width: 4),
           // Right: Gold XP Badge
           GestureDetector(

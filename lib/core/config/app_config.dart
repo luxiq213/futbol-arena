@@ -28,9 +28,9 @@ class AppConfig {
   /// for permanent Ad-Free Mode.
   static const String adFreeProductId = 'com.futbol.party.ad_free_lifetime';
 
-  /// Set to false if you want to ship v1.0 completely ad-free without IAP/Ad banners,
-  /// or leave true when StoreKit product `com.futbol.party.ad_free_lifetime` is added in App Store Connect.
-  static const bool enableAdsAndIapInStoreBuild = true;
+  /// Set to false for v1.0 initial App Store submission so Apple Review sees a clean,
+  /// 100% ad-free experience without requiring StoreKit product approval first.
+  static const bool enableAdsAndIapInStoreBuild = false;
 
   /// Public Privacy Policy & Support URLs for App Store Connect metadata
   static const String privacyPolicyUrl = 'https://futbolparty.app/privacy';
