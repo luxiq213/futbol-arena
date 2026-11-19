@@ -223,7 +223,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           itemCount: entries.length,
-          separatorBuilder: (_, _) => const SizedBox(height: 6),
+          separatorBuilder: (context, index) => const SizedBox(height: 6),
           itemBuilder: (context, index) {
             final item = entries[index];
             return Container(

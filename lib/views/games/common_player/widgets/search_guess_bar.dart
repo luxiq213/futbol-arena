@@ -105,7 +105,7 @@ class _SearchGuessBarState extends State<SearchGuessBar> {
               shrinkWrap: true,
               padding: const EdgeInsets.symmetric(vertical: 4),
               itemCount: _suggestions.length,
-              separatorBuilder: (_, _) => const Divider(color: AppColors.border, height: 1),
+              separatorBuilder: (context, index) => const Divider(color: AppColors.border, height: 1),
               itemBuilder: (context, index) {
                 final player = _suggestions[index];
                 return ListTile(

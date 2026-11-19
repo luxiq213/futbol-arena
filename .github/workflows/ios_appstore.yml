@@ -2,10 +2,6 @@ name: Build and Upload iOS IPA to App Store Connect
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - main
-      - master
 
 jobs:
   ios-release:

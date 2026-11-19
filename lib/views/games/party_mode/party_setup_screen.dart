@@ -311,7 +311,7 @@ class _PartySetupScreenState extends State<PartySetupScreen> {
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
                       itemCount: provider.players.length,
-                      separatorBuilder: (_, _) => const SizedBox(height: 6),
+                      separatorBuilder: (context, index) => const SizedBox(height: 6),
                       itemBuilder: (context, index) {
                         final player = provider.players[index];
                         return Container(

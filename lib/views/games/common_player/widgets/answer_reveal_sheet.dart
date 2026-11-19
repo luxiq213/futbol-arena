@@ -66,7 +66,7 @@ class AnswerRevealSheet extends StatelessWidget {
             child: ListView.separated(
               shrinkWrap: true,
               itemCount: players.length,
-              separatorBuilder: (_, _) => const SizedBox(height: 8),
+              separatorBuilder: (context, index) => const SizedBox(height: 8),
               itemBuilder: (context, index) {
                 final player = players[index];
                 final isFound = foundIds.contains(player.id);
