@@ -31,10 +31,6 @@
 	</array>
 	<key>CFBundleDisplayName</key>
 	<string>Futbol Arena</string>
-	<key>GADApplicationIdentifier</key>
-	<string>ca-app-pub-3940256099942544~1458002511</string>
-	<key>NSUserTrackingUsageDescription</key>
-	<string>Size daha uygun reklamlar sunabilmek ve ücretsiz oyun deneyimini desteklemek için reklam kimliği izni kullanılmaktadır.</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
