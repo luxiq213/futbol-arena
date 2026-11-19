@@ -10,7 +10,7 @@ on:
 jobs:
   ios-release:
     name: Build & Publish iOS IPA
-    runs-on: macos-14
+    runs-on: macos-latest
     timeout-minutes: 45
     env:
       BUNDLE_ID: com.futbol.party.futbolParty
