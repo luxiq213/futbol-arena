@@ -28,10 +28,15 @@ jobs:
         with:
           channel: stable
 
-      - name: Set up Python & Install Codemagic CLI Signing Tools
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Codemagic CLI Signing Tools
         run: |
-          pip3 install --upgrade pip
-          pip3 install codemagic-cli-tools
+          python -m pip install --upgrade pip
+          pip install codemagic-cli-tools
 
       - name: Resolve Flutter Packages & Configure iOS Project
         run: |
