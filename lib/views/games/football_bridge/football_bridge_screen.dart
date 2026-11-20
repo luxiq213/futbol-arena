@@ -237,6 +237,9 @@ class FootballBridgeScreen extends StatelessWidget {
                           // Search Guess Input (if bridge not yet completed)
                           if (!game.isBridgeCompleted)
                             SearchGuessBar(
+                              searchLimit: 10,
+                              priorityClubIds: game.currentTipPlayer?.clubIds,
+                              showClubTags: true,
                               onSubmitted: (query) {
                                 game.submitStepByQuery(query);
                               },

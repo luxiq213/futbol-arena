@@ -45,6 +45,12 @@ class TextNormalizer {
     if (cleanName == cleanQuery) return true;
     if (cleanName.contains(cleanQuery)) return true;
 
+    final spacelessQuery = cleanQuery.replaceAll(' ', '');
+    if (spacelessQuery.length >= 3 &&
+        cleanName.replaceAll(' ', '').contains(spacelessQuery)) {
+      return true;
+    }
+
     // Check last name only (e.g. user typed "Ronaldo" or "Özil")
     final parts = cleanName.split(' ');
     for (var part in parts) {
@@ -54,7 +60,10 @@ class TextNormalizer {
     if (aliases != null) {
       for (final alias in aliases) {
         final cleanAlias = normalize(alias);
-        if (cleanAlias == cleanQuery || cleanAlias.contains(cleanQuery)) {
+        if (cleanAlias == cleanQuery ||
+            cleanAlias.contains(cleanQuery) ||
+            (spacelessQuery.length >= 3 &&
+                cleanAlias.replaceAll(' ', '').contains(spacelessQuery))) {
           return true;
         }
       }

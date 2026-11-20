@@ -69,6 +69,15 @@ void main() {
 
       final ardResults = db.searchPlayers('arda');
       expect(ardResults.any((p) => p.name.contains('Arda')), isTrue);
+
+      final neymarResults = db.searchPlayers('neymar');
+      expect(neymarResults.any((p) => p.id == 'neymar'), isTrue);
+
+      final irfanSpaceless = db.searchPlayers('irfancan');
+      expect(irfanSpaceless.any((p) => p.id == 'irfan_can_kahveci'), isTrue);
+
+      final mbappeResults = db.searchPlayers('mbappe');
+      expect(mbappeResults.any((p) => p.id == 'kylian_mbappe'), isTrue);
     });
   });
 }

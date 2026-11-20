@@ -290,6 +290,10 @@ class FootballGridScreen extends StatelessWidget {
                                   onPressed: () {
                                     Navigator.pop(ctx);
                                     grid.giveUp();
+                                    Navigator.popUntil(
+                                      context,
+                                      (r) => r.isFirst,
+                                    );
                                   },
                                   child: const Text(
                                     'Pes Et',

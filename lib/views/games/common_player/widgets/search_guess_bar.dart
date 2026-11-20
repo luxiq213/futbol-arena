@@ -5,8 +5,17 @@ import '../../../../data/repositories/football_database.dart';
 
 class SearchGuessBar extends StatefulWidget {
   final Function(String) onSubmitted;
+  final int searchLimit;
+  final List<String>? priorityClubIds;
+  final bool showClubTags;
 
-  const SearchGuessBar({super.key, required this.onSubmitted});
+  const SearchGuessBar({
+    super.key,
+    required this.onSubmitted,
+    this.searchLimit = 6,
+    this.priorityClubIds,
+    this.showClubTags = false,
+  });
 
   @override
   State<SearchGuessBar> createState() => _SearchGuessBarState();
@@ -17,10 +26,26 @@ class _SearchGuessBarState extends State<SearchGuessBar> {
   final FootballDatabase _db = FootballDatabase();
   List<PlayerModel> _suggestions = [];
 
+  List<String> _sharedClubsWith(PlayerModel player) {
+    final targetIds = widget.priorityClubIds;
+    if (targetIds == null || targetIds.isEmpty) return const [];
+    return player.clubIds.where((id) => targetIds.contains(id)).toList();
+  }
+
   void _onChanged(String val) {
     if (val.trim().length >= 2) {
+      final results = List<PlayerModel>.from(
+        _db.searchPlayers(val, limit: widget.searchLimit),
+      );
+      if (widget.priorityClubIds != null && widget.priorityClubIds!.isNotEmpty) {
+        results.sort((a, b) {
+          final aShared = _sharedClubsWith(a).isNotEmpty ? 1 : 0;
+          final bShared = _sharedClubsWith(b).isNotEmpty ? 1 : 0;
+          return bShared.compareTo(aShared);
+        });
+      }
       setState(() {
-        _suggestions = _db.searchPlayers(val);
+        _suggestions = results;
       });
     } else {
       setState(() {
@@ -108,29 +133,80 @@ class _SearchGuessBarState extends State<SearchGuessBar> {
               separatorBuilder: (context, index) => const Divider(color: AppColors.border, height: 1),
               itemBuilder: (context, index) {
                 final player = _suggestions[index];
+                final sharedClubIds = _sharedClubsWith(player);
+                final isBridgeMatch = sharedClubIds.isNotEmpty;
+                final clubLabel = widget.showClubTags
+                    ? player.clubIds
+                        .map((id) => _db.getClub(id)?.shortName ?? id)
+                        .take(4)
+                        .join(' • ')
+                    : '';
+
                 return ListTile(
                   dense: true,
                   leading: Container(
                     width: 26,
                     height: 26,
                     decoration: BoxDecoration(
-                      color: AppColors.surfaceLight,
+                      color: isBridgeMatch
+                          ? AppColors.pitchGreen.withValues(alpha: 0.25)
+                          : AppColors.surfaceLight,
                       borderRadius: BorderRadius.circular(6),
+                      border: isBridgeMatch
+                          ? Border.all(color: AppColors.pitchGreen, width: 0.9)
+                          : null,
                     ),
-                    child: const Center(
-                      child: Icon(Icons.person_outline, size: 14, color: AppColors.gold),
+                    child: Center(
+                      child: Icon(
+                        isBridgeMatch ? Icons.link_rounded : Icons.person_outline,
+                        size: 14,
+                        color: isBridgeMatch ? AppColors.greenLight : AppColors.gold,
+                      ),
                     ),
                   ),
-                  title: Text(
-                    player.name,
-                    style: const TextStyle(
-                      color: AppColors.textPrimary,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 13,
-                    ),
+                  title: Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          player.name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: AppColors.textPrimary,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
+                      if (isBridgeMatch) ...[
+                        const SizedBox(width: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 5,
+                            vertical: 1.5,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.pitchGreen.withValues(alpha: 0.24),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            'Ortak: ${_db.getClub(sharedClubIds.first)?.shortName ?? ""}',
+                            style: const TextStyle(
+                              fontSize: 8.5,
+                              fontWeight: FontWeight.w900,
+                              color: AppColors.greenLight,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                   subtitle: Text(
-                    '${player.country} • ${player.position}',
+                    clubLabel.isNotEmpty
+                        ? '${player.country} • $clubLabel'
+                        : '${player.country} • ${player.position}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: const TextStyle(color: AppColors.textSecondary, fontSize: 11),
                   ),
                   trailing: const Icon(Icons.north_west, color: AppColors.textMuted, size: 14),
