@@ -451,8 +451,50 @@ class LeagueDraftProvider extends ChangeNotifier {
     startDraftFromLobby();
   }
 
+  List<ManagerOption> get activePoolManagers {
+    const superLigIds = {
+      'mgr_terim',
+      'mgr_senol',
+      'mgr_okan',
+      'mgr_sergen',
+      'mgr_denizli',
+      'mgr_lucescu',
+      'mgr_aykut',
+      'mgr_daum',
+      'mgr_zico',
+      'mgr_ersun',
+    };
+    const worldCupLegendIds = {
+      'mgr_lippi',
+      'mgr_delbosque',
+      'mgr_senol',
+      'mgr_terim',
+      'mgr_cruyff',
+      'mgr_capello',
+      'mgr_bielsa',
+      'mgr_vangaal',
+      'mgr_ancelotti',
+      'mgr_zidane',
+      'mgr_mourinho',
+      'mgr_ferguson',
+    };
+    switch (_poolTheme) {
+      case LeaguePoolTheme.superLigHistory:
+        return allManagers.where((m) => superLigIds.contains(m.id)).toList();
+      case LeaguePoolTheme.europeanGiants:
+        return allManagers.where((m) => !superLigIds.contains(m.id)).toList();
+      case LeaguePoolTheme.worldCupLegends:
+        return allManagers
+            .where((m) => worldCupLegendIds.contains(m.id) || superLigIds.contains(m.id))
+            .toList();
+      case LeaguePoolTheme.allWorldHistory:
+        return allManagers;
+    }
+  }
+
   void _prepareManagerChoicesForActive() {
-    final pool = List<ManagerOption>.from(allManagers)..shuffle(_rng);
+    final source = activePoolManagers.isNotEmpty ? activePoolManagers : allManagers;
+    final pool = List<ManagerOption>.from(source)..shuffle(_rng);
     _currentManagerChoices = pool.take(3).toList();
   }
 
@@ -742,13 +784,14 @@ class LeagueDraftProvider extends ChangeNotifier {
         .map((p) => p.manager?.id)
         .whereType<String>()
         .toSet();
-    final availableManagers = allManagers
+    final poolManagers = activePoolManagers.isNotEmpty ? activePoolManagers : allManagers;
+    final availableManagers = poolManagers
         .where((m) => !takenManagerIds.contains(m.id))
         .toList()
       ..shuffle(_rng);
     final mgrs = availableManagers.isNotEmpty
         ? availableManagers
-        : (List<ManagerOption>.from(allManagers)..shuffle(_rng));
+        : (List<ManagerOption>.from(poolManagers)..shuffle(_rng));
 
     final forms = List<FormationOption>.from(allFormations)..shuffle(_rng);
     bot.manager = mgrs.first;
@@ -1387,6 +1430,36 @@ class LeagueDraftProvider extends ChangeNotifier {
       attackBonus: 6,
       defenseBonus: 1,
     ),
+    ManagerOption(
+      id: 'mgr_daum',
+      name: 'Christoph Daum',
+      nationality: 'Almanya',
+      styleTitle: 'Süper Lig Efsanesi • Hücum Pres',
+      bonusDescription: '+5 Hücum • +3 Duran Top',
+      rating: 90,
+      attackBonus: 5,
+      defenseBonus: 3,
+    ),
+    ManagerOption(
+      id: 'mgr_zico',
+      name: 'Arthur Zico',
+      nationality: 'Brezilya',
+      styleTitle: 'Kadıköy & ŞL Çeyrek Finali Büyüsü',
+      bonusDescription: '+5 Hücum Tekniği • +3 Orta Saha',
+      rating: 91,
+      attackBonus: 5,
+      defenseBonus: 3,
+    ),
+    ManagerOption(
+      id: 'mgr_ersun',
+      name: 'Ersun Yanal',
+      nationality: 'Türkiye',
+      styleTitle: 'Nisan Şampiyonu • Yüksek Tempo',
+      bonusDescription: '+5 Hücum Coşkusu • +2 Pres',
+      rating: 89,
+      attackBonus: 5,
+      defenseBonus: 2,
+    ),
   ];
 
   static const List<FormationOption> allFormations = [
@@ -1479,15 +1552,15 @@ class LeagueDraftProvider extends ChangeNotifier {
       defenseBonus: 4,
     ),
     FormationOption(
-      id: 'form_424',
-      code: '4-2-4',
-      title: '4-2-4 Brezilya Samba Hücumu',
-      description: '4 Defans • 2 Orta Saha • 4 Hücumcu',
+      id: 'form_4141',
+      code: '4-1-4-1',
+      title: '4-1-4-1 Modern Kanat Presi',
+      description: '4 Defans • 5 Orta Saha • 1 Santrfor',
       defenders: 4,
-      midfielders: 2,
-      forwards: 4,
-      attackBonus: 6,
-      defenseBonus: 0,
+      midfielders: 5,
+      forwards: 1,
+      attackBonus: 4,
+      defenseBonus: 3,
     ),
     FormationOption(
       id: 'form_541',

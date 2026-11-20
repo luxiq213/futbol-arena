@@ -1171,7 +1171,7 @@ class _LeagueDraftViewState extends State<_LeagueDraftView> {
     final selectedLabel = labels[selectedSlot];
 
     return SingleChildScrollView(
-      key: ValueKey('pick_${active.id}_${active.squad.length}_$selectedSlot'),
+      key: ValueKey('pick_${active.id}_${active.squad.length}'),
       padding: const EdgeInsets.fromLTRB(14, 4, 14, 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1277,9 +1277,14 @@ class _LeagueDraftViewState extends State<_LeagueDraftView> {
     final fwdStart = 1 + defCount + midCount;
     final fwdIndices = List<int>.generate(11 - fwdStart, (i) => fwdStart + i);
 
+    final usesPitchSlots = participant.pitchSlots.any((e) => e != null);
+
     Widget buildSlotNode(int slotIdx) {
-      final assigned = participant.pitchSlots[slotIdx] ??
-          (slotIdx < participant.squad.length ? participant.squad[slotIdx] : null);
+      final assigned = usesPitchSlots
+          ? participant.pitchSlots[slotIdx]
+          : (slotIdx < participant.squad.length
+              ? participant.squad[slotIdx]
+              : null);
       final isSelected = interactive && provider?.selectedPitchSlotIndex == slotIdx;
       final posCode = slotIdx < labels.length ? labels[slotIdx] : 'OS';
 

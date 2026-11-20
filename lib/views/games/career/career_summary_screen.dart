@@ -132,7 +132,7 @@ class _CareerSummaryScreenState extends State<CareerSummaryScreen> {
         automaticallyImplyLeading: false,
         leading: IconButton(
           tooltip: 'Ana Menüye Dön',
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 19),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded),
           onPressed: () => Navigator.popUntil(context, (r) => r.isFirst),
         ),
         title: const Text('Kariyer Jübilesi & Efsane Kartı'),

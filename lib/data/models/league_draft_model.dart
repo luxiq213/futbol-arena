@@ -70,6 +70,12 @@ class FormationOption {
         return ['KL', 'SLB', 'STP', 'STP', 'STP', 'SĞB', 'DOS', 'OS', 'OOS', 'SNT', 'SNT'];
       case '4-1-4-1':
         return ['KL', 'SLB', 'STP', 'STP', 'SĞB', 'DOS', 'SLO', 'OS', 'OS', 'SĞO', 'SNT'];
+      case '4-1-2-1-2':
+        return ['KL', 'SLB', 'STP', 'STP', 'SĞB', 'DOS', 'SLO', 'SĞO', 'OOS', 'SNT', 'SNT'];
+      case '4-3-2-1':
+        return ['KL', 'SLB', 'STP', 'STP', 'SĞB', 'OS', 'DOS', 'OS', 'OOS', 'OOS', 'SNT'];
+      case '5-4-1':
+        return ['KL', 'SLB', 'STP', 'STP', 'STP', 'SĞB', 'SLO', 'OS', 'OS', 'SĞO', 'SNT'];
       default:
         return [
           'KL',

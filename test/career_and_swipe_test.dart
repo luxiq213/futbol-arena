@@ -260,6 +260,13 @@ void main() {
       expect(draftProvider.phase, LeagueDraftPhase.pickManager);
       expect(draftProvider.currentManagerChoices.length, 3);
 
+      // Verify pool-aligned manager choices and valid 11-slot formations
+      for (final f in LeagueDraftProvider.allFormations) {
+        expect(1 + f.defenders + f.midfielders + f.forwards, 11);
+        expect(f.specificSlotLabels.length, 11);
+        expect(f.forwards, lessThanOrEqualTo(3));
+      }
+
       for (int p = 0; p < 3; p++) {
         if (draftProvider.phase == LeagueDraftPhase.nextPlayerHandoff) {
           draftProvider.beginNextHumanTurn();
