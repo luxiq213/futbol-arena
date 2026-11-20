@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -32,18 +33,72 @@ class _LeagueDraftView extends StatefulWidget {
 
 class _LeagueDraftViewState extends State<_LeagueDraftView> {
   Timer? _liveStreamTimer;
+  Timer? _flashTimer;
+  late final TextEditingController _teamNameController;
   bool _isFastStream = false;
   int _autoStartedSeason = -1;
+  bool _showLossFlash = false;
+  bool _showWinFlash = false;
+  int _lossImpactTick = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _teamNameController = TextEditingController(text: 'Kaptan FC');
+  }
 
   @override
   void dispose() {
     _stopLiveStream();
+    _flashTimer?.cancel();
+    _teamNameController.dispose();
     super.dispose();
   }
 
   void _stopLiveStream() {
     _liveStreamTimer?.cancel();
     _liveStreamTimer = null;
+  }
+
+  void _simulateWeekWithFeedback(LeagueDraftProvider provider) {
+    provider.simulateNextMatchday();
+    final latest = provider.latestSimulatedFixture;
+    if (latest == null) return;
+
+    final home = provider.participants[latest.homeIndex];
+    final away = provider.participants[latest.awayIndex];
+    final isHumanInMatch = !home.isBot || !away.isBot;
+    if (!isHumanInMatch) return;
+
+    final userIsHome = !home.isBot;
+    final myGoals = userIsHome ? latest.homeGoals : latest.awayGoals;
+    final oppGoals = userIsHome ? latest.awayGoals : latest.homeGoals;
+
+    _flashTimer?.cancel();
+    if (myGoals < oppGoals) {
+      HapticFeedback.heavyImpact();
+      if (mounted) {
+        setState(() {
+          _showLossFlash = true;
+          _showWinFlash = false;
+          _lossImpactTick++;
+        });
+      }
+      _flashTimer = Timer(const Duration(milliseconds: 520), () {
+        if (mounted) setState(() => _showLossFlash = false);
+      });
+    } else if (myGoals > oppGoals) {
+      HapticFeedback.lightImpact();
+      if (mounted) {
+        setState(() {
+          _showWinFlash = true;
+          _showLossFlash = false;
+        });
+      }
+      _flashTimer = Timer(const Duration(milliseconds: 380), () {
+        if (mounted) setState(() => _showWinFlash = false);
+      });
+    }
   }
 
   void _scheduleNextStreamStep(LeagueDraftProvider provider) {
@@ -56,8 +111,8 @@ class _LeagueDraftViewState extends State<_LeagueDraftView> {
       return;
     }
 
-    // Step week by week (1. Hafta -> 34./38. Hafta) so each tick shows the user's match (Win / Lose / Draw + Score)
-    final delayMs = _isFastStream ? 200 : 420;
+    // Readable pace so each matchday result and impact feedback are clearly felt
+    final delayMs = _isFastStream ? 360 : 850;
 
     _liveStreamTimer = Timer(Duration(milliseconds: delayMs), () {
       if (!mounted ||
@@ -67,7 +122,7 @@ class _LeagueDraftViewState extends State<_LeagueDraftView> {
         if (mounted) setState(() {});
         return;
       }
-      provider.simulateNextMatchday();
+      _simulateWeekWithFeedback(provider);
       if (provider.isAllFixturesPlayed) {
         _stopLiveStream();
         if (mounted) setState(() {});
@@ -89,7 +144,7 @@ class _LeagueDraftViewState extends State<_LeagueDraftView> {
     if (provider.isAllFixturesPlayed) return;
 
     // Immediately simulate 1 matchday so the user sees instant response
-    provider.simulateNextMatchday();
+    _simulateWeekWithFeedback(provider);
     if (provider.isAllFixturesPlayed) {
       setState(() {});
       return;
@@ -353,12 +408,44 @@ class _LeagueDraftViewState extends State<_LeagueDraftView> {
           ),
         ],
       ),
-      body: StadiumBackground(
-        showLiveMatch: false,
-        child: AnimatedSwitcher(
-          duration: const Duration(milliseconds: 220),
-          child: _buildPhaseContent(context, provider),
-        ),
+      body: Stack(
+        children: [
+          StadiumBackground(
+            showLiveMatch: false,
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 220),
+              child: _buildPhaseContent(context, provider),
+            ),
+          ),
+          // Red Impact / Goal Vignette Flash Overlay
+          Positioned.fill(
+            child: IgnorePointer(
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 220),
+                decoration: BoxDecoration(
+                  gradient: (_showLossFlash || _showWinFlash)
+                      ? RadialGradient(
+                          center: Alignment.center,
+                          radius: 0.95,
+                          colors: [
+                            Colors.transparent,
+                            (_showLossFlash ? AppColors.error : AppColors.pitchGreen)
+                                .withValues(alpha: _showLossFlash ? 0.36 : 0.22),
+                          ],
+                          stops: const [0.42, 1.0],
+                        )
+                      : null,
+                  border: _showLossFlash
+                      ? Border.all(
+                          color: AppColors.error.withValues(alpha: 0.72),
+                          width: 3.5,
+                        )
+                      : null,
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -398,8 +485,12 @@ class _LeagueDraftViewState extends State<_LeagueDraftView> {
   // PHASE 0: ONLINE LEAGUE LOBBY (INVITE UP TO LEAGUE SIZE, REST ARE AI BOTS)
   // ===========================================================================
   Widget _buildSetupPhase(BuildContext context, LeagueDraftProvider provider) {
-    const capacities = [18, 20];
     final totalWeeks = (provider.leagueCapacity - 1) * 2;
+    final humanSlots = provider.lobbySlots.where((s) => !s.isBot).toList();
+    final hostName = humanSlots.isNotEmpty ? humanSlots.first.name : '';
+    if (_teamNameController.text.isEmpty && hostName.isNotEmpty) {
+      _teamNameController.text = hostName;
+    }
 
     return SingleChildScrollView(
       key: const ValueKey('setup'),
@@ -407,7 +498,7 @@ class _LeagueDraftViewState extends State<_LeagueDraftView> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // 1. Compact Online Lobby Room Top HUD Strip (Room Code + Share + Join)
+          // 1. Compact Online Lobby Room Top HUD Strip (Fixed 18 Teams)
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
             decoration: BoxDecoration(
@@ -440,7 +531,7 @@ class _LeagueDraftViewState extends State<_LeagueDraftView> {
                         ),
                       ),
                       Text(
-                        '${provider.leagueCapacity} Takım ($totalWeeks Hafta) • Kalan koltuklar AI Bot',
+                        '18 Takımlı Lig ($totalWeeks Hafta)',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
@@ -519,94 +610,60 @@ class _LeagueDraftViewState extends State<_LeagueDraftView> {
               ],
             ),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 12),
 
-          // 2. Real Football League Format & Team Count Selector (18 Takım Süper Lig/Bundesliga, 20 Takım PL/LaLiga/SerieA)
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text(
-                '1. GERÇEK FUTBOL LİGİ TAKIM SAYISI',
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 0.7,
-                  color: AppColors.greenLight,
-                ),
-              ),
-              Text(
-                '${provider.invitedHumanCount} Oyuncu + ${provider.botFillCount} AI Kulüp',
-                style: const TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w900,
-                  color: AppColors.gold,
-                ),
-              ),
-            ],
+          // 1. Editable Custom Team Name
+          const Text(
+            '1. TAKIMININ İSMİ',
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 0.7,
+              color: AppColors.greenLight,
+            ),
           ),
-          const SizedBox(height: 7),
-          Row(
-            children: capacities.map((cap) {
-              final isSelected = provider.leagueCapacity == cap;
-              final subtitle = cap == 18
-                  ? '34 Hafta • Süper Lig / Bundesliga'
-                  : '38 Hafta • Premier League / La Liga / Serie A';
-              return Expanded(
-                child: Padding(
-                  padding: EdgeInsets.only(right: cap == capacities.last ? 0 : 8),
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(11),
-                    onTap: () => provider.setLeagueCapacity(cap),
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 160),
-                      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
-                      decoration: BoxDecoration(
-                        color: isSelected
-                            ? AppColors.pitchGreen.withValues(alpha: 0.28)
-                            : AppColors.surface.withValues(alpha: 0.85),
-                        borderRadius: BorderRadius.circular(11),
-                        border: Border.all(
-                          color: isSelected ? AppColors.gold : AppColors.border,
-                          width: isSelected ? 1.4 : 0.8,
-                        ),
-                      ),
-                      child: Column(
-                        children: [
-                          Text(
-                            '$cap Takımlı Lig',
-                            style: TextStyle(
-                              fontSize: 12.5,
-                              fontWeight: FontWeight.w900,
-                              color: isSelected ? Colors.white : AppColors.textSecondary,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            subtitle,
-                            textAlign: TextAlign.center,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontSize: 9.2,
-                              color: isSelected ? AppColors.gold : AppColors.textMuted,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              );
-            }).toList(),
+          const SizedBox(height: 6),
+          TextField(
+            controller: _teamNameController,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+            ),
+            onChanged: (val) => provider.updateLobbySlotName(0, val),
+            decoration: InputDecoration(
+              hintText: 'Örn: Kartal FC, Boğaz Gücü...',
+              hintStyle: const TextStyle(color: AppColors.textMuted),
+              filled: true,
+              fillColor: AppColors.surface.withValues(alpha: 0.92),
+              prefixIcon: const Icon(
+                Icons.shield_outlined,
+                color: AppColors.gold,
+                size: 19,
+              ),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(color: AppColors.border),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: AppColors.gold.withValues(alpha: 0.45)),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(color: AppColors.pitchGreen, width: 1.4),
+              ),
+            ),
           ),
           const SizedBox(height: 14),
 
-          // 3. Pool Selector & Database Browser Button
+          // 2. Pool Selector & Database Browser Button (Fixed 18 Teams)
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const Text(
-                '2. LİG & TARİHİ SEZON HAVUZU SEÇİMİ',
+                '2. LİG & TARİHİ SEZON HAVUZU',
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w800,
@@ -625,7 +682,7 @@ class _LeagueDraftViewState extends State<_LeagueDraftView> {
                     border: Border.all(color: AppColors.pitchGreen.withValues(alpha: 0.6)),
                   ),
                   child: Text(
-                    'Veritabanını İncele (${LeagueDraftProvider.allEraClubPacks.length} Takım/Yıl • ${LeagueDraftProvider.allManagers.length} Hoca) ›',
+                    'Veritabanı (${LeagueDraftProvider.allEraClubPacks.length} Paket • ${LeagueDraftProvider.allManagers.length} Hoca) ›',
                     style: const TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.w800,
@@ -644,17 +701,17 @@ class _LeagueDraftViewState extends State<_LeagueDraftView> {
               _buildPoolFilterChip(
                 provider: provider,
                 theme: LeaguePoolTheme.allWorldHistory,
-                label: 'Dünya Süper Ligi • 20 Takım (${LeagueDraftProvider.allEraClubPacks.length} Paket)',
+                label: 'Dünya Süper Ligi • 18 Takım (${LeagueDraftProvider.allEraClubPacks.length} Paket)',
               ),
               _buildPoolFilterChip(
                 provider: provider,
                 theme: LeaguePoolTheme.superLigHistory,
-                label: 'Türkiye Süper Lig • 18 Takım (14 Paket)',
+                label: 'Türkiye Süper Lig • 18 Takım',
               ),
               _buildPoolFilterChip(
                 provider: provider,
                 theme: LeaguePoolTheme.europeanGiants,
-                label: 'Avrupa Devler Ligi • 20 Takım (40 Paket)',
+                label: 'Avrupa Devler Ligi • 18 Takım',
               ),
               _buildPoolFilterChip(
                 provider: provider,
@@ -663,24 +720,24 @@ class _LeagueDraftViewState extends State<_LeagueDraftView> {
               ),
             ],
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 16),
 
-          // Quick Start Button right above the 18/20 team list so the user can start immediately
+          // Start Button right here
           CustomButton(
-            text: '${provider.seasonNumber}. Sezon Kadro Seçimini Başlat (${provider.leagueCapacity} Takım • $totalWeeks Hafta)',
+            text: '${provider.seasonNumber}. Sezon Kadro Seçimini Başlat (18 Takım)',
             icon: Icons.play_arrow_rounded,
             backgroundColor: AppColors.pitchGreen,
             textColor: Colors.white,
             onPressed: provider.startDraftFromLobby,
           ),
-          const SizedBox(height: 15),
+          const SizedBox(height: 16),
 
-          // 4. Lobby Slots (Invited Friends + Auto AI Bot Fillers up to 18 or 20 Teams)
+          // 3. Human Participants Only + AI Auto-Fill Info Notice (No clutter of 17 AI rows)
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                '3. LİG TAKIMLARI (${provider.invitedHumanCount} OYUNCU • ${provider.botFillCount} AI KULÜP)',
+                '3. KATILAN OYUNCULAR (${humanSlots.length}/18)',
                 style: const TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w800,
@@ -720,22 +777,17 @@ class _LeagueDraftViewState extends State<_LeagueDraftView> {
           ),
           const SizedBox(height: 8),
 
-          ...List.generate(provider.lobbySlots.length, (index) {
-            final slot = provider.lobbySlots[index];
-            final isHuman = !slot.isBot;
+          ...humanSlots.map((slot) {
+            final index = slot.slotIndex;
             return Container(
               margin: const EdgeInsets.only(bottom: 7),
               padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 9),
               decoration: BoxDecoration(
-                color: isHuman
-                    ? const Color(0xFF103826).withValues(alpha: 0.92)
-                    : AppColors.surface.withValues(alpha: 0.75),
+                color: const Color(0xFF103826).withValues(alpha: 0.92),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: isHuman
-                      ? (slot.isHost ? AppColors.gold : AppColors.pitchGreen)
-                      : AppColors.border,
-                  width: isHuman ? 1.2 : 0.8,
+                  color: slot.isHost ? AppColors.gold : AppColors.pitchGreen,
+                  width: 1.2,
                 ),
               ),
               child: Row(
@@ -744,19 +796,13 @@ class _LeagueDraftViewState extends State<_LeagueDraftView> {
                     width: 30,
                     height: 30,
                     decoration: BoxDecoration(
-                      color: isHuman
-                          ? AppColors.pitchGreen.withValues(alpha: 0.25)
-                          : Colors.white.withValues(alpha: 0.07),
+                      color: AppColors.pitchGreen.withValues(alpha: 0.25),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Icon(
-                      isHuman
-                          ? (slot.isHost ? Icons.stars_rounded : Icons.person_rounded)
-                          : Icons.smart_toy_outlined,
+                      slot.isHost ? Icons.stars_rounded : Icons.person_rounded,
                       size: 17,
-                      color: isHuman
-                          ? (slot.isHost ? AppColors.gold : AppColors.greenLight)
-                          : AppColors.textSecondary,
+                      color: slot.isHost ? AppColors.gold : AppColors.greenLight,
                     ),
                   ),
                   const SizedBox(width: 10),
@@ -769,23 +815,17 @@ class _LeagueDraftViewState extends State<_LeagueDraftView> {
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
                               decoration: BoxDecoration(
-                                color: isHuman
-                                    ? (slot.isHost
-                                        ? AppColors.gold.withValues(alpha: 0.22)
-                                        : AppColors.pitchGreen.withValues(alpha: 0.24))
-                                    : Colors.white.withValues(alpha: 0.08),
+                                color: slot.isHost
+                                    ? AppColors.gold.withValues(alpha: 0.22)
+                                    : AppColors.pitchGreen.withValues(alpha: 0.24),
                                 borderRadius: BorderRadius.circular(4),
                               ),
                               child: Text(
-                                slot.isHost
-                                    ? 'ODA KURUCU (SEN)'
-                                    : (isHuman ? 'DAVETLİ ARKADAŞ' : 'AI BOT (OTOMATİK)'),
+                                slot.isHost ? 'SENİN TAKIMIN' : 'DAVETLİ OYUNCU',
                                 style: TextStyle(
                                   fontSize: 8.5,
                                   fontWeight: FontWeight.w900,
-                                  color: isHuman
-                                      ? (slot.isHost ? AppColors.gold : AppColors.greenLight)
-                                      : AppColors.textSecondary,
+                                  color: slot.isHost ? AppColors.gold : AppColors.greenLight,
                                 ),
                               ),
                             ),
@@ -811,74 +851,65 @@ class _LeagueDraftViewState extends State<_LeagueDraftView> {
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          '${index + 1}. ${slot.name}',
+                          slot.name,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontSize: 13,
+                          style: const TextStyle(
+                            fontSize: 13.5,
                             fontWeight: FontWeight.w800,
-                            color: isHuman ? Colors.white : AppColors.textSecondary,
+                            color: Colors.white,
                           ),
                         ),
                       ],
                     ),
                   ),
-                  if (isHuman) ...[
+                  IconButton(
+                    visualDensity: VisualDensity.compact,
+                    tooltip: 'İsmi Düzenle',
+                    onPressed: () => _showRenameSlotDialog(context, provider, index, slot.name),
+                    icon: const Icon(Icons.edit_outlined, size: 17, color: AppColors.greenLight),
+                  ),
+                  if (!slot.isHost)
                     IconButton(
                       visualDensity: VisualDensity.compact,
-                      tooltip: 'İsmi Düzenle',
-                      onPressed: () => _showRenameSlotDialog(context, provider, index, slot.name),
-                      icon: const Icon(Icons.edit_outlined, size: 17, color: AppColors.greenLight),
+                      tooltip: 'Oyuncuyu Çıkar',
+                      onPressed: () => provider.convertSlotToBot(index),
+                      icon: const Icon(Icons.person_remove_outlined, size: 17, color: Colors.redAccent),
                     ),
-                    if (!slot.isHost)
-                      IconButton(
-                        visualDensity: VisualDensity.compact,
-                        tooltip: 'Koltuğu AI Bot Yap',
-                        onPressed: () => provider.convertSlotToBot(index),
-                        icon: const Icon(Icons.person_remove_outlined, size: 17, color: Colors.redAccent),
-                      ),
-                  ] else ...[
-                    InkWell(
-                      borderRadius: BorderRadius.circular(8),
-                      onTap: () => _showInviteFriendDialog(context, provider, targetSlotIndex: index),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.06),
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: AppColors.gold.withValues(alpha: 0.45)),
-                        ),
-                        child: const Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.person_add_alt_rounded, size: 12, color: AppColors.gold),
-                            SizedBox(width: 4),
-                            Text(
-                              'Davet Et',
-                              style: TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w800,
-                                color: AppColors.gold,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
                 ],
               ),
             );
           }),
 
-          const SizedBox(height: 14),
-
-          CustomButton(
-            text: '${provider.seasonNumber}. Sezon Kadro Seçimini Başlat (${provider.leagueCapacity} Takım)',
-            icon: Icons.play_arrow_rounded,
-            backgroundColor: AppColors.pitchGreen,
-            textColor: Colors.white,
-            onPressed: provider.startDraftFromLobby,
+          // Clean AI completion info banner
+          Container(
+            margin: const EdgeInsets.only(top: 4),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            decoration: BoxDecoration(
+              color: AppColors.surface.withValues(alpha: 0.78),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+            ),
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.info_outline_rounded,
+                  size: 16,
+                  color: AppColors.greenLight,
+                ),
+                const SizedBox(width: 9),
+                Expanded(
+                  child: Text(
+                    '18 takımlık ligde yeterli gerçek oyuncu olmazsa kalan ${provider.botFillCount} kontenjan yapay zeka (AI) takımlarıyla otomatik tamamlanır.',
+                    style: const TextStyle(
+                      fontSize: 11.2,
+                      color: AppColors.textSecondary,
+                      height: 1.35,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -1145,12 +1176,12 @@ class _LeagueDraftViewState extends State<_LeagueDraftView> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // 1. Compact Header Strip: Manager, Formation, Squad Progress (X/11) & Auto-Fill
+          // 1. Compact Header Strip: Manager, Formation, Squad Progress (X/11) (No auto-fill skip)
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 8),
             decoration: BoxDecoration(
               color: AppColors.surface.withValues(alpha: 0.92),
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(11),
               border: Border.all(color: AppColors.border),
             ),
             child: Row(
@@ -1170,11 +1201,11 @@ class _LeagueDraftViewState extends State<_LeagueDraftView> {
                         ),
                       ),
                       Text(
-                        'Kadro: ${active.squad.length}/11 • Seçili Mevki: $selectedLabel (${provider.currentNeededRoleLabel})',
+                        'Kadro: ${active.squad.length}/11 • Hedef Mevki: $selectedLabel (${provider.currentNeededRoleLabel})',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
-                          fontSize: 11,
+                          fontSize: 11.5,
                           fontWeight: FontWeight.w900,
                           color: Colors.white,
                         ),
@@ -1182,30 +1213,19 @@ class _LeagueDraftViewState extends State<_LeagueDraftView> {
                     ],
                   ),
                 ),
-                InkWell(
-                  borderRadius: BorderRadius.circular(8),
-                  onTap: provider.autoCompleteCurrentParticipantSquad,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-                    decoration: BoxDecoration(
-                      color: AppColors.pitchGreen.withValues(alpha: 0.22),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: AppColors.pitchGreen),
-                    ),
-                    child: const Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.bolt_rounded, size: 12, color: AppColors.gold),
-                        SizedBox(width: 3),
-                        Text(
-                          'Kalanları Doldur',
-                          style: TextStyle(
-                            fontSize: 9.5,
-                            fontWeight: FontWeight.w800,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ],
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: AppColors.pitchGreen.withValues(alpha: 0.22),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: AppColors.pitchGreen),
+                  ),
+                  child: Text(
+                    '${active.squad.length}/11',
+                    style: const TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w900,
+                      color: AppColors.greenLight,
                     ),
                   ),
                 ),
@@ -1213,271 +1233,34 @@ class _LeagueDraftViewState extends State<_LeagueDraftView> {
             ),
           ),
 
-          const SizedBox(height: 8),
+          const SizedBox(height: 10),
 
-          // 2. Interactive 11-Slot Tactical Pitch Open Right in Front of the User
+          // 2. Taller, Airy 2D Tactical Pitch with Field Markings
           _buildInteractiveFormationPitch(
             provider: provider,
             participant: active,
             interactive: true,
           ),
 
-          const SizedBox(height: 8),
+          const SizedBox(height: 10),
 
-          // 3. Spun Historical Club + Year Header
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 8),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  const Color(0xFF15452F).withValues(alpha: 0.94),
-                  const Color(0xFF081F15).withValues(alpha: 0.96),
-                ],
-              ),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppColors.gold, width: 1.1),
+          // 3. Animated Spun Club Roulette + 3 Sequential Mystery Boxes
+          _DraftRevealArena(
+            key: ValueKey(
+              'reveal_${active.id}_${active.squad.length}_${pack.id}_${provider.remainingRerolls}',
             ),
-            child: Row(
-              children: [
-                ClubCrestWidget(
-                  club: FootballDatabase().getClub(pack.clubId) ??
-                      FootballDatabase().getAllClubs().first,
-                  size: 36,
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
-                            decoration: BoxDecoration(
-                              color: AppColors.gold,
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: Text(
-                              '${pack.seasonLabel} SEZONU',
-                              style: const TextStyle(
-                                fontSize: 8.5,
-                                fontWeight: FontWeight.w900,
-                                color: Color(0xFF06160F),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 6),
-                          Flexible(
-                            child: Text(
-                              pack.eraTitle,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                fontSize: 9.5,
-                                fontWeight: FontWeight.w700,
-                                color: AppColors.greenLight,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        '${pack.seasonLabel} ${pack.clubName} (5 Oyuncu)',
-                        style: const TextStyle(
-                          fontSize: 13.5,
-                          fontWeight: FontWeight.w900,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                if (provider.remainingRerolls > 0)
-                  InkWell(
-                    borderRadius: BorderRadius.circular(8),
-                    onTap: provider.rerollCurrentClubPack,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: AppColors.gold.withValues(alpha: 0.16),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: AppColors.gold, width: 0.9),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(Icons.refresh_rounded, size: 12, color: AppColors.gold),
-                          const SizedBox(width: 4),
-                          Text(
-                            'Değiştir (${provider.remainingRerolls})',
-                            style: const TextStyle(
-                              fontSize: 9.5,
-                              fontWeight: FontWeight.w800,
-                              color: AppColors.gold,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-              ],
-            ),
+            provider: provider,
+            pack: pack,
+            choices: provider.currentPlayerChoices,
+            selectedSlotIndex: selectedSlot,
+            selectedSlotLabel: selectedLabel,
           ),
-
-          const SizedBox(height: 8),
-
-          Text(
-            'GELEN 5 OYUNCUDAN BİRİNE DOKUN VE "$selectedLabel" MEVKİSİNE YERLEŞTİR:',
-            style: const TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w800,
-              letterSpacing: 0.5,
-              color: AppColors.greenLight,
-            ),
-          ),
-          const SizedBox(height: 6),
-
-          // 4. 5 Player Candidates from the Spun Historical Club
-          ...provider.currentPlayerChoices.map((player) {
-            final isRoleMatch = player.role == provider.currentNeededRole;
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 6),
-              child: InkWell(
-                borderRadius: BorderRadius.circular(12),
-                onTap: () => provider.selectPlayerForSquad(
-                  player,
-                  targetSlotIndex: selectedSlot,
-                ),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: AppColors.surface.withValues(alpha: 0.94),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: isRoleMatch
-                          ? AppColors.gold.withValues(alpha: 0.85)
-                          : AppColors.border,
-                      width: isRoleMatch ? 1.2 : 0.9,
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 38,
-                        height: 38,
-                        alignment: Alignment.center,
-                        decoration: BoxDecoration(
-                          color: isRoleMatch
-                              ? AppColors.gold.withValues(alpha: 0.18)
-                              : AppColors.pitchGreen.withValues(alpha: 0.18),
-                          borderRadius: BorderRadius.circular(9),
-                          border: Border.all(
-                            color: isRoleMatch ? AppColors.gold : AppColors.pitchGreen,
-                          ),
-                        ),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              '${player.rating}',
-                              style: const TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w900,
-                                color: AppColors.gold,
-                              ),
-                            ),
-                            Text(
-                              player.specificPosition,
-                              style: const TextStyle(
-                                fontSize: 7.5,
-                                fontWeight: FontWeight.w800,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Flexible(
-                                  child: Text(
-                                    player.name,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(
-                                      fontSize: 13.5,
-                                      fontWeight: FontWeight.w800,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                ),
-                                if (isRoleMatch) ...[
-                                  const SizedBox(width: 6),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-                                    decoration: BoxDecoration(
-                                      color: AppColors.gold.withValues(alpha: 0.20),
-                                      borderRadius: BorderRadius.circular(4),
-                                    ),
-                                    child: const Text(
-                                      'TAM MEVKİ',
-                                      style: TextStyle(
-                                        fontSize: 7.5,
-                                        fontWeight: FontWeight.w900,
-                                        color: AppColors.gold,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ],
-                            ),
-                            const SizedBox(height: 1.5),
-                            Text(
-                              '${player.seasonLabel} ${player.clubName} • Orj. Mevki: ${player.specificPosition}',
-                              style: const TextStyle(
-                                fontSize: 10.5,
-                                color: AppColors.textSecondary,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
-                        decoration: BoxDecoration(
-                          color: AppColors.pitchGreen.withValues(alpha: 0.24),
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: AppColors.pitchGreen.withValues(alpha: 0.7)),
-                        ),
-                        child: Text(
-                          '$selectedLabel\'ye Koy',
-                          style: const TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w800,
-                            color: AppColors.greenLight,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            );
-          }),
         ],
       ),
     );
   }
 
-  /// Renders the 2D tactical football pitch with all 11 formation slots open in front of the user
+  /// Renders a taller, airier 2D tactical football pitch with real pitch markings
   Widget _buildInteractiveFormationPitch({
     required LeagueDraftProvider? provider,
     required LeagueParticipant participant,
@@ -1504,27 +1287,27 @@ class _LeagueDraftViewState extends State<_LeagueDraftView> {
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 2.5),
           child: InkWell(
-            borderRadius: BorderRadius.circular(9),
+            borderRadius: BorderRadius.circular(10),
             onTap: interactive && provider != null
                 ? () => provider.selectPitchSlot(slotIdx)
                 : null,
             child: AnimatedContainer(
-              duration: const Duration(milliseconds: 160),
-              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 5),
+              duration: const Duration(milliseconds: 180),
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
               decoration: BoxDecoration(
                 color: assigned != null
                     ? const Color(0xFF0A281B).withValues(alpha: 0.94)
                     : (isSelected
-                        ? AppColors.gold.withValues(alpha: 0.22)
-                        : Colors.black.withValues(alpha: 0.38)),
-                borderRadius: BorderRadius.circular(9),
+                        ? AppColors.gold.withValues(alpha: 0.24)
+                        : Colors.black.withValues(alpha: 0.36)),
+                borderRadius: BorderRadius.circular(10),
                 border: Border.all(
                   color: isSelected
                       ? AppColors.gold
                       : (assigned != null
                           ? AppColors.pitchGreen
-                          : Colors.white.withValues(alpha: 0.24)),
-                  width: isSelected ? 1.6 : 1.0,
+                          : Colors.white.withValues(alpha: 0.26)),
+                  width: isSelected ? 1.7 : 1.0,
                 ),
               ),
               child: Column(
@@ -1535,19 +1318,19 @@ class _LeagueDraftViewState extends State<_LeagueDraftView> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                        padding: const EdgeInsets.symmetric(horizontal: 4.5, vertical: 1.5),
                         decoration: BoxDecoration(
                           color: isSelected
                               ? AppColors.gold
                               : (assigned != null
                                   ? AppColors.pitchGreen
-                                  : Colors.white.withValues(alpha: 0.14)),
+                                  : Colors.white.withValues(alpha: 0.16)),
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text(
                           posCode,
                           style: TextStyle(
-                            fontSize: 8,
+                            fontSize: 8.5,
                             fontWeight: FontWeight.w900,
                             color: isSelected ? const Color(0xFF06160F) : Colors.white,
                           ),
@@ -1558,7 +1341,7 @@ class _LeagueDraftViewState extends State<_LeagueDraftView> {
                         Text(
                           '${assigned.rating}',
                           style: const TextStyle(
-                            fontSize: 9,
+                            fontSize: 9.5,
                             fontWeight: FontWeight.w900,
                             color: AppColors.gold,
                           ),
@@ -1566,16 +1349,16 @@ class _LeagueDraftViewState extends State<_LeagueDraftView> {
                       ],
                     ],
                   ),
-                  const SizedBox(height: 3),
+                  const SizedBox(height: 4),
                   Text(
                     assigned != null
                         ? _shortPlayerName(assigned.name)
-                        : (isSelected ? 'Buraya Seç' : 'Boş'),
+                        : (isSelected ? 'Hedef' : 'Boş'),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                      fontSize: 9.5,
+                      fontSize: 9.8,
                       fontWeight: assigned != null || isSelected
                           ? FontWeight.w800
                           : FontWeight.w500,
@@ -1593,63 +1376,76 @@ class _LeagueDraftViewState extends State<_LeagueDraftView> {
     }
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(8, 10, 8, 10),
+      constraints: const BoxConstraints(minHeight: 288),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [
-            Color(0xFF145235),
-            Color(0xFF0E3D27),
-            Color(0xFF145235),
+            Color(0xFF155B3A),
+            Color(0xFF0E4129),
+            Color(0xFF155B3A),
           ],
         ),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.pitchGreen.withValues(alpha: 0.75), width: 1.2),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: AppColors.pitchGreen.withValues(alpha: 0.8),
+          width: 1.3,
+        ),
       ),
-      child: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'SAHA DİZİLİŞİ (${form.code}) • ${participant.squad.length}/11 OYUNCU',
-                style: const TextStyle(
-                  fontSize: 9.5,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 0.5,
-                  color: AppColors.gold,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(15),
+        child: CustomPaint(
+          painter: _TacticalPitchPainter(),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(9, 12, 9, 14),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'SAHA DİZİLİŞİ (${form.code}) • ${participant.squad.length}/11',
+                      style: const TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 0.5,
+                        color: AppColors.gold,
+                      ),
+                    ),
+                    Text(
+                      'Güç: ${participant.overallTeamPower} OVR',
+                      style: const TextStyle(
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w900,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-              Text(
-                'Güç: ${participant.overallTeamPower} OVR',
-                style: const TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w900,
-                  color: Colors.white,
+                const SizedBox(height: 14),
+                // Forwards Line (Top of Pitch)
+                Row(children: fwdIndices.map(buildSlotNode).toList()),
+                const SizedBox(height: 15),
+                // Midfielders Line
+                Row(children: midIndices.map(buildSlotNode).toList()),
+                const SizedBox(height: 15),
+                // Defenders Line
+                Row(children: defIndices.map(buildSlotNode).toList()),
+                const SizedBox(height: 15),
+                // Goalkeeper Line (Bottom of Pitch)
+                Row(
+                  children: [
+                    const Spacer(),
+                    ...gkIndices.map(buildSlotNode),
+                    const Spacer(),
+                  ],
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-          const SizedBox(height: 8),
-          // Forwards Line (Top of Pitch)
-          Row(children: fwdIndices.map(buildSlotNode).toList()),
-          const SizedBox(height: 7),
-          // Midfielders Line
-          Row(children: midIndices.map(buildSlotNode).toList()),
-          const SizedBox(height: 7),
-          // Defenders Line
-          Row(children: defIndices.map(buildSlotNode).toList()),
-          const SizedBox(height: 7),
-          // Goalkeeper Line (Bottom of Pitch)
-          Row(
-            children: [
-              const Spacer(),
-              ...gkIndices.map(buildSlotNode),
-              const Spacer(),
-            ],
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -1917,7 +1713,7 @@ class _LeagueDraftViewState extends State<_LeagueDraftView> {
                         borderRadius: BorderRadius.circular(11),
                         onTap: () {
                           _stopLiveStream();
-                          provider.simulateNextMatchday();
+                          _simulateWeekWithFeedback(provider);
                         },
                         child: Container(
                           padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 10),
@@ -2444,13 +2240,27 @@ class _LeagueDraftViewState extends State<_LeagueDraftView> {
       }
     }
 
-    return Container(
+    final card = Container(
       key: ValueKey('flow_${match.matchday}_${match.homeIndex}_${match.awayIndex}'),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.42),
+        color: isHumanInMatch && outcomeColor == AppColors.error
+            ? const Color(0xFF3A0A0E).withValues(alpha: 0.88)
+            : Colors.black.withValues(alpha: 0.42),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: outcomeColor.withValues(alpha: 0.85), width: 1.3),
+        border: Border.all(
+          color: outcomeColor.withValues(alpha: 0.90),
+          width: outcomeColor == AppColors.error ? 1.8 : 1.3,
+        ),
+        boxShadow: isHumanInMatch && outcomeColor == AppColors.error
+            ? [
+                BoxShadow(
+                  color: AppColors.error.withValues(alpha: 0.42),
+                  blurRadius: 18,
+                  spreadRadius: 1,
+                ),
+              ]
+            : null,
       ),
       child: Column(
         children: [
@@ -2559,6 +2369,24 @@ class _LeagueDraftViewState extends State<_LeagueDraftView> {
         ],
       ),
     );
+
+    if (isHumanInMatch && outcomeColor == AppColors.error) {
+      return TweenAnimationBuilder<double>(
+        key: ValueKey('shake_${match.matchday}_$_lossImpactTick'),
+        tween: Tween<double>(begin: 1.0, end: 0.0),
+        duration: const Duration(milliseconds: 420),
+        curve: Curves.easeOut,
+        builder: (context, t, child) {
+          final dx = math.sin(t * math.pi * 6) * 8.0 * t;
+          return Transform.translate(
+            offset: Offset(dx, 0),
+            child: child,
+          );
+        },
+        child: card,
+      );
+    }
+    return card;
   }
 
   Widget _buildEndOfSeasonSummaryCard({
@@ -3145,6 +2973,486 @@ $squadLines
           ),
         );
       },
+    );
+  }
+}
+
+class _TacticalPitchPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.13)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.2;
+
+    // Subtle horizontal grass stripes
+    final stripePaint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.03)
+      ..style = PaintingStyle.fill;
+    const stripeCount = 6;
+    final stripeH = size.height / stripeCount;
+    for (int i = 0; i < stripeCount; i += 2) {
+      canvas.drawRect(
+        Rect.fromLTWH(0, i * stripeH, size.width, stripeH),
+        stripePaint,
+      );
+    }
+
+    // Halfway line & center circle
+    final midY = size.height * 0.52;
+    canvas.drawLine(Offset(10, midY), Offset(size.width - 10, midY), paint);
+    canvas.drawCircle(Offset(size.width / 2, midY), 34, paint);
+
+    // Top penalty area (Attacking goal)
+    final topBoxW = size.width * 0.48;
+    canvas.drawRect(
+      Rect.fromLTWH((size.width - topBoxW) / 2, 0, topBoxW, 40),
+      paint,
+    );
+
+    // Bottom penalty area (GK box)
+    canvas.drawRect(
+      Rect.fromLTWH((size.width - topBoxW) / 2, size.height - 40, topBoxW, 40),
+      paint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+class _DraftRevealArena extends StatefulWidget {
+  final LeagueDraftProvider provider;
+  final EraClubPack pack;
+  final List<EraPlayerCandidate> choices;
+  final int selectedSlotIndex;
+  final String selectedSlotLabel;
+
+  const _DraftRevealArena({
+    super.key,
+    required this.provider,
+    required this.pack,
+    required this.choices,
+    required this.selectedSlotIndex,
+    required this.selectedSlotLabel,
+  });
+
+  @override
+  State<_DraftRevealArena> createState() => _DraftRevealArenaState();
+}
+
+class _DraftRevealArenaState extends State<_DraftRevealArena> {
+  final List<Timer> _timers = [];
+  int _rouletteStep = 0;
+  bool _clubLocked = false;
+  int _openedBoxes = 0;
+
+  late final List<EraClubPack> _rouletteSamples;
+
+  @override
+  void initState() {
+    super.initState();
+    final pool = widget.provider.activePoolPacks;
+    _rouletteSamples = pool.isNotEmpty
+        ? pool.take(6).toList()
+        : [widget.pack];
+    _startSequence();
+  }
+
+  void _startSequence() {
+    // 1. Quick club roulette spin ticks
+    for (int i = 1; i <= 3; i++) {
+      _timers.add(
+        Timer(Duration(milliseconds: i * 95), () {
+          if (!mounted) return;
+          setState(() => _rouletteStep = i);
+        }),
+      );
+    }
+
+    // 2. Lock spun club
+    _timers.add(
+      Timer(const Duration(milliseconds: 360), () {
+        if (!mounted) return;
+        HapticFeedback.selectionClick();
+        setState(() => _clubLocked = true);
+      }),
+    );
+
+    // 3. Sequentially pop open the 3 mystery boxes (pıt - pıt - pıt)
+    const boxDelays = [500, 720, 940];
+    for (int i = 0; i < boxDelays.length; i++) {
+      _timers.add(
+        Timer(Duration(milliseconds: boxDelays[i]), () {
+          if (!mounted) return;
+          HapticFeedback.selectionClick();
+          setState(() => _openedBoxes = i + 1);
+        }),
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    for (final t in _timers) {
+      t.cancel();
+    }
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final displayedPack = _clubLocked
+        ? widget.pack
+        : _rouletteSamples[_rouletteStep % _rouletteSamples.length];
+    final displayedClub = FootballDatabase().getClub(displayedPack.clubId) ??
+        FootballDatabase().getAllClubs().first;
+    final boxCount = widget.choices.length.clamp(0, 3);
+    final allBoxesReady = _openedBoxes >= boxCount;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // Animated Club Roulette Header
+        AnimatedScale(
+          scale: _clubLocked ? 1.0 : 0.97,
+          duration: const Duration(milliseconds: 220),
+          curve: Curves.easeOutBack,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 9),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  const Color(0xFF15452F).withValues(alpha: 0.94),
+                  const Color(0xFF081F15).withValues(alpha: 0.96),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(13),
+              border: Border.all(
+                color: _clubLocked
+                    ? AppColors.gold
+                    : AppColors.pitchGreen.withValues(alpha: 0.7),
+                width: _clubLocked ? 1.3 : 1.0,
+              ),
+            ),
+            child: Row(
+              children: [
+                ClubCrestWidget(club: displayedClub, size: 38),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 1.5,
+                            ),
+                            decoration: BoxDecoration(
+                              color: _clubLocked
+                                  ? AppColors.gold
+                                  : AppColors.pitchGreen,
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              _clubLocked
+                                  ? '${displayedPack.seasonLabel} KULÜBÜ'
+                                  : 'KULÜP ÇEKİLİYOR...',
+                              style: TextStyle(
+                                fontSize: 8.5,
+                                fontWeight: FontWeight.w900,
+                                color: _clubLocked
+                                    ? const Color(0xFF06160F)
+                                    : Colors.white,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Flexible(
+                            child: Text(
+                              displayedPack.eraTitle,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 9.5,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.greenLight,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        displayedPack.clubName,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w900,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (_clubLocked && widget.provider.remainingRerolls > 0)
+                  InkWell(
+                    borderRadius: BorderRadius.circular(8),
+                    onTap: widget.provider.rerollCurrentClubPack,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.gold.withValues(alpha: 0.16),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: AppColors.gold, width: 0.9),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.refresh_rounded,
+                            size: 12,
+                            color: AppColors.gold,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            'Değiştir (${widget.provider.remainingRerolls})',
+                            style: const TextStyle(
+                              fontSize: 9.5,
+                              fontWeight: FontWeight.w800,
+                              color: AppColors.gold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
+
+        const SizedBox(height: 10),
+
+        Text(
+          allBoxesReady
+              ? '3 KUTUDAN BİRİNİ SEÇ VE KADROYA EKLE:'
+              : 'KULÜP KUTULARI SIRAYLA AÇILIYOR...',
+          style: const TextStyle(
+            fontSize: 10,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 0.5,
+            color: AppColors.greenLight,
+          ),
+        ),
+        const SizedBox(height: 8),
+
+        // 3 Sequentially Revealed Mystery Player Boxes
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: List.generate(boxCount, (i) {
+            final player = widget.choices[i];
+            final isOpened = i < _openedBoxes;
+            final isExactMatch =
+                player.role == widget.provider.currentNeededRole;
+            final isAnyOpenMatch =
+                isExactMatch || widget.provider.hasOpenSlotForRole(player.role);
+
+            return Expanded(
+              child: Padding(
+                padding: EdgeInsets.only(right: i == boxCount - 1 ? 0 : 7),
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 260),
+                  switchInCurve: Curves.easeOutBack,
+                  transitionBuilder: (child, anim) => ScaleTransition(
+                    scale: anim,
+                    child: FadeTransition(opacity: anim, child: child),
+                  ),
+                  child: !isOpened
+                      ? Container(
+                          key: ValueKey('closed_$i'),
+                          height: 144,
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [
+                                AppColors.surface.withValues(alpha: 0.94),
+                                AppColors.darkGreen.withValues(alpha: 0.55),
+                              ],
+                            ),
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(
+                              color: AppColors.gold.withValues(alpha: 0.45),
+                              width: 1.1,
+                            ),
+                          ),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(
+                                Icons.inventory_2_outlined,
+                                color: AppColors.gold,
+                                size: 28,
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                '${i + 1}. KUTU',
+                                style: const TextStyle(
+                                  fontSize: 10.5,
+                                  fontWeight: FontWeight.w900,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              const Text(
+                                'Açılıyor...',
+                                style: TextStyle(
+                                  fontSize: 9,
+                                  color: AppColors.textMuted,
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                      : InkWell(
+                          key: ValueKey('open_${player.id}_$i'),
+                          borderRadius: BorderRadius.circular(14),
+                          onTap: allBoxesReady
+                              ? () => widget.provider.selectPlayerForSquad(
+                                    player,
+                                    targetSlotIndex: widget.selectedSlotIndex,
+                                  )
+                              : null,
+                          child: Container(
+                            height: 144,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 9,
+                            ),
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: [
+                                  const Color(0xFF103324).withValues(alpha: 0.96),
+                                  const Color(0xFF071A12).withValues(alpha: 0.96),
+                                ],
+                              ),
+                              borderRadius: BorderRadius.circular(14),
+                              border: Border.all(
+                                color: isExactMatch
+                                    ? AppColors.gold
+                                    : (isAnyOpenMatch
+                                        ? AppColors.pitchGreen
+                                        : Colors.orangeAccent.withValues(alpha: 0.8)),
+                                width: isExactMatch ? 1.5 : 1.1,
+                              ),
+                            ),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 5,
+                                        vertical: 2,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: isAnyOpenMatch
+                                            ? AppColors.pitchGreen.withValues(alpha: 0.25)
+                                            : Colors.orangeAccent.withValues(alpha: 0.22),
+                                        borderRadius: BorderRadius.circular(5),
+                                      ),
+                                      child: Text(
+                                        player.specificPosition,
+                                        style: TextStyle(
+                                          fontSize: 9,
+                                          fontWeight: FontWeight.w900,
+                                          color: isAnyOpenMatch
+                                              ? AppColors.greenLight
+                                              : Colors.orangeAccent,
+                                        ),
+                                      ),
+                                    ),
+                                    Text(
+                                      '${player.rating}',
+                                      style: const TextStyle(
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.w900,
+                                        color: AppColors.gold,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                Text(
+                                  player.name,
+                                  textAlign: TextAlign.center,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w900,
+                                    color: Colors.white,
+                                    height: 1.15,
+                                  ),
+                                ),
+                                Container(
+                                  width: double.infinity,
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 4,
+                                    vertical: 4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: isExactMatch
+                                        ? AppColors.gold.withValues(alpha: 0.22)
+                                        : (isAnyOpenMatch
+                                            ? AppColors.pitchGreen.withValues(alpha: 0.22)
+                                            : Colors.orangeAccent.withValues(alpha: 0.20)),
+                                    borderRadius: BorderRadius.circular(7),
+                                  ),
+                                  child: Text(
+                                    isExactMatch
+                                        ? 'TAM MEVKİ'
+                                        : (isAnyOpenMatch
+                                            ? 'KADROYA AL'
+                                            : 'ZORUNLU ${widget.selectedSlotLabel}'),
+                                    textAlign: TextAlign.center,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      fontSize: 8.5,
+                                      fontWeight: FontWeight.w900,
+                                      color: isExactMatch
+                                          ? AppColors.gold
+                                          : (isAnyOpenMatch
+                                              ? AppColors.greenLight
+                                              : Colors.orangeAccent),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                ),
+              ),
+            );
+          }),
+        ),
+      ],
     );
   }
 }

@@ -73,9 +73,9 @@ class LeagueDraftProvider extends ChangeNotifier {
   LeagueDraftPhase _phase = LeagueDraftPhase.setup;
   LeaguePoolTheme _poolTheme = LeaguePoolTheme.allWorldHistory;
 
-  // Online Lobby State (Room Code, Real League Capacity 18 or 20, Invited Friends + AI Bots, Multi-Season Tracker)
+  // Online Lobby State (Fixed 18-team League, Host + Optional Friends + Automatic AI Bots)
   String _lobbyRoomCode = '482915';
-  int _leagueCapacity = 20;
+  int _leagueCapacity = 18;
   int _seasonNumber = 1;
   bool _championshipAwardedForCurrentSeason = false;
   final List<LeagueLobbySlot> _lobbySlots = [];
@@ -102,7 +102,7 @@ class LeagueDraftProvider extends ChangeNotifier {
 
   LeagueDraftProvider() {
     _lobbyRoomCode = (100000 + _rng.nextInt(900000)).toString();
-    _rebuildLobbySlotsForCapacity(20);
+    _rebuildLobbySlotsForCapacity(18);
   }
 
   LeagueDraftPhase get phase => _phase;
@@ -155,7 +155,7 @@ class LeagueDraftProvider extends ChangeNotifier {
       _lobbySlots.add(
         LeagueLobbySlot(
           slotIndex: 0,
-          name: 'Kaptan FC (Ev Sahibi)',
+          name: 'Kaptan FC',
           isBot: false,
           isHost: true,
         ),
@@ -253,14 +253,7 @@ class LeagueDraftProvider extends ChangeNotifier {
 
   void setPoolTheme(LeaguePoolTheme theme) {
     _poolTheme = theme;
-    // Match real football league team counts automatically:
-    // Süper Lig / Bundesliga -> 18 Takım (34 Hafta)
-    // Premier League / La Liga / Serie A / Dünya -> 20 Takım (38 Hafta)
-    final targetCapacity = (theme == LeaguePoolTheme.superLigHistory ||
-            theme == LeaguePoolTheme.worldCupLegends)
-        ? 18
-        : 20;
-    _rebuildLobbySlotsForCapacity(targetCapacity);
+    _rebuildLobbySlotsForCapacity(18);
     notifyListeners();
   }
 
@@ -408,11 +401,7 @@ class LeagueDraftProvider extends ChangeNotifier {
     _goalScorerClubTags.clear();
     _championshipAwardedForCurrentSeason = false;
 
-    final defaultCap = (_poolTheme == LeaguePoolTheme.superLigHistory ||
-            _poolTheme == LeaguePoolTheme.worldCupLegends)
-        ? 18
-        : 20;
-    final targetCap = leagueCapacity ?? (isSoloMode ? defaultCap : max(_leagueCapacity, playerNames.length));
+    final targetCap = leagueCapacity ?? (isSoloMode ? 18 : max(_leagueCapacity, playerNames.length));
     _leagueCapacity = targetCap.clamp(2, 20);
     _lobbySlots.clear();
     final botPool = _activeBotNames;
@@ -499,9 +488,30 @@ class LeagueDraftProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Checks whether any remaining empty pitch slot matches [role].
+  bool hasOpenSlotForRole(String role) {
+    final form = activeParticipant.formation ?? allFormations.first;
+    final roles = form.draftSlotRoles;
+    for (int i = 0; i < 11; i++) {
+      if (activeParticipant.pitchSlots[i] == null && roles[i] == role) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   void _spinNextHistoricalClubForActive() {
+    final form = activeParticipant.formation ?? allFormations.first;
+    final roles = form.draftSlotRoles;
     final neededRole = currentNeededRole;
     final alreadyPickedIds = activeParticipant.squad.map((e) => e.id).toSet();
+
+    final openRoles = <String>{};
+    for (int i = 0; i < 11; i++) {
+      if (activeParticipant.pitchSlots[i] == null) {
+        openRoles.add(roles[i]);
+      }
+    }
 
     // Filter packs from the selected pool that were not already spun in this turn
     final pool = activePoolPacks.isNotEmpty ? activePoolPacks : allEraClubPacks;
@@ -510,12 +520,11 @@ class LeagueDraftProvider extends ChangeNotifier {
       ..shuffle(_rng);
 
     EraClubPack chosenPack = candidatePacks.first;
-
     for (final pack in candidatePacks) {
-      final matching = pack.roster
-          .where((p) => p.role == neededRole && !alreadyPickedIds.contains(p.id))
-          .toList();
-      if (matching.isNotEmpty) {
+      final hasOpenRole = pack.roster.any(
+        (p) => openRoles.contains(p.role) && !alreadyPickedIds.contains(p.id),
+      );
+      if (hasOpenRole) {
         chosenPack = pack;
         break;
       }
@@ -524,33 +533,43 @@ class LeagueDraftProvider extends ChangeNotifier {
     _usedPackIdsInCurrentTurn.add(chosenPack.id);
     _currentSpunClubPack = chosenPack;
 
-    // Build 5 choices from this historical club & year:
-    final roleMatches = chosenPack.roster
+    // Build 3 randomized candidate boxes from this club: prioritize open-slot roles, then force-fill with remaining stars
+    final selectedSlotMatches = chosenPack.roster
         .where((p) => p.role == neededRole && !alreadyPickedIds.contains(p.id))
         .toList()
       ..shuffle(_rng);
-
+    final openRoleMatches = chosenPack.roster
+        .where((p) =>
+            p.role != neededRole &&
+            openRoles.contains(p.role) &&
+            !alreadyPickedIds.contains(p.id))
+        .toList()
+      ..shuffle(_rng);
     final othersInPack = chosenPack.roster
-        .where((p) => p.role != neededRole && !alreadyPickedIds.contains(p.id))
+        .where((p) => !openRoles.contains(p.role) && !alreadyPickedIds.contains(p.id))
         .toList()
       ..shuffle(_rng);
 
-    final combined = <EraPlayerCandidate>[...roleMatches, ...othersInPack];
+    final combined = <EraPlayerCandidate>[
+      ...selectedSlotMatches,
+      ...openRoleMatches,
+      ...othersInPack,
+    ];
     for (final p in chosenPack.roster) {
       if (!combined.any((c) => c.id == p.id)) {
         combined.add(p);
       }
     }
 
-    // If this pack has fewer than 5 players, supplement from same club's other era packs or iconic club stars
-    if (combined.length < 5) {
+    if (combined.length < 3) {
       final sameClubPlayers = allEraClubPacks
           .where((pack) => pack.clubId == chosenPack.clubId && pack.id != chosenPack.id)
           .expand((pack) => pack.roster)
           .where((p) => !alreadyPickedIds.contains(p.id))
-          .toList();
+          .toList()
+        ..shuffle(_rng);
       for (final p in sameClubPlayers) {
-        if (combined.length >= 5) break;
+        if (combined.length >= 3) break;
         if (!combined.any((c) => c.name == p.name)) {
           combined.add(
             EraPlayerCandidate(
@@ -568,10 +587,9 @@ class LeagueDraftProvider extends ChangeNotifier {
       }
     }
 
-    // Final guarantee that there are always 5 players from the spun club
-    const fallbackRoles = ['GK', 'DEF', 'MID', 'FWD', 'MID'];
-    const fallbackPos = ['KL', 'STP', 'OS', 'SNT', 'OOS'];
-    while (combined.length < 5) {
+    const fallbackRoles = ['GK', 'DEF', 'MID', 'FWD'];
+    const fallbackPos = ['KL', 'STP', 'OS', 'SNT'];
+    while (combined.length < 3) {
       final idx = combined.length;
       combined.add(
         EraPlayerCandidate(
@@ -579,7 +597,7 @@ class LeagueDraftProvider extends ChangeNotifier {
           name: '${chosenPack.clubName} Yıldızı #${idx + 1}',
           role: fallbackRoles[idx % fallbackRoles.length],
           specificPosition: fallbackPos[idx % fallbackPos.length],
-          rating: 85 + (idx % 5),
+          rating: 85 + (idx % 4),
           clubId: chosenPack.clubId,
           clubName: chosenPack.clubName,
           seasonLabel: chosenPack.seasonLabel,
@@ -587,7 +605,9 @@ class LeagueDraftProvider extends ChangeNotifier {
       );
     }
 
-    _currentPlayerChoices = combined.take(5).toList();
+    // Shuffle the 3 boxes so slot #1 isn't always predictable
+    final threeBoxes = combined.take(3).toList()..shuffle(_rng);
+    _currentPlayerChoices = threeBoxes;
   }
 
   void selectPlayerForSquad(EraPlayerCandidate player, {int? targetSlotIndex}) {
@@ -595,12 +615,12 @@ class LeagueDraftProvider extends ChangeNotifier {
     final roles = form.draftSlotRoles;
     final labels = form.specificSlotLabels;
 
-    int slotIdx = targetSlotIndex ?? _selectedPitchSlotIndex;
-    slotIdx = slotIdx.clamp(0, 10);
+    int slotIdx = (targetSlotIndex ?? _selectedPitchSlotIndex).clamp(0, 10);
 
-    // If the user didn't explicitly pass targetSlotIndex and the currently selected slot is already filled,
-    // or if the selected slot is empty, place into slotIdx.
-    if (targetSlotIndex == null && activeParticipant.pitchSlots[slotIdx] != null) {
+    // Prefer an open slot matching the player's natural role; otherwise place into
+    // selectedSlot (or force-fill the next remaining open slot at the end).
+    if (activeParticipant.pitchSlots[slotIdx] != null ||
+        roles[slotIdx] != player.role) {
       final emptyMatching = <int>[];
       final emptyAny = <int>[];
       for (int i = 0; i < 11; i++) {
@@ -611,7 +631,8 @@ class LeagueDraftProvider extends ChangeNotifier {
       }
       if (emptyMatching.isNotEmpty) {
         slotIdx = emptyMatching.first;
-      } else if (emptyAny.isNotEmpty) {
+      } else if (activeParticipant.pitchSlots[slotIdx] != null &&
+          emptyAny.isNotEmpty) {
         slotIdx = emptyAny.first;
       }
     }

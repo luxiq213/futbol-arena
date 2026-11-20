@@ -249,6 +249,7 @@ void main() {
       expect(FootballDatabase().getAllClubs().length, greaterThanOrEqualTo(50));
 
       final draftProvider = LeagueDraftProvider();
+      expect(draftProvider.leagueCapacity, 18);
       draftProvider.startDraft(
         playerNames: ['Mehmet', 'Ali', 'Burak'],
         isSoloMode: false,
@@ -274,7 +275,7 @@ void main() {
         expect(draftProvider.phase, LeagueDraftPhase.pickPlayers);
         for (int slot = 0; slot < 11; slot++) {
           expect(draftProvider.currentSpunClubPack, isNotNull);
-          expect(draftProvider.currentPlayerChoices.length, 5);
+          expect(draftProvider.currentPlayerChoices.length, 3);
           draftProvider.selectPlayerForSquad(
             draftProvider.currentPlayerChoices.first,
           );
