@@ -44,3 +44,44 @@ workflows:
         auth: integration
         submit_to_testflight: false
         submit_to_app_store: false
+
+  ios-adhoc-usb:
+    name: Futbol Arena iOS Ad Hoc USB
+    instance_type: mac_mini_m2
+    max_build_duration: 60
+    integrations:
+      app_store_connect: AstraNova ASC
+    environment:
+      ios_signing:
+        distribution_type: ad_hoc
+        bundle_identifier: com.futbol.party.futbolParty
+      flutter: stable
+      xcode: latest
+      cocoapods: default
+    scripts:
+      - name: Get Flutter packages & configure iOS project
+        script: |
+          rm -f pubspec.lock
+          flutter pub get
+          flutter build ios --config-only --release --no-codesign
+      - name: Run Flutter unit tests
+        script: |
+          flutter test
+      - name: Install CocoaPods dependencies if Podfile exists
+        script: |
+          if [ -f ios/Podfile ]; then
+            cd ios && pod install && cd ..
+          fi
+      - name: Set up code signing settings on Xcode project
+        script: |
+          xcode-project use-profiles
+      - name: Build signed Ad Hoc iOS IPA
+        script: |
+          flutter build ipa --release \
+            --build-name=1.0.0 \
+            --build-number=3 \
+            --export-options-plist=/Users/builder/export_options.plist
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+      - flutter_drive.log
