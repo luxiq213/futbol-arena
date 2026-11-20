@@ -18,16 +18,6 @@ class CareerSetupScreen extends StatefulWidget {
 class _CareerSetupScreenState extends State<CareerSetupScreen> {
   late final TextEditingController _nameController;
   PlayerPosition _selectedPosition = PlayerPosition.striker;
-  String _selectedRegion = 'Türkiye';
-
-  final List<String> _regions = [
-    'Türkiye',
-    'İngiltere',
-    'İspanya',
-    'İtalya',
-    'Almanya',
-    'Brezilya / Güney Amerika',
-  ];
 
   @override
   void initState() {
@@ -49,7 +39,6 @@ class _CareerSetupScreenState extends State<CareerSetupScreen> {
     provider.startCareer(
       playerName: _nameController.text,
       position: _selectedPosition,
-      region: _selectedRegion,
     );
 
     Navigator.pushReplacement(
@@ -206,9 +195,9 @@ class _CareerSetupScreenState extends State<CareerSetupScreen> {
 
               const SizedBox(height: 18),
 
-              // 3. Başlangıç Bölgesi
+              // 3. Rastgele Kader Hikayesi Bilgisi
               const Text(
-                'BAŞLANGIÇ LİGİ / ÜLKESİ',
+                'RASTGELE BAŞLANGIÇ HİKAYESİ (10 SENARYO)',
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w800,
@@ -218,37 +207,104 @@ class _CareerSetupScreenState extends State<CareerSetupScreen> {
               ),
               const SizedBox(height: 8),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14),
+                padding: const EdgeInsets.all(13),
                 decoration: BoxDecoration(
-                  color: AppColors.surface,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.border),
-                ),
-                child: DropdownButtonHideUnderline(
-                  child: DropdownButton<String>(
-                    value: _selectedRegion,
-                    isExpanded: true,
-                    dropdownColor: AppColors.surface,
-                    icon: const Icon(Icons.keyboard_arrow_down, color: AppColors.pitchGreen),
-                    items: _regions.map((reg) {
-                      return DropdownMenuItem<String>(
-                        value: reg,
-                        child: Text(reg, style: const TextStyle(color: Colors.white, fontSize: 13)),
-                      );
-                    }).toList(),
-                    onChanged: (val) {
-                      if (val != null) setState(() => _selectedRegion = val);
-                    },
+                  gradient: LinearGradient(
+                    colors: [
+                      AppColors.surface.withValues(alpha: 0.94),
+                      AppColors.darkGreen.withValues(alpha: 0.45),
+                    ],
                   ),
+                  borderRadius: BorderRadius.circular(13),
+                  border: Border.all(
+                    color: AppColors.gold.withValues(alpha: 0.45),
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(7),
+                          decoration: BoxDecoration(
+                            color: AppColors.gold.withValues(alpha: 0.16),
+                            borderRadius: BorderRadius.circular(9),
+                          ),
+                          child: const Icon(
+                            Icons.auto_awesome_rounded,
+                            color: AppColors.gold,
+                            size: 18,
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        const Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Kaderin Başlarken Çekilecek',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 13.5,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                              SizedBox(height: 2),
+                              Text(
+                                '10 farklı futbol hikayesinden biri rastgele gelir; başlayacağın lig, ilk kulübün ve kariyer rotan buna göre şekillenir.',
+                                style: TextStyle(
+                                  color: AppColors.textSecondary,
+                                  fontSize: 11.2,
+                                  height: 1.32,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 6,
+                      children: CareerGameProvider.originStories
+                          .take(4)
+                          .map(
+                            (story) => Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.06),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(
+                                  color: Colors.white.withValues(alpha: 0.12),
+                                ),
+                              ),
+                              child: Text(
+                                '${story.title} (${story.originCountry})',
+                                style: const TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.greenLight,
+                                ),
+                              ),
+                            ),
+                          )
+                          .toList(),
+                    ),
+                  ],
                 ),
               ),
 
-              const SizedBox(height: 32),
+              const SizedBox(height: 24),
 
               // Start Career Action Button
               CustomButton(
-                text: 'Kariyeri Başlat (17 Yaş)',
-                icon: Icons.sports_soccer,
+                text: 'Kaderini Çek & Başlat (17 Yaş)',
+                icon: Icons.casino_outlined,
                 height: 52,
                 onPressed: _onStart,
               ),

@@ -64,6 +64,25 @@ void main() {
       expect(summary.careerRating, inInclusiveRange(82, 99));
       expect(summary.clubsPlayed.isNotEmpty, isTrue);
       expect(summary.legacyTitle.isNotEmpty, isTrue);
+      expect(summary.originStoryTitle.isNotEmpty, isTrue);
+    });
+
+    test('CareerMode has 10 origin stories starting in each story league', () {
+      expect(CareerGameProvider.originStories.length, 10);
+      final provider = CareerGameProvider();
+      for (final story in CareerGameProvider.originStories) {
+        provider.startCareer(
+          playerName: 'Test Yıldız',
+          position: PlayerPosition.attackingMid,
+          forcedStory: story,
+        );
+        expect(provider.originStory?.id, story.id);
+        expect(provider.currentClub, isNotNull);
+        expect(story.starterClubIds.contains(provider.currentClub!.id), isTrue);
+        expect(provider.currentClub!.country, story.originCountry);
+        expect(provider.currentClub!.league, story.originLeague);
+        expect(provider.currentOffers.length, 2);
+      }
     });
 
     test('GameDifficulty enum provides expected scaling properties', () {

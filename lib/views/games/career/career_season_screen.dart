@@ -22,6 +22,7 @@ class CareerSeasonScreen extends StatefulWidget {
 class _CareerSeasonScreenState extends State<CareerSeasonScreen> {
   bool _isProcessing = false;
   bool _showingFullScreenPenalty = false;
+  bool _showingOriginStoryIntro = true;
 
   void _onSelectClub(ClubModel? chosenClub) async {
     if (_isProcessing) return;
@@ -136,6 +137,14 @@ class _CareerSeasonScreenState extends State<CareerSeasonScreen> {
         backgroundColor: AppColors.background,
         body: Center(child: CircularProgressIndicator(color: AppColors.pitchGreen)),
       );
+    }
+
+    // Full-Screen Origin Story Reveal when a new career kicks off at age 17
+    final originStory = provider.originStory;
+    if (_showingOriginStoryIntro &&
+        provider.currentStageIndex == 0 &&
+        originStory != null) {
+      return _buildOriginStoryRevealScreen(provider, originStory, currentClub);
     }
 
     // Full-Screen Animated 3D Penalty Shootout (triggered randomly after signing a transfer)
@@ -255,6 +264,184 @@ class _CareerSeasonScreenState extends State<CareerSeasonScreen> {
 
               const SizedBox(height: 24),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildOriginStoryRevealScreen(
+    CareerGameProvider provider,
+    CareerOriginStory story,
+    ClubModel startingClub,
+  ) {
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      extendBodyBehindAppBar: true,
+      appBar: AppBar(
+        title: Text('${provider.playerName} • ${provider.position.shortCode}'),
+      ),
+      body: StadiumBackground(
+        showFieldLines: true,
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+            child: Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    AppColors.surface.withValues(alpha: 0.96),
+                    AppColors.darkGreen.withValues(alpha: 0.72),
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: AppColors.gold.withValues(alpha: 0.55),
+                  width: 1.3,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.45),
+                    blurRadius: 24,
+                    offset: const Offset(0, 10),
+                  ),
+                ],
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Center(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.gold.withValues(alpha: 0.16),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: AppColors.gold.withValues(alpha: 0.55),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.auto_awesome_rounded,
+                            color: AppColors.gold,
+                            size: 13,
+                          ),
+                          const SizedBox(width: 5),
+                          Text(
+                            story.badgeTag,
+                            style: const TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w900,
+                              color: AppColors.gold,
+                              letterSpacing: 0.9,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  Text(
+                    story.title,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w900,
+                      color: Colors.white,
+                      letterSpacing: -0.3,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    'Başlangıç Ligi: ${story.originCountry} • ${story.originLeague}',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.greenLight,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Container(
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withValues(alpha: 0.30),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.12),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        ClubCrestWidget(club: startingClub, size: 48),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'İLK PROFESYONEL KULÜBÜN',
+                                style: TextStyle(
+                                  fontSize: 9.5,
+                                  fontWeight: FontWeight.w800,
+                                  color: AppColors.textMuted,
+                                  letterSpacing: 0.7,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                startingClub.name,
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w900,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              Text(
+                                '17 Yaş • ${provider.position.label}',
+                                style: const TextStyle(
+                                  fontSize: 11.5,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.textSecondary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  Text(
+                    story.introStory,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 13.2,
+                      height: 1.48,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                  CustomButton(
+                    text: 'Sahaya Çık & İlk Sezona Başla',
+                    icon: Icons.sports_soccer,
+                    height: 50,
+                    onPressed: () {
+                      setState(() => _showingOriginStoryIntro = false);
+                    },
+                  ),
+                ],
+              ),
+            ),
           ),
         ),
       ),

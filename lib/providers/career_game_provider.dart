@@ -14,6 +14,7 @@ class CareerGameProvider extends ChangeNotifier {
   String _playerName = 'Kaptan';
   PlayerPosition _position = PlayerPosition.striker;
   String _region = 'Türkiye';
+  CareerOriginStory? _originStory;
 
   int _currentStageIndex = 0;
   final int _maxStages = 10;
@@ -32,12 +33,284 @@ class CareerGameProvider extends ChangeNotifier {
   int _penaltiesTaken = 0;
   int _formMomentum = 70; // 0 - 100
 
+  static const List<CareerOriginStory> originStories = [
+    CareerOriginStory(
+      id: 'legacy_son',
+      title: 'Eski Futbolcunun Oğlu',
+      badgeTag: 'PREMIER LEAGUE MİRASI',
+      originCountry: 'İngiltere',
+      originLeague: 'Premier League',
+      introStory:
+          'Eski bir Premier Lig yıldızının çocuğu olarak çocukluğunu İngiltere stadyumlarının koridorlarında geçirdin. Soyadının getirdiği ağır beklentilere rağmen Ada futbolunda kendi imzanı atmaya başlıyorsun.',
+      stageFlavors: [
+        'Babandan miras oyun zekanla Premier League savunmalarını şaşkına çevirdin.',
+        'İngiliz basını her maçını efsane babanın gençliğiyle kıyaslıyor.',
+        'Ada futbolundaki sert tempoya alıştın, dev kulüplerin kapısı aralanıyor.',
+      ],
+      starterClubIds: ['everton', 'west_ham', 'aston_villa', 'newcastle'],
+      progressionClubIds: [
+        'liverpool',
+        'arsenal',
+        'chelsea',
+        'man_united',
+        'man_city',
+        'tottenham',
+        'real_madrid',
+        'barcelona',
+        'bayern',
+      ],
+      startingMomentumBonus: 4,
+    ),
+    CareerOriginStory(
+      id: 'anadolu_wonderkid',
+      title: 'Anadolu\'dan Parlayan Elmas',
+      badgeTag: 'ANADOLU ÇIKIŞLI',
+      originCountry: 'Türkiye',
+      originLeague: 'Süper Lig',
+      introStory:
+          'Anadolu\'nun mütevazı çim sahalarından Süper Lig vitrinine fırlayan saf bir yeteneksin. Tüm ülkenin üç büyüklerden önce Avrupa kulüplerinin seni kapmasını konuştuğu o genç sensin.',
+      stageFlavors: [
+        'Anadolu kulübündeki müthiş çıkışın İstanbul devlerini harekete geçirdi.',
+        'Süper Lig\'de haftanın oyuncusu seçilerek tüm Türkiye\'nin gündemine oturdun.',
+        'Anadolu\'nun bağrından çıkıp Avrupa kulüplerinin gözlemcilerini peşine taktın.',
+      ],
+      starterClubIds: [
+        'bursaspor',
+        'sivasspor',
+        'goztepe',
+        'samsunspor',
+        'adana_demirspor',
+      ],
+      progressionClubIds: [
+        'galatasaray',
+        'fenerbahce',
+        'besiktas',
+        'trabzonspor',
+        'dortmund',
+        'leverkusen',
+        'inter',
+        'arsenal',
+      ],
+      startingMomentumBonus: 2,
+    ),
+    CareerOriginStory(
+      id: 'istanbul_derby_kid',
+      title: 'Boğaz Derbilerinin Çocuğu',
+      badgeTag: 'SÜPER LİG AKADEMİSİ',
+      originCountry: 'Türkiye',
+      originLeague: 'Süper Lig',
+      introStory:
+          'Henüz 17 yaşında 50 bin taraftarın uğultusu altında büyük bir Türk kulübünün altyapısından A takıma yükseldin. Derbi baskısını iliklerinde hissederek zirveye yürüyorsun.',
+      stageFlavors: [
+        'Derbi akşamındaki soğukkanlılığın seni taraftarın yeni gözdesi yaptı.',
+        'Şampiyonluk ateşinin yandığı Süper Lig haftalarında sorumluluğu üstlendin.',
+        'Türkiye\'nin dev sahnelerinden Avrupa Şampiyonlar Ligi arenasına göz kırptın.',
+      ],
+      starterClubIds: ['galatasaray', 'fenerbahce', 'besiktas', 'trabzonspor'],
+      progressionClubIds: [
+        'napoli',
+        'roma',
+        'benfica',
+        'atletico_madrid',
+        'psg',
+        'inter',
+        'galatasaray',
+        'fenerbahce',
+      ],
+      startingMomentumBonus: 5,
+    ),
+    CareerOriginStory(
+      id: 'iberia_maestro',
+      title: 'İberya\'nın Pas Dehası',
+      badgeTag: 'LA LIGA AKADEMİSİ',
+      originCountry: 'İspanya',
+      originLeague: 'La Liga',
+      introStory:
+          'İspanya\'nın teknik futbol ekolünde büyüyen, dar alanda tek dokunuşla savunma hatlarını delen nadir bir yeteneksin. La Liga çimlerinde ilk profesyonel imzanı atıyorsun.',
+      stageFlavors: [
+        'La Liga\'daki ipek gibi pas tekniğinle dev İspanyol kulüplerinin radarına girdin.',
+        'İspanya\'nın taktik zekasını yüksek gol ve asist katkısıyla süsledin.',
+        'Bernabéu ve Camp Nou devleri artık bonservisini sormaya başladı.',
+      ],
+      starterClubIds: [
+        'real_sociedad',
+        'real_betis',
+        'villarreal',
+        'valencia',
+        'deportivo',
+        'sevilla',
+      ],
+      progressionClubIds: [
+        'barcelona',
+        'real_madrid',
+        'atletico_madrid',
+        'man_city',
+        'arsenal',
+        'psg',
+      ],
+      startingMomentumBonus: 3,
+    ),
+    CareerOriginStory(
+      id: 'calcio_tactician',
+      title: 'Çizme\'nin Taktik Ustası',
+      badgeTag: 'SERIE A OKULU',
+      originCountry: 'İtalya',
+      originLeague: 'Serie A',
+      introStory:
+          'İtalya\'nın sert savunma satrancı ve disiplinli gençlik akademilerinde yoğruldun. Serie A\'da taktik dehanla rakiplerinin planlarını daha 17 yaşında bozuyorsun.',
+      stageFlavors: [
+        'Serie A\'nın katı savunmaları arasında bulduğun çözümler hocaları büyüledi.',
+        'İtalyan basını seni yeni neslin en akıllı Serie A yıldızı ilan etti.',
+        'Milano, Torino ve Roma arasında senin için kıyasıya bir transfer yarışı var.',
+      ],
+      starterClubIds: ['atalanta', 'fiorentina', 'parma', 'lazio', 'roma'],
+      progressionClubIds: [
+        'inter',
+        'milan',
+        'juventus',
+        'napoli',
+        'real_madrid',
+        'bayern',
+        'chelsea',
+      ],
+      startingMomentumBonus: 3,
+    ),
+    CareerOriginStory(
+      id: 'ruhr_dynamo',
+      title: 'Ruhr Havzasının Dinamosu',
+      badgeTag: 'BUNDESLİGA MAKİNESİ',
+      originCountry: 'Almanya',
+      originLeague: 'Bundesliga',
+      introStory:
+          'Almanya\'nın yüksek tempolu gegenpress fabrikasında çelik gibi bir kondisyonla yetiştin. 90 dakika boyunca durmayan motorunla Bundesliga\'yı sarsmaya hazırsın.',
+      stageFlavors: [
+        'Bundesliga\'nın baş döndüren hızında bitmek bilmeyen enerjinle fark yarattın.',
+        'Sarı Duvar veya Bavyera devleri genç yaşına rağmen senin için sıraya girdi.',
+        'Alman disipliniyle ulaştığın seviye seni tüm Avrupa\'nın gözdesi yaptı.',
+      ],
+      starterClubIds: ['schalke', 'wolfsburg', 'werder_bremen', 'leipzig'],
+      progressionClubIds: [
+        'dortmund',
+        'leverkusen',
+        'bayern',
+        'liverpool',
+        'arsenal',
+        'real_madrid',
+      ],
+      startingMomentumBonus: 4,
+    ),
+    CareerOriginStory(
+      id: 'paris_street_flair',
+      title: 'Paris Sokaklarından Yıldızlığa',
+      badgeTag: 'LIGUE 1 SOKAK FUTBOLU',
+      originCountry: 'Fransa',
+      originLeague: 'Ligue 1',
+      introStory:
+          'Paris banliyölerinin beton sahalarından çıkıp Ligue 1 akademilerine seçildin. Çalım cesaretin ve patlayıcı süratinle Fransa\'nın yeni süper yıldız adayısın.',
+      stageFlavors: [
+        'Ligue 1 savunmalarını sokak futbolu çalımlarınla tek tek geçtin.',
+        'Fransa vitrinindeki şovun Premier League ve La Liga devlerini ayağa kaldırdı.',
+        'Sokaklardan Dünya futbolunun en parlak sahnesine uzanan yolculuğun sürüyor.',
+      ],
+      starterClubIds: ['monaco', 'psg'],
+      progressionClubIds: [
+        'psg',
+        'monaco',
+        'arsenal',
+        'chelsea',
+        'real_madrid',
+        'barcelona',
+        'liverpool',
+        'milan',
+      ],
+      startingMomentumBonus: 6,
+    ),
+    CareerOriginStory(
+      id: 'lisbon_scout_gem',
+      title: 'Lizbon Keşif Ağının Mücevheri',
+      badgeTag: 'LIGA PORTUGAL VİTRİNİ',
+      originCountry: 'Portekiz',
+      originLeague: 'Liga Portugal',
+      introStory:
+          'Avrupa devlerinin her yaz rekor bonservislerle oyuncu kaptığı Portekiz futbol fabrikasından çıktın. Liga Portugal\'da vitrine çıktığın ilk günden beri tüm gözler üzerinde.',
+      stageFlavors: [
+        'Portekiz\'deki parlayışın sonrası İngiliz ve İspanyol scoutlar tribüne kamp kurdu.',
+        'Liga Portugal derbilerinde gösterdiğin klasla değerini katladın.',
+        'Avrupa\'nın bir sonraki dev çıkış transferi senin adınla anılıyor.',
+      ],
+      starterClubIds: ['sporting', 'benfica', 'porto'],
+      progressionClubIds: [
+        'porto',
+        'benfica',
+        'sporting',
+        'man_united',
+        'man_city',
+        'chelsea',
+        'arsenal',
+        'real_madrid',
+        'barcelona',
+        'psg',
+      ],
+      startingMomentumBonus: 5,
+    ),
+    CareerOriginStory(
+      id: 'ajax_total_heir',
+      title: 'Amsterdam Total Futbol Mirasçısı',
+      badgeTag: 'EREDİVİSİE EKOLÜ',
+      originCountry: 'Hollanda',
+      originLeague: 'Eredivisie',
+      introStory:
+          'Total Futbol felsefesinin kalbi Amsterdam\'da yetiştin. Oyunu iki yönlü okuyan zekanla Eredivisie\'den Avrupa\'nın en büyük tahtlarına göz dikiyorsun.',
+      stageFlavors: [
+        'Hollanda akademisinin saf tekniğini Eredivisie sahalarına kusursuz yansıttın.',
+        'Ajax okulundan çıkan her efsane gibi senin de hedefin Avrupa\'nın zirvesi.',
+        'Avrupa devleri Total Futbol disiplininle seni kadrosuna katmak istiyor.',
+      ],
+      starterClubIds: ['ajax'],
+      progressionClubIds: [
+        'barcelona',
+        'juventus',
+        'man_united',
+        'arsenal',
+        'bayern',
+        'liverpool',
+        'inter',
+      ],
+      startingMomentumBonus: 4,
+    ),
+    CareerOriginStory(
+      id: 'english_cinderella',
+      title: 'Ada Masalı: Alt Kümeden Zirveye',
+      badgeTag: 'PREMIER LEAGUE MUCİZESİ',
+      originCountry: 'İngiltere',
+      originLeague: 'Premier League',
+      introStory:
+          'Kimsenin şans vermediği bir gençlik denemesinden mucize eseri kontrat kaptın. Sürprizlerin ve peri masallarının ligi Premier League\'de sıfırdan zirveye tırmanıyorsun.',
+      stageFlavors: [
+        'İngiltere alt kademelerinden gelen açlık ve hırsın Premier League\'i fethetti.',
+        'Bir peri masalı gibi başlayan Ada kariyerin artık kupa avına dönüştü.',
+        'İngiliz futbolunun devleri mütevazı başlangıcından zirveye çıkan seni izliyor.',
+      ],
+      starterClubIds: ['leicester', 'newcastle', 'tottenham', 'west_ham'],
+      progressionClubIds: [
+        'arsenal',
+        'liverpool',
+        'man_city',
+        'chelsea',
+        'inter',
+        'atletico_madrid',
+      ],
+      startingMomentumBonus: 1,
+    ),
+  ];
+
   // Getters
   bool get isCareerActive => _isCareerActive;
   bool get isCareerFinished => _isCareerFinished;
   String get playerName => _playerName;
   PlayerPosition get position => _position;
   String get region => _region;
+  CareerOriginStory? get originStory => _originStory;
   int get currentStageIndex => _currentStageIndex;
   int get maxStages => _maxStages;
   int get currentAge => _stageAges[_currentStageIndex.clamp(0, _stageAges.length - 1)];
@@ -90,15 +363,35 @@ class CareerGameProvider extends ChangeNotifier {
     'Jübile & Son Dans',
   ];
 
-  /// Start a brand new player career
+  /// Start a brand new player career with one of the 10 randomized origin stories
+  /// (unless a specific region or forcedStory is explicitly requested).
   void startCareer({
     required String playerName,
-    required String region,
     required PlayerPosition position,
+    String? region,
+    CareerOriginStory? forcedStory,
   }) {
     _playerName = playerName.trim().isNotEmpty ? playerName.trim() : 'Kaptan';
     _position = position;
-    _region = region;
+
+    final CareerOriginStory chosenStory;
+    if (forcedStory != null) {
+      chosenStory = forcedStory;
+    } else if (region != null && region.trim().isNotEmpty) {
+      final matching = originStories
+          .where((s) => s.originCountry == region.trim())
+          .toList();
+      chosenStory = matching.isNotEmpty
+          ? matching[_random.nextInt(matching.length)]
+          : originStories[_random.nextInt(originStories.length)];
+    } else {
+      chosenStory = originStories[_random.nextInt(originStories.length)];
+    }
+
+    _originStory = chosenStory;
+    _region = region != null && region.trim().isNotEmpty
+        ? region.trim()
+        : chosenStory.originCountry;
     _currentStageIndex = 0;
     _isCareerActive = true;
     _isCareerFinished = false;
@@ -108,13 +401,13 @@ class CareerGameProvider extends ChangeNotifier {
     _finalSummary = null;
     _penaltiesScored = 0;
     _penaltiesTaken = 0;
-    _formMomentum = 72;
+    _formMomentum = (70 + chosenStory.startingMomentumBonus).clamp(60, 90);
     // Penalty does NOT appear on initial screen; it triggers randomly after signing a transfer
     _hasPendingPenalty = false;
     _lastPenaltyResult = null;
 
-    // Pick authentic starting club based on region
-    final startingClub = _getInitialClubForRegion(region);
+    // Pick authentic starting club from the drawn origin story's league
+    final startingClub = _getInitialClubForStory(chosenStory);
     _currentClub = startingClub;
     _careerClubsHistory.add(startingClub);
 
@@ -122,7 +415,7 @@ class CareerGameProvider extends ChangeNotifier {
     final initialSeason = _simulateSeason(startingClub, _stageAges.first);
     _seasonHistory.add(initialSeason);
     _highlightsHistory.add(
-      '17 yaşında profesyonel sözleşmeyi imzaladın ve A takımla sahaya çıktın. İstatistiklerin gizli tutuluyor ve jübilede açıklanacak!',
+      '${chosenStory.title} (${startingClub.country} • ${startingClub.league}): 17 yaşında ${startingClub.name} ile ilk profesyonel imzanı attın. İstatistiklerin jübilede açıklanacak!',
     );
 
     _generateNextOffers();
@@ -311,6 +604,7 @@ class CareerGameProvider extends ChangeNotifier {
       playerName: _playerName,
       position: _position,
       nationality: _region,
+      originStoryTitle: _originStory?.title ?? '',
       totalMatches: totalMatches,
       totalGoals: totalGoals,
       totalAssists: totalAssists,
@@ -422,7 +716,8 @@ class CareerGameProvider extends ChangeNotifier {
   }
 
   String _generateHighlight(ClubModel club, int age, SeasonPerformance perf) {
-    final highlights = [
+    final storyFlavors = _originStory?.stageFlavors ?? const <String>[];
+    final genericHighlights = [
       '${club.name} formasıyla çıktığın derbi maçlardaki performansın tribünleri ayağa kaldırdı (İstatistikler gizli).',
       'Teknik direktörün seni takımın kilit ismi ilan etti; Avrupa kulüplerinin gözlemcileri peşinde.',
       'Kritik haftalarda sorumluluk alarak sahada liderliğini konuşturduğun bir dönem geçirdin.',
@@ -430,15 +725,66 @@ class CareerGameProvider extends ChangeNotifier {
       'Deplasmanda sergilediğin futbol resitaliyle hem kendi taraftarından hem rakiplerden alkış topladın.',
       'Soyunma odasında ve sahada gerçek bir profesyonel olarak kariyer basamaklarını tırmanmaya devam ettin.',
     ];
-    return highlights[_random.nextInt(highlights.length)];
+    if (storyFlavors.isNotEmpty && _random.nextDouble() < 0.55) {
+      return '${storyFlavors[_random.nextInt(storyFlavors.length)]} (${club.name} • ${club.league})';
+    }
+    return genericHighlights[_random.nextInt(genericHighlights.length)];
   }
 
   void _generateNextOffers() {
     final allClubs = _database.getAllClubs();
     final available = allClubs.where((c) => c.id != _currentClub?.id).toList();
-    available.shuffle(_random);
+    if (available.length <= 2) {
+      _currentOffers = available;
+      return;
+    }
 
-    _currentOffers = available.take(2).toList();
+    final story = _originStory;
+    if (story == null) {
+      available.shuffle(_random);
+      _currentOffers = available.take(2).toList();
+      return;
+    }
+
+    // Story-guided progression:
+    // Early career (stages 0..3): anchor heavily in origin league & story starter/step-up clubs.
+    // Mid/Prime career (stages 4..7): favor story's progression clubs & continental challengers.
+    // Late career (stages 8..9): nostalgic origin-league clubs + final challenges.
+    final sameLeaguePool = available
+        .where((c) => c.country == story.originCountry)
+        .toList()
+      ..shuffle(_random);
+    final progressionPool = available
+        .where((c) => story.progressionClubIds.contains(c.id))
+        .toList()
+      ..shuffle(_random);
+
+    final picked = <ClubModel>[];
+    if (_currentStageIndex <= 3 && sameLeaguePool.isNotEmpty && _random.nextDouble() < 0.80) {
+      picked.add(sameLeaguePool.first);
+    } else if (progressionPool.isNotEmpty && _random.nextDouble() < 0.78) {
+      picked.add(progressionPool.first);
+    }
+
+    if (picked.length < 2) {
+      final secondPool = (_currentStageIndex >= 7 && sameLeaguePool.isNotEmpty && _random.nextDouble() < 0.45)
+          ? sameLeaguePool
+          : (progressionPool.isNotEmpty && _random.nextDouble() < 0.60 ? progressionPool : available);
+      final candidates = secondPool.where((c) => !picked.any((p) => p.id == c.id)).toList()
+        ..shuffle(_random);
+      if (candidates.isNotEmpty) {
+        picked.add(candidates.first);
+      }
+    }
+
+    available.shuffle(_random);
+    for (final c in available) {
+      if (picked.length >= 2) break;
+      if (!picked.any((p) => p.id == c.id)) {
+        picked.add(c);
+      }
+    }
+    _currentOffers = picked.take(2).toList();
   }
 
   /// Provides a strategic contract & role promise for a transfer offer card
@@ -461,28 +807,24 @@ class CareerGameProvider extends ChangeNotifier {
     return 'Anahtar Oyuncu • İlk 11 Garantisi & Avrupa Hedefi';
   }
 
-  ClubModel _getInitialClubForRegion(String reg) {
-    final allClubs = _database.getAllClubs();
-    if (reg == 'Türkiye') {
-      final trClubs = allClubs.where((c) => c.country == 'Türkiye').toList();
-      if (trClubs.isNotEmpty) {
-        return trClubs[_random.nextInt(trClubs.length)];
-      }
-    } else if (reg == 'İspanya') {
-      final spClubs = allClubs.where((c) => c.country == 'İspanya').toList();
-      if (spClubs.isNotEmpty) return spClubs[_random.nextInt(spClubs.length)];
-    } else if (reg == 'İngiltere') {
-      final enClubs = allClubs.where((c) => c.country == 'İngiltere').toList();
-      if (enClubs.isNotEmpty) return enClubs[_random.nextInt(enClubs.length)];
-    } else if (reg == 'İtalya') {
-      final itClubs = allClubs.where((c) => c.country == 'İtalya').toList();
-      if (itClubs.isNotEmpty) return itClubs[_random.nextInt(itClubs.length)];
-    } else if (reg == 'Almanya') {
-      final deClubs = allClubs.where((c) => c.country == 'Almanya').toList();
-      if (deClubs.isNotEmpty) return deClubs[_random.nextInt(deClubs.length)];
+  ClubModel _getInitialClubForStory(CareerOriginStory story) {
+    final storyClubs = story.starterClubIds
+        .map(_database.getClub)
+        .whereType<ClubModel>()
+        .toList();
+    if (storyClubs.isNotEmpty) {
+      return storyClubs[_random.nextInt(storyClubs.length)];
     }
 
-    final academy = _database.getClub('ajax') ?? _database.getClub('sporting') ?? allClubs.first;
-    return academy;
+    final countryClubs = _database
+        .getAllClubs()
+        .where((c) => c.country == story.originCountry)
+        .toList();
+    if (countryClubs.isNotEmpty) {
+      return countryClubs[_random.nextInt(countryClubs.length)];
+    }
+
+    final allClubs = _database.getAllClubs();
+    return _database.getClub('ajax') ?? _database.getClub('sporting') ?? allClubs.first;
   }
 }

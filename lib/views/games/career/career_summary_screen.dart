@@ -17,6 +17,9 @@ class CareerSummaryScreen extends StatelessWidget {
     final buffer = StringBuffer();
     buffer.writeln('--- FUTBOLCU KARİYER ÖZETİ ---');
     buffer.writeln('Oyuncu: ${summary.playerName}');
+    if (summary.originStoryTitle.isNotEmpty) {
+      buffer.writeln('Hikaye: ${summary.originStoryTitle}');
+    }
     buffer.writeln('Mevki: ${summary.position.label} (${summary.position.shortCode})');
     buffer.writeln('Ülke: ${summary.nationality}');
     buffer.writeln('Genel Derece: ${summary.careerRating} OVR - ${summary.legacyTitle}');

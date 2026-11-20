@@ -86,10 +86,37 @@ class SeasonPerformance {
   }
 }
 
+class CareerOriginStory {
+  final String id;
+  final String title;
+  final String badgeTag;
+  final String originCountry;
+  final String originLeague;
+  final String introStory;
+  final List<String> stageFlavors;
+  final List<String> starterClubIds;
+  final List<String> progressionClubIds;
+  final int startingMomentumBonus;
+
+  const CareerOriginStory({
+    required this.id,
+    required this.title,
+    required this.badgeTag,
+    required this.originCountry,
+    required this.originLeague,
+    required this.introStory,
+    required this.stageFlavors,
+    required this.starterClubIds,
+    required this.progressionClubIds,
+    this.startingMomentumBonus = 0,
+  });
+}
+
 class CareerSummary {
   final String playerName;
   final PlayerPosition position;
   final String nationality;
+  final String originStoryTitle;
   final int totalMatches;
   final int totalGoals;
   final int totalAssists;
@@ -104,6 +131,7 @@ class CareerSummary {
     required this.playerName,
     required this.position,
     required this.nationality,
+    this.originStoryTitle = '',
     required this.totalMatches,
     required this.totalGoals,
     required this.totalAssists,
