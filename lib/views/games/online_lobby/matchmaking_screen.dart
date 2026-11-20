@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../data/models/club_model.dart';
 import '../../../../data/models/grid_challenge_model.dart';
 import '../../../../data/models/play_mode_model.dart';
 import '../../../../providers/auth_provider.dart';
@@ -18,6 +19,8 @@ class MatchmakingScreen extends StatefulWidget {
   final GameDifficulty difficulty;
   final CommonPlayerPairMode commonPlayerPairFormat;
   final GridThemeType gridTheme;
+  final ClubModel? customClubA;
+  final ClubModel? customClubB;
 
   const MatchmakingScreen({
     super.key,
@@ -25,6 +28,8 @@ class MatchmakingScreen extends StatefulWidget {
     this.difficulty = GameDifficulty.medium,
     this.commonPlayerPairFormat = CommonPlayerPairMode.clubVsClub,
     this.gridTheme = GridThemeType.mixed,
+    this.customClubA,
+    this.customClubB,
   });
 
   @override
@@ -86,6 +91,8 @@ class _MatchmakingScreenState extends State<MatchmakingScreen> {
           difficulty: widget.difficulty,
           opponent: opponent,
           initialPairFormat: widget.commonPlayerPairFormat,
+          initialClubA: widget.customClubA,
+          initialClubB: widget.customClubB,
         );
         break;
       case GameTargetType.fiveClubs:

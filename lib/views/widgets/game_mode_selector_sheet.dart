@@ -4,12 +4,12 @@ import '../../data/models/grid_challenge_model.dart';
 import '../../data/models/play_mode_model.dart';
 import '../games/auction_duel/auction_duel_screen.dart';
 import '../games/common_player/common_player_screen.dart';
+import '../games/common_player/custom_common_player_setup_screen.dart';
 import '../games/five_clubs/five_clubs_screen.dart';
 import '../games/football_bridge/football_bridge_screen.dart';
 import '../games/football_grid/football_grid_screen.dart';
 import '../games/online_lobby/lobby_hub_screen.dart';
 import '../games/online_lobby/matchmaking_screen.dart';
-import '../games/party_mode/party_setup_screen.dart';
 
 void showGameModeSelectorSheet(
   BuildContext context, {
@@ -105,12 +105,12 @@ class _GameModeSelectorSheetState extends State<GameModeSelectorSheet> {
     );
   }
 
-  void _launchLocalParty(BuildContext context) {
+  void _launchCustomOnlineCommonPlayer(BuildContext context) {
     Navigator.of(context).pop();
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => PartySetupScreen(
-          initialPairFormat: _selectedPairFormat,
+        builder: (_) => CustomCommonPlayerSetupScreen(
+          difficulty: _selectedDifficulty,
         ),
       ),
     );
@@ -546,14 +546,14 @@ class _GameModeSelectorSheetState extends State<GameModeSelectorSheet> {
 
           if (widget.targetGame == GameTargetType.commonPlayer) ...[
             const SizedBox(height: 9),
-            // 4. Yan Yana Parti Modu
+            // 4. Özel Online Eşleşme (Oyuncuların Takımları Belirlediği Mod)
             _buildModeOptionCard(
-              icon: Icons.groups_2_outlined,
-              title: 'Aynı Cihazda Yan Yana (Parti Turnuvası)',
-              subtitle: 'Tek telefonda arkadaşlarınla masada süreye karşı eleme usulü yarış.',
-              badge: 'YAN YANA',
+              icon: Icons.edit_location_alt_outlined,
+              title: 'Özel Online Eşleşme (Takımları Seç)',
+              subtitle: 'Kendi belirlediğin iki takımı yaz, online/AI rakibe karşı ortak oyuncuları kapış.',
+              badge: 'ÖZEL / ONLİNE',
               badgeColor: AppColors.silver,
-              onTap: () => _launchLocalParty(context),
+              onTap: () => _launchCustomOnlineCommonPlayer(context),
             ),
           ],
             ],

@@ -55,10 +55,16 @@ class CommonPlayerGameProvider extends ChangeNotifier {
     this.difficulty = GameDifficulty.medium,
     this.opponent,
     CommonPlayerPairMode pairFormat = CommonPlayerPairMode.clubVsClub,
-  }) {
+    ClubModel? initialClubA,
+    ClubModel? initialClubB,
+  })  : _initialCustomClubA = initialClubA,
+        _initialCustomClubB = initialClubB {
     _pairFormat = pairFormat;
     startNewRound();
   }
+
+  ClubModel? _initialCustomClubA;
+  ClubModel? _initialCustomClubB;
 
   void setPairFormat(CommonPlayerPairMode mode) {
     if (_pairFormat == mode) return;
@@ -67,12 +73,19 @@ class CommonPlayerGameProvider extends ChangeNotifier {
   }
 
   void startNewRound() {
-    final pair = _db.getRandomClubPair(
-      difficulty: difficulty,
-      pairFormat: _pairFormat,
-    );
-    _clubA = pair.key;
-    _clubB = pair.value;
+    if (_initialCustomClubA != null && _initialCustomClubB != null) {
+      _clubA = _initialCustomClubA;
+      _clubB = _initialCustomClubB;
+      _initialCustomClubA = null;
+      _initialCustomClubB = null;
+    } else {
+      final pair = _db.getRandomClubPair(
+        difficulty: difficulty,
+        pairFormat: _pairFormat,
+      );
+      _clubA = pair.key;
+      _clubB = pair.value;
+    }
     _mutualPlayers = _db.getMutualPlayers(_clubA!.id, _clubB!.id);
     _foundPlayerIds.clear();
     _foundByOpponentIds.clear();

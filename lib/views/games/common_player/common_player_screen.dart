@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../data/models/club_model.dart';
 import '../../../../data/models/play_mode_model.dart';
 import '../../../../providers/auth_provider.dart';
 import '../../../../providers/common_player_game_provider.dart';
@@ -16,6 +17,8 @@ class CommonPlayerScreen extends StatelessWidget {
   final GameDifficulty difficulty;
   final OpponentProfile? opponent;
   final CommonPlayerPairMode initialPairFormat;
+  final ClubModel? initialClubA;
+  final ClubModel? initialClubB;
 
   const CommonPlayerScreen({
     super.key,
@@ -23,6 +26,8 @@ class CommonPlayerScreen extends StatelessWidget {
     this.difficulty = GameDifficulty.medium,
     this.opponent,
     this.initialPairFormat = CommonPlayerPairMode.clubVsClub,
+    this.initialClubA,
+    this.initialClubB,
   });
 
   @override
@@ -36,6 +41,8 @@ class CommonPlayerScreen extends StatelessWidget {
         difficulty: difficulty,
         opponent: opponent,
         pairFormat: initialPairFormat,
+        initialClubA: initialClubA,
+        initialClubB: initialClubB,
       ),
       child: Consumer<CommonPlayerGameProvider>(
         builder: (context, game, _) {
@@ -481,32 +488,34 @@ class CommonPlayerScreen extends StatelessWidget {
                             onPressed: game.hintsUsed == 0 ? () => game.useHint() : null,
                           ),
                         ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: CustomButton(
-                            text: game.isAllFound ? 'Sonraki Tur' : 'Cevapları Gör',
-                            height: 44,
-                            backgroundColor: AppColors.pitchGreen,
-                            textColor: Colors.white,
-                            icon: game.isAllFound ? Icons.arrow_forward : Icons.visibility_outlined,
-                            onPressed: () {
-                              if (game.isAllFound) {
-                                context.read<AuthProvider>().addPoints(100, won: true);
-                                game.startNewRound();
-                              } else {
-                                showModalBottomSheet(
-                                  context: context,
-                                  isScrollControlled: true,
-                                  backgroundColor: Colors.transparent,
-                                  builder: (_) => AnswerRevealSheet(
-                                    players: game.mutualPlayers,
-                                    foundIds: game.foundPlayerIds,
-                                  ),
-                                );
-                              }
-                            },
+                        if (!game.isDuelMode || game.isAllFound) ...[
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: CustomButton(
+                              text: game.isAllFound ? 'Sonraki Tur' : 'Cevapları Gör',
+                              height: 44,
+                              backgroundColor: AppColors.pitchGreen,
+                              textColor: Colors.white,
+                              icon: game.isAllFound ? Icons.arrow_forward : Icons.visibility_outlined,
+                              onPressed: () {
+                                if (game.isAllFound) {
+                                  context.read<AuthProvider>().addPoints(100, won: true);
+                                  game.startNewRound();
+                                } else {
+                                  showModalBottomSheet(
+                                    context: context,
+                                    isScrollControlled: true,
+                                    backgroundColor: Colors.transparent,
+                                    builder: (_) => AnswerRevealSheet(
+                                      players: game.mutualPlayers,
+                                      foundIds: game.foundPlayerIds,
+                                    ),
+                                  );
+                                }
+                              },
+                            ),
                           ),
-                        ),
+                        ],
                       ],
                     ),
                   ),
