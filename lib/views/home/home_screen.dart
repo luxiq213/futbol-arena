@@ -29,6 +29,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _activeTab = 0; // 0: Oyunlar, 1: Sıralama, 2: Profil
   late final PageController _pageController;
+  bool _isAnimatingToTab = false;
 
   @override
   void initState() {
@@ -42,14 +43,21 @@ class _HomeScreenState extends State<HomeScreen> {
     super.dispose();
   }
 
-  void _onFooterTabTapped(int index) {
-    if (_activeTab == index) return;
+  Future<void> _onFooterTabTapped(int index) async {
+    if (_activeTab == index && !_isAnimatingToTab) return;
     setState(() => _activeTab = index);
-    _pageController.animateToPage(
-      index,
-      duration: const Duration(milliseconds: 320),
-      curve: Curves.easeOutCubic,
-    );
+    _isAnimatingToTab = true;
+    try {
+      await _pageController.animateToPage(
+        index,
+        duration: const Duration(milliseconds: 340),
+        curve: Curves.easeOutCubic,
+      );
+    } finally {
+      if (mounted) {
+        _isAnimatingToTab = false;
+      }
+    }
   }
 
   @override
@@ -58,12 +66,15 @@ class _HomeScreenState extends State<HomeScreen> {
     final loc = context.watch<LocaleProvider>();
     final user = auth.currentUser;
     final bottomInset = MediaQuery.of(context).padding.bottom;
+    final footerBottom =
+        bottomInset > 0 ? (bottomInset * 0.56).clamp(10.0, 22.0) : 12.0;
 
     return Scaffold(
       backgroundColor: AppColors.background,
       body: StadiumBackground(
         showFieldLines: true,
         showLiveMatch: _activeTab == 0,
+        safeBottom: false,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -81,24 +92,41 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: PageView(
                       controller: _pageController,
                       onPageChanged: (index) {
-                        setState(() => _activeTab = index);
+                        if (!_isAnimatingToTab && _activeTab != index) {
+                          setState(() => _activeTab = index);
+                        }
                       },
                       children: [
                         // Page 0: Oyunlar (Games Hub)
                         SingleChildScrollView(
-                          padding: EdgeInsets.fromLTRB(14, 2, 14, bottomInset + 80),
+                          padding: EdgeInsets.fromLTRB(
+                            14,
+                            2,
+                            14,
+                            footerBottom + 86,
+                          ),
                           child: _buildGamesSection(context, loc),
                         ),
 
                         // Page 1: Sıralama (Leaderboard)
                         SingleChildScrollView(
-                          padding: EdgeInsets.fromLTRB(14, 2, 14, bottomInset + 80),
+                          padding: EdgeInsets.fromLTRB(
+                            14,
+                            2,
+                            14,
+                            footerBottom + 86,
+                          ),
                           child: const LeaderboardScreen(isEmbedded: true),
                         ),
 
                         // Page 2: Profil (Profile & Settings)
                         SingleChildScrollView(
-                          padding: EdgeInsets.fromLTRB(14, 2, 14, bottomInset + 80),
+                          padding: EdgeInsets.fromLTRB(
+                            14,
+                            2,
+                            14,
+                            footerBottom + 86,
+                          ),
                           child: const ProfileScreen(isEmbedded: true),
                         ),
                       ],
@@ -109,10 +137,11 @@ class _HomeScreenState extends State<HomeScreen> {
                   Positioned(
                     left: 0,
                     right: 0,
-                    bottom: bottomInset > 0 ? bottomInset + 2 : 8,
+                    bottom: footerBottom,
                     child: AppFloatingGlassFooter(
                       activeIndex: _activeTab,
                       onTabSelected: _onFooterTabTapped,
+                      pageController: _pageController,
                     ),
                   ),
                 ],
@@ -167,16 +196,33 @@ class _HomeScreenState extends State<HomeScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(
-                    currentTitle,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w900,
-                      color: Colors.white,
-                      letterSpacing: -0.2,
-                      height: 1.1,
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 220),
+                    switchInCurve: Curves.easeOutCubic,
+                    switchOutCurve: Curves.easeInCubic,
+                    layoutBuilder: (currentChild, previousChildren) => Stack(
+                      alignment: Alignment.centerLeft,
+                      children: [
+                        ...previousChildren,
+                        if (currentChild != null) currentChild,
+                      ],
+                    ),
+                    transitionBuilder: (child, animation) => FadeTransition(
+                      opacity: animation,
+                      child: child,
+                    ),
+                    child: Text(
+                      currentTitle,
+                      key: ValueKey(currentTitle),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w900,
+                        color: Colors.white,
+                        letterSpacing: -0.2,
+                        height: 1.1,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 1),

@@ -5,12 +5,14 @@ class StadiumBackground extends StatelessWidget {
   final Widget child;
   final bool showFieldLines;
   final bool showLiveMatch;
+  final bool safeBottom;
 
   const StadiumBackground({
     super.key,
     required this.child,
     this.showFieldLines = true,
     this.showLiveMatch = false,
+    this.safeBottom = true,
   });
 
   @override
@@ -54,7 +56,7 @@ class StadiumBackground extends StatelessWidget {
           ),
 
           // Foreground Content
-          SafeArea(child: child),
+          SafeArea(bottom: safeBottom, child: child),
         ],
       ),
     );
