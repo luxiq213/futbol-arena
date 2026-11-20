@@ -1,5 +1,7 @@
+import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../data/models/career_model.dart';
@@ -749,6 +751,8 @@ class _FullScreenPenaltyShootoutViewState extends State<_FullScreenPenaltyShooto
   PenaltyShotResult? _shotResult;
   bool _isShooting = false;
   bool _shotFinished = false;
+  bool _showImpactFlashBanner = false;
+  Timer? _flashBannerTimer;
 
   // Drag/flick gesture tracking from ball
   Offset? _dragStart;
@@ -770,6 +774,7 @@ class _FullScreenPenaltyShootoutViewState extends State<_FullScreenPenaltyShooto
 
   @override
   void dispose() {
+    _flashBannerTimer?.cancel();
     _idleController.dispose();
     _shotController.dispose();
     super.dispose();
@@ -791,8 +796,22 @@ class _FullScreenPenaltyShootoutViewState extends State<_FullScreenPenaltyShooto
     await _shotController.forward(from: 0.0);
     if (!mounted) return;
 
+    if (result.isGoal) {
+      HapticFeedback.mediumImpact();
+    } else {
+      HapticFeedback.heavyImpact();
+    }
+
     setState(() {
       _shotFinished = true;
+      _showImpactFlashBanner = true;
+    });
+
+    _flashBannerTimer?.cancel();
+    _flashBannerTimer = Timer(const Duration(milliseconds: 1150), () {
+      if (mounted) {
+        setState(() => _showImpactFlashBanner = false);
+      }
     });
   }
 
@@ -1019,7 +1038,91 @@ class _FullScreenPenaltyShootoutViewState extends State<_FullScreenPenaltyShooto
                 ),
               ),
 
-            // 4. Bottom Instruction / Power Meter OR Shot Result Celebration Card
+            // 4. Center Fast Impact Banner (GOOOOL! / KURTARDI!) sweeping across screen on shot arrival
+            Positioned(
+              left: 20,
+              right: 20,
+              top: 150,
+              child: IgnorePointer(
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 220),
+                  switchInCurve: Curves.easeOutBack,
+                  switchOutCurve: Curves.easeIn,
+                  transitionBuilder: (child, anim) => ScaleTransition(
+                    scale: Tween<double>(begin: 0.65, end: 1.0).animate(anim),
+                    child: FadeTransition(opacity: anim, child: child),
+                  ),
+                  child: (_showImpactFlashBanner && _shotResult != null)
+                      ? Container(
+                          key: const ValueKey('penalty_flash_banner'),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 18,
+                            vertical: 14,
+                          ),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: _shotResult!.isGoal
+                                  ? [
+                                      AppColors.pitchGreen.withValues(alpha: 0.94),
+                                      const Color(0xFF0A3822).withValues(alpha: 0.96),
+                                    ]
+                                  : [
+                                      AppColors.error.withValues(alpha: 0.94),
+                                      const Color(0xFF4C0D12).withValues(alpha: 0.96),
+                                    ],
+                            ),
+                            borderRadius: BorderRadius.circular(18),
+                            border: Border.all(
+                              color: _shotResult!.isGoal
+                                  ? AppColors.gold
+                                  : Colors.white.withValues(alpha: 0.75),
+                              width: 2.0,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: (_shotResult!.isGoal
+                                        ? AppColors.gold
+                                        : AppColors.error)
+                                    .withValues(alpha: 0.55),
+                                blurRadius: 24,
+                                spreadRadius: 2,
+                              ),
+                            ],
+                          ),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                _shotResult!.isGoal
+                                    ? (isGk ? 'EFSANE KURTARIŞ!' : 'GOOOOL!')
+                                    : (isGk ? 'GOL YEDİN!' : 'KURTARILDI!'),
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                  fontSize: 32,
+                                  fontWeight: FontWeight.w900,
+                                  letterSpacing: 1.6,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                'Köşe: ${_shotResult!.playerCorner.label} • Kaleci: ${_shotResult!.keeperCorner.label}',
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w800,
+                                  color: Colors.white70,
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                      : const SizedBox.shrink(),
+                ),
+              ),
+            ),
+
+            // 5. Bottom Instruction / Power Meter OR Shot Result Celebration Card
             Positioned(
               left: 16,
               right: 16,

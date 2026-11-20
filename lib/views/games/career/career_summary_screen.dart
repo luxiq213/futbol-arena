@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -10,8 +11,48 @@ import '../../widgets/custom_button.dart';
 import '../../widgets/stadium_background.dart';
 import 'career_setup_screen.dart';
 
-class CareerSummaryScreen extends StatelessWidget {
+class CareerSummaryScreen extends StatefulWidget {
   const CareerSummaryScreen({super.key});
+
+  @override
+  State<CareerSummaryScreen> createState() => _CareerSummaryScreenState();
+}
+
+class _CareerSummaryScreenState extends State<CareerSummaryScreen> {
+  int _revealStep = 0; // 0: frame, 1: OVR, 2..7: 6 stats one-by-one, 8: details
+  Timer? _revealTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    _revealTimer = Timer.periodic(const Duration(milliseconds: 240), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+      if (_revealStep >= 8) {
+        timer.cancel();
+        return;
+      }
+      setState(() => _revealStep++);
+      if (_revealStep >= 1 && _revealStep <= 7) {
+        HapticFeedback.selectionClick();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _revealTimer?.cancel();
+    super.dispose();
+  }
+
+  void _revealAllImmediately() {
+    _revealTimer?.cancel();
+    if (_revealStep < 8) {
+      setState(() => _revealStep = 8);
+    }
+  }
 
   void _shareCareer(BuildContext context, CareerSummary summary) {
     final buffer = StringBuffer();
@@ -89,6 +130,11 @@ class CareerSummaryScreen extends StatelessWidget {
       extendBodyBehindAppBar: true,
       appBar: AppBar(
         automaticallyImplyLeading: false,
+        leading: IconButton(
+          tooltip: 'Ana Menüye Dön',
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 19),
+          onPressed: () => Navigator.popUntil(context, (r) => r.isFirst),
+        ),
         title: const Text('Kariyer Jübilesi & Efsane Kartı'),
         actions: [
           IconButton(
@@ -100,73 +146,112 @@ class CareerSummaryScreen extends StatelessWidget {
       ),
       body: StadiumBackground(
         showFieldLines: true,
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // FIFA / TikTok Style Legend Card
-              _buildLegendCard(context, summary),
+        child: GestureDetector(
+          behavior: HitTestBehavior.translucent,
+          onTap: _revealAllImmediately,
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Sequential Burst Legend & Stats Card
+                _buildLegendCard(context, summary),
 
-              const SizedBox(height: 16),
+                const SizedBox(height: 16),
 
-              // Career Journey: Clubs Played
-              _buildClubJourneyCard(summary),
+                AnimatedOpacity(
+                  opacity: _revealStep >= 8 ? 1.0 : 0.0,
+                  duration: const Duration(milliseconds: 350),
+                  child: _revealStep < 8
+                      ? Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          child: Center(
+                            child: TextButton(
+                              onPressed: _revealAllImmediately,
+                              child: const Text(
+                                'Tüm İstatistikleri Hızlı Aç ›',
+                                style: TextStyle(
+                                  color: AppColors.gold,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                            ),
+                          ),
+                        )
+                      : Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            // Career Journey: Clubs Played
+                            _buildClubJourneyCard(summary),
 
-              const SizedBox(height: 14),
+                            const SizedBox(height: 14),
 
-              // Trophy Cabinet
-              _buildTrophyCabinetCard(summary),
+                            // Trophy Cabinet
+                            _buildTrophyCabinetCard(summary),
 
-              const SizedBox(height: 14),
+                            const SizedBox(height: 14),
 
-              // Season-by-season Highlights
-              _buildHighlightsCard(provider),
+                            // Season-by-season Highlights
+                            _buildHighlightsCard(provider),
 
-              const SizedBox(height: 20),
+                            const SizedBox(height: 20),
 
-              // Action Buttons
-              CustomButton(
-                text: 'Kariyeri Kopyala & Paylaş',
-                icon: Icons.copy_rounded,
-                onPressed: () => _shareCareer(context, summary),
-              ),
+                            // Action Buttons
+                            CustomButton(
+                              text: 'Kariyeri Kopyala & Paylaş',
+                              icon: Icons.copy_rounded,
+                              onPressed: () => _shareCareer(context, summary),
+                            ),
 
-              const SizedBox(height: 10),
+                            const SizedBox(height: 10),
 
-              CustomButton(
-                text: 'Yeni Bir Kariyer Başlat',
-                icon: Icons.replay_rounded,
-                isOutlined: true,
-                onPressed: () {
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (_) => const CareerSetupScreen()),
-                  );
-                },
-              ),
+                            CustomButton(
+                              text: 'Yeni Bir Kariyer Başlat',
+                              icon: Icons.replay_rounded,
+                              isOutlined: true,
+                              onPressed: () {
+                                Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => const CareerSetupScreen(),
+                                  ),
+                                );
+                              },
+                            ),
 
-              const SizedBox(height: 10),
+                            const SizedBox(height: 10),
 
-              OutlinedButton(
-                style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  side: BorderSide(color: Colors.white.withValues(alpha: 0.2)),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            OutlinedButton(
+                              style: OutlinedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 14,
+                                ),
+                                side: BorderSide(
+                                  color: Colors.white.withValues(alpha: 0.2),
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                              onPressed: () =>
+                                  Navigator.popUntil(context, (r) => r.isFirst),
+                              child: const Text(
+                                'Ana Menüye Dön',
+                                style: TextStyle(
+                                  color: AppColors.textMuted,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+
+                            const SizedBox(height: 32),
+                          ],
+                        ),
                 ),
-                onPressed: () => Navigator.popUntil(context, (r) => r.isFirst),
-                child: const Text(
-                  'Ana Menüye Dön',
-                  style: TextStyle(
-                    color: AppColors.textMuted,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 32),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -174,6 +259,66 @@ class CareerSummaryScreen extends StatelessWidget {
   }
 
   Widget _buildLegendCard(BuildContext context, CareerSummary summary) {
+    final ballonDorCount = summary.allTrophies
+        .where((t) => t.contains('Ballon') || t.contains('Altın Ayakkabı'))
+        .length;
+    final leagueCount = summary.allTrophies
+        .where(
+          (t) =>
+              t.contains('Şampiyonu') && !t.contains('Ulusal Kupa'),
+        )
+        .length;
+    final uclCount = summary.allTrophies
+        .where((t) => t.contains('Şampiyonlar Ligi'))
+        .length;
+
+    final statTiles = [
+      (
+        label: 'TOPLAM MAÇ',
+        value: '${summary.totalMatches}',
+        icon: Icons.stadium_outlined,
+        color: Colors.white,
+        stepRequired: 2,
+      ),
+      (
+        label: 'TOPLAM GOL',
+        value: '${summary.totalGoals}',
+        icon: Icons.sports_soccer,
+        color: AppColors.greenLight,
+        stepRequired: 3,
+      ),
+      (
+        label: 'TOPLAM ASİST',
+        value: '${summary.totalAssists}',
+        icon: Icons.auto_awesome_outlined,
+        color: Colors.lightBlueAccent,
+        stepRequired: 4,
+      ),
+      (
+        label: 'LİG KUPASI',
+        value: '$leagueCount',
+        icon: Icons.emoji_events_outlined,
+        color: AppColors.gold,
+        stepRequired: 5,
+      ),
+      (
+        label: 'BALLON D\'OR',
+        value: '$ballonDorCount',
+        icon: Icons.workspace_premium_outlined,
+        color: Colors.amberAccent,
+        stepRequired: 6,
+      ),
+      (
+        label: uclCount > 0 ? 'Ş. LİGİ / KUPA' : 'TOPLAM KUPA',
+        value: uclCount > 0
+            ? '$uclCount / ${summary.allTrophies.length}'
+            : '${summary.allTrophies.length}',
+        icon: Icons.stars_rounded,
+        color: AppColors.gold,
+        stepRequired: 7,
+      ),
+    ];
+
     return Container(
       decoration: BoxDecoration(
         gradient: const LinearGradient(
@@ -215,163 +360,203 @@ class CareerSummaryScreen extends StatelessWidget {
           ),
 
           Padding(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(18),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // Top Row: OVR Rating & Legacy Badge
+                // Top Row: OVR Rating & Legacy Badge pop in at step >= 1
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          '${summary.careerRating}',
-                          style: const TextStyle(
-                            fontSize: 48,
-                            fontWeight: FontWeight.w900,
-                            color: AppColors.gold,
-                            height: 1.0,
-                          ),
+                    AnimatedScale(
+                      scale: _revealStep >= 1 ? 1.0 : 0.4,
+                      duration: const Duration(milliseconds: 300),
+                      curve: Curves.easeOutBack,
+                      child: AnimatedOpacity(
+                        opacity: _revealStep >= 1 ? 1.0 : 0.0,
+                        duration: const Duration(milliseconds: 220),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '${summary.careerRating}',
+                              style: const TextStyle(
+                                fontSize: 48,
+                                fontWeight: FontWeight.w900,
+                                color: AppColors.gold,
+                                height: 1.0,
+                              ),
+                            ),
+                            Text(
+                              summary.position.shortCode,
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w800,
+                                color: Colors.white,
+                                letterSpacing: 1.2,
+                              ),
+                            ),
+                            Text(
+                              summary.nationality,
+                              style: const TextStyle(
+                                fontSize: 11,
+                                color: AppColors.textMuted,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
                         ),
-                        Text(
-                          summary.position.shortCode,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w800,
-                            color: Colors.white,
-                            letterSpacing: 1.2,
-                          ),
-                        ),
-                        Text(
-                          summary.nationality,
-                          style: const TextStyle(
-                            fontSize: 11,
-                            color: AppColors.textMuted,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
 
-                    // Legacy Banner
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: AppColors.gold.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: AppColors.gold, width: 1),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(Icons.workspace_premium_outlined, size: 16, color: AppColors.gold),
-                          const SizedBox(width: 6),
-                          Text(
-                            summary.legacyTitle,
-                            style: const TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w800,
-                              color: AppColors.gold,
-                              letterSpacing: 0.6,
-                            ),
+                    AnimatedScale(
+                      scale: _revealStep >= 1 ? 1.0 : 0.5,
+                      duration: const Duration(milliseconds: 300),
+                      curve: Curves.easeOutBack,
+                      child: AnimatedOpacity(
+                        opacity: _revealStep >= 1 ? 1.0 : 0.0,
+                        duration: const Duration(milliseconds: 220),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 11,
+                            vertical: 6,
                           ),
-                        ],
+                          decoration: BoxDecoration(
+                            color: AppColors.gold.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: AppColors.gold, width: 1),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(
+                                Icons.workspace_premium_outlined,
+                                size: 15,
+                                color: AppColors.gold,
+                              ),
+                              const SizedBox(width: 5),
+                              Text(
+                                summary.legacyTitle,
+                                style: const TextStyle(
+                                  fontSize: 10.5,
+                                  fontWeight: FontWeight.w800,
+                                  color: AppColors.gold,
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
                     ),
                   ],
                 ),
 
-                const SizedBox(height: 16),
+                const SizedBox(height: 14),
 
-                // Player Name
+                // Player Name & Origin Story
                 Text(
                   summary.playerName.toUpperCase(),
                   textAlign: TextAlign.center,
                   style: const TextStyle(
-                    fontSize: 24,
+                    fontSize: 23,
                     fontWeight: FontWeight.w900,
-                    letterSpacing: 1.2,
+                    letterSpacing: 1.1,
                     color: Colors.white,
                   ),
                 ),
-
                 Text(
-                  summary.position.label,
+                  summary.originStoryTitle.isNotEmpty
+                      ? '${summary.position.label} • ${summary.originStoryTitle}'
+                      : summary.position.label,
                   textAlign: TextAlign.center,
                   style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.pitchGreen,
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.greenLight,
                   ),
                 ),
 
-                const SizedBox(height: 20),
+                const SizedBox(height: 16),
 
-                // Core Stats Grid
-                Container(
-                  padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 10),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withValues(alpha: 0.4),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+                // Sequential Popping 2x3 Stats Grid
+                GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: statTiles.length,
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 3,
+                    crossAxisSpacing: 8,
+                    mainAxisSpacing: 8,
+                    childAspectRatio: 1.18,
                   ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: [
-                      _buildStatColumn('MAÇ', '${summary.totalMatches}'),
-                      _buildDivider(),
-                      _buildStatColumn('GOL', '${summary.totalGoals}'),
-                      _buildDivider(),
-                      _buildStatColumn('ASİST', '${summary.totalAssists}'),
-                      _buildDivider(),
-                      _buildStatColumn('PENALTI', '${summary.penaltiesScored}/${summary.penaltiesTaken}'),
-                      _buildDivider(),
-                      _buildStatColumn('KUPA', '${summary.allTrophies.length}'),
-                    ],
-                  ),
+                  itemBuilder: (context, idx) {
+                    final tile = statTiles[idx];
+                    final isRevealed = _revealStep >= tile.stepRequired;
+                    return AnimatedScale(
+                      scale: isRevealed ? 1.0 : 0.35,
+                      duration: const Duration(milliseconds: 300),
+                      curve: Curves.easeOutBack,
+                      child: AnimatedOpacity(
+                        opacity: isRevealed ? 1.0 : 0.08,
+                        duration: const Duration(milliseconds: 220),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 8,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.45),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: isRevealed
+                                  ? tile.color.withValues(alpha: 0.48)
+                                  : Colors.white.withValues(alpha: 0.08),
+                              width: 1.1,
+                            ),
+                          ),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(tile.icon, size: 15, color: tile.color),
+                              const SizedBox(height: 3),
+                              Text(
+                                isRevealed ? tile.value : '?',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w900,
+                                  color: tile.color,
+                                  height: 1.05,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                tile.label,
+                                textAlign: TextAlign.center,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontSize: 8.5,
+                                  fontWeight: FontWeight.w800,
+                                  color: AppColors.textMuted,
+                                  letterSpacing: 0.4,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  },
                 ),
               ],
             ),
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildStatColumn(String label, String value) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          value,
-          style: const TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w900,
-            color: Colors.white,
-          ),
-        ),
-        const SizedBox(height: 2),
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 10,
-            fontWeight: FontWeight.w700,
-            color: AppColors.textMuted,
-            letterSpacing: 0.8,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildDivider() {
-    return Container(
-      width: 1,
-      height: 30,
-      color: Colors.white.withValues(alpha: 0.15),
     );
   }
 
