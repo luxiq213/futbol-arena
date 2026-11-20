@@ -131,34 +131,6 @@ class FootballGridScreen extends StatelessWidget {
                               ],
                             ),
                           ),
-                          const SizedBox(width: 6),
-                          InkWell(
-                            borderRadius: BorderRadius.circular(6),
-                            onTap: grid.startNewGrid,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-                              decoration: BoxDecoration(
-                                color: AppColors.pitchGreen.withValues(alpha: 0.2),
-                                borderRadius: BorderRadius.circular(6),
-                                border: Border.all(color: AppColors.pitchGreen.withValues(alpha: 0.6)),
-                              ),
-                              child: const Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(Icons.refresh_rounded, size: 11, color: AppColors.greenLight),
-                                  SizedBox(width: 3),
-                                  Text(
-                                    'Yeni Tablo',
-                                    style: TextStyle(
-                                      fontSize: 9.5,
-                                      fontWeight: FontWeight.w800,
-                                      color: AppColors.greenLight,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
                         ],
                       ),
                     ),
@@ -269,19 +241,79 @@ class FootballGridScreen extends StatelessWidget {
 
                     const SizedBox(height: 18),
 
-                    // Action buttons
-                    Row(
-                      children: [
-                        Expanded(
-                          child: CustomButton(
-                            text: 'Farklı Bir 3x3 Matris Getir',
-                            isOutlined: true,
-                            icon: Icons.refresh,
-                            onPressed: () => grid.startNewGrid(),
-                          ),
-                        ),
-                      ],
-                    ),
+                    // Action buttons: Pes Et while active; Yeni Oyun only after game ends
+                    if (!grid.isGameOver)
+                      CustomButton(
+                        text: 'Pes Et',
+                        isOutlined: true,
+                        backgroundColor: AppColors.error,
+                        textColor: AppColors.error,
+                        icon: Icons.flag_outlined,
+                        onPressed: () {
+                          showDialog(
+                            context: context,
+                            builder: (ctx) => AlertDialog(
+                              backgroundColor: AppColors.surface,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                                side: BorderSide(
+                                  color: AppColors.error.withValues(alpha: 0.65),
+                                ),
+                              ),
+                              title: const Text(
+                                'Pes Etmek İstiyor musun?',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                              content: const Text(
+                                'Pes edersen maçı kaybedersin ve boş kalan hücrelerin cevapları tabloda gösterilir.',
+                                style: TextStyle(
+                                  color: AppColors.textSecondary,
+                                  fontSize: 12.5,
+                                ),
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.pop(ctx),
+                                  child: const Text(
+                                    'Devam Et',
+                                    style: TextStyle(color: AppColors.textSecondary),
+                                  ),
+                                ),
+                                ElevatedButton(
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: AppColors.error,
+                                  ),
+                                  onPressed: () {
+                                    Navigator.pop(ctx);
+                                    grid.giveUp();
+                                  },
+                                  child: const Text(
+                                    'Pes Et',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      )
+                    else
+                      CustomButton(
+                        text: grid.hasGivenUp
+                            ? 'Pes Edildi • Tekrar Oyna'
+                            : 'Yeni Oyun Başlat',
+                        icon: Icons.replay_rounded,
+                        backgroundColor: AppColors.pitchGreen,
+                        textColor: Colors.white,
+                        onPressed: grid.startNewGrid,
+                      ),
 
                     const SizedBox(height: 24),
                   ],
@@ -329,6 +361,7 @@ class FootballGridScreen extends StatelessWidget {
               ...List.generate(3, (c) {
                 final cell = grid.cells[r][c];
                 final isSelected = grid.activeRow == r && grid.activeCol == c;
+                final isSurrendered = grid.isCellRevealedBySurrender(r, c);
 
                 return Expanded(
                   child: GestureDetector(
@@ -339,16 +372,20 @@ class FootballGridScreen extends StatelessWidget {
                       padding: const EdgeInsets.all(6),
                       decoration: BoxDecoration(
                         color: cell.isSolved
-                            ? (cell.solvedByOpponent
-                                ? AppColors.surfaceLight.withValues(alpha: 0.85)
-                                : AppColors.pitchGreen.withValues(alpha: 0.35))
+                            ? (isSurrendered
+                                ? AppColors.error.withValues(alpha: 0.20)
+                                : (cell.solvedByOpponent
+                                    ? AppColors.surfaceLight.withValues(alpha: 0.85)
+                                    : AppColors.pitchGreen.withValues(alpha: 0.35)))
                             : (isSelected ? AppColors.surfaceLight : AppColors.surface.withValues(alpha: 0.90)),
                         borderRadius: BorderRadius.circular(10),
                         border: Border.all(
                           color: isSelected
                               ? AppColors.gold
                               : (cell.isSolved
-                                  ? (cell.solvedByOpponent ? AppColors.silver : AppColors.goldMuted)
+                                  ? (isSurrendered
+                                      ? AppColors.error.withValues(alpha: 0.7)
+                                      : (cell.solvedByOpponent ? AppColors.silver : AppColors.goldMuted))
                                   : AppColors.border),
                           width: isSelected ? 1.5 : 1.0,
                         ),
@@ -371,13 +408,17 @@ class FootballGridScreen extends StatelessWidget {
                                 ),
                                 const SizedBox(height: 2),
                                 Text(
-                                  grid.isDuelMode
-                                      ? (cell.solvedByOpponent ? 'Rakip' : 'Sen')
-                                      : cell.player!.country,
+                                  isSurrendered
+                                      ? 'Pes Cevabı'
+                                      : (grid.isDuelMode
+                                          ? (cell.solvedByOpponent ? 'Rakip' : 'Sen')
+                                          : cell.player!.country),
                                   style: TextStyle(
                                     fontSize: 8.5,
                                     fontWeight: FontWeight.w700,
-                                    color: cell.solvedByOpponent ? AppColors.silver : AppColors.gold,
+                                    color: isSurrendered
+                                        ? AppColors.error
+                                        : (cell.solvedByOpponent ? AppColors.silver : AppColors.gold),
                                   ),
                                 ),
                               ],

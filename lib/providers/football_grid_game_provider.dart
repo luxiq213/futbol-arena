@@ -24,6 +24,9 @@ class FootballGridGameProvider extends ChangeNotifier {
   int? _activeRow;
   int? _activeCol;
   bool _isOpponentThinking = false;
+  bool _hasGivenUp = false;
+  Timer? _opponentTimer;
+  final Set<String> _surrenderRevealedKeys = {};
   String? _feedback;
 
   GridThemeType get selectedTheme => _selectedTheme;
@@ -35,8 +38,12 @@ class FootballGridGameProvider extends ChangeNotifier {
   int? get activeRow => _activeRow;
   int? get activeCol => _activeCol;
   bool get isOpponentThinking => _isOpponentThinking;
+  bool get hasGivenUp => _hasGivenUp;
   String? get feedback => _feedback;
   bool get isDuelMode => playMode != PlayModeType.solo && opponent != null;
+
+  bool isCellRevealedBySurrender(int row, int col) =>
+      _surrenderRevealedKeys.contains('${row}_$col');
 
   int get solvedCount {
     int count = 0;
@@ -68,7 +75,13 @@ class FootballGridGameProvider extends ChangeNotifier {
     return count;
   }
 
-  bool get isGameOver => solvedCount == 9;
+  bool get isGameOver => _hasGivenUp || solvedCount == 9;
+
+  @override
+  void dispose() {
+    _opponentTimer?.cancel();
+    super.dispose();
+  }
 
   FootballGridGameProvider({
     this.playMode = PlayModeType.solo,
@@ -86,6 +99,7 @@ class FootballGridGameProvider extends ChangeNotifier {
   }
 
   void startNewGrid() {
+    _opponentTimer?.cancel();
     _challenge = _db.getRandom3x3GridChallenge(theme: _selectedTheme);
     _cells = List.generate(
       3,
@@ -100,7 +114,53 @@ class FootballGridGameProvider extends ChangeNotifier {
     _activeRow = null;
     _activeCol = null;
     _isOpponentThinking = false;
+    _hasGivenUp = false;
+    _surrenderRevealedKeys.clear();
     _feedback = null;
+    notifyListeners();
+  }
+
+  /// Surrenders the current 3x3 grid and reveals example answers for remaining empty cells.
+  void giveUp() {
+    if (isGameOver) return;
+    _opponentTimer?.cancel();
+    _isOpponentThinking = false;
+    _hasGivenUp = true;
+    _activeRow = null;
+    _activeCol = null;
+
+    final usedIds = <String>{};
+    for (final row in _cells) {
+      for (final cell in row) {
+        if (cell.isSolved && cell.player != null) {
+          usedIds.add(cell.player!.id);
+        }
+      }
+    }
+
+    for (int r = 0; r < 3; r++) {
+      for (int c = 0; c < 3; c++) {
+        final cell = _cells[r][c];
+        if (!cell.isSolved) {
+          final rCrit = _challenge.rowCriteria[r];
+          final cCrit = _challenge.colCriteria[c];
+          final candidates = _db
+              .getValidPlayersForCell(rCrit, cCrit)
+              .where((p) => !usedIds.contains(p.id))
+              .toList();
+          if (candidates.isNotEmpty) {
+            final answer = candidates.first;
+            usedIds.add(answer.id);
+            cell.player = answer;
+            cell.isSolved = true;
+            _surrenderRevealedKeys.add('${r}_$c');
+          }
+        }
+      }
+    }
+
+    GameFeedback.error();
+    _feedback = 'Pes ettin! Çözemediğin kutuların cevapları açıldı.';
     notifyListeners();
   }
 
@@ -192,8 +252,13 @@ class FootballGridGameProvider extends ChangeNotifier {
     _isOpponentThinking = true;
     notifyListeners();
 
-    Timer(const Duration(milliseconds: 700), () {
+    _opponentTimer?.cancel();
+    _opponentTimer = Timer(const Duration(milliseconds: 700), () {
       _isOpponentThinking = false;
+      if (_hasGivenUp) {
+        notifyListeners();
+        return;
+      }
       final currentUnsolved = <GridCellState>[];
       final usedIds = <String>{};
       for (var r in _cells) {
