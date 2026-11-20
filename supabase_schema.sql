@@ -68,3 +68,22 @@ create policy "Participants can update online rooms"
 
 -- 3. SUPABASE REALTIME YAYININA ONLINE ODALARI EKLE
 alter publication supabase_realtime add table public.online_rooms;
+
+-- 4. API ROLLERİNE TABLO İZİNLERİ VE HESAP SİLME RPC FONKSİYONU
+grant usage on schema public to anon, authenticated;
+grant select, insert, update, delete on table public.profiles to anon, authenticated;
+grant select, insert, update on table public.online_rooms to anon, authenticated;
+
+create or replace function public.delete_own_user()
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  delete from public.profiles where id = auth.uid();
+  delete from auth.users where id = auth.uid();
+end;
+$$;
+
+grant execute on function public.delete_own_user() to authenticated;

@@ -1,5 +1,5 @@
 class AppStrings {
-  static const String appName = 'Futbol Trivia';
+  static const String appName = 'Futbol Arena';
   static const String appTagline = 'Futbol Bilgini Sinayan Özgün Tahmin Arenasi';
   
   // Auth

@@ -143,15 +143,22 @@ class SupabaseService {
     }
   }
 
-  /// Permanently deletes the user's profile data & signs out (Apple Guideline 5.1.1(v))
+  /// Permanently deletes the user's profile & auth account (Apple Guideline 5.1.1(v))
   Future<void> deleteUserAccount(String userId) async {
     if (!isReady) return;
     try {
       await _client.from('profiles').delete().eq('id', userId);
-      await _client.auth.signOut();
     } catch (e) {
-      debugPrint('Supabase deleteUserAccount error: $e');
+      debugPrint('Supabase delete profile row error: $e');
     }
+    try {
+      await _client.rpc('delete_own_user');
+    } catch (e) {
+      debugPrint('Supabase delete_own_user rpc skipped/error: $e');
+    }
+    try {
+      await _client.auth.signOut();
+    } catch (_) {}
   }
 
   Future<void> signOut() async {

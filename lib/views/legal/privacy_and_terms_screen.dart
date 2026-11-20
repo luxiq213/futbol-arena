@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/config/app_config.dart';
 import '../../core/constants/app_colors.dart';
 import '../widgets/stadium_background.dart';
 
@@ -37,22 +38,27 @@ class PrivacyAndTermsScreen extends StatelessWidget {
                 title: '2. Toplanan Veriler ve Kullanım Amacı',
                 body:
                     '• Hesap Bilgileri: Kayıt olmanız durumunda yalnızca belirlediğiniz kullanıcı adı, e-posta adresi, seçtiğiniz avatar ve favori takım bilgisi profilinizi ve sıralama tablosundaki (Leaderboard) puanınızı senkronize etmek için saklanır.\n'
-                    '• Misafir Modu: Hesap oluşturmadan Misafir olarak oynadığınızda verileriniz yalnızca cihazınızda (SharedPreferences) yerel olarak tutulur.\n'
-                    '• Satın Alım Durumu: Uygulamadaki tek satın alım seçeneği olan "Reklamsız Mod" hakkınızın cihaz değiştirdiğinizde korunabilmesi için kalıcı hesabınızla ilişkilendirilir.',
+                    '• Misafir Modu: Hesap oluşturmadan Misafir olarak oynadığınızda verileriniz yalnızca cihazınızda yerel olarak tutulur.',
               ),
               const SizedBox(height: 10),
               _buildSectionCard(
-                icon: Icons.ads_click_rounded,
-                title: '3. Google AdMob ve Reklam Hizmetleri',
-                body:
-                    'Ücretsiz sürümde uygulama içi banner ve oyun sonu geçiş reklamları için Google AdMob altyapısı kullanılmaktadır. Google AdMob, reklam gösterimi ve frekans sınırlandırması için cihazınızın reklam kimliğini (Advertising ID / IDFA) işleyebilir. "Reklamsız Mod" satın alındığında tüm reklam istekleri ve gösterimleri kalıcı olarak durdurulur.',
+                icon: AppConfig.enableAdsAndIapInStoreBuild
+                    ? Icons.ads_click_rounded
+                    : Icons.verified_user_outlined,
+                title: AppConfig.enableAdsAndIapInStoreBuild
+                    ? '3. Google AdMob ve Reklam Hizmetleri'
+                    : '3. Gizlilik ve İzleme (Tracking) Politikası',
+                body: AppConfig.enableAdsAndIapInStoreBuild
+                    ? 'Ücretsiz sürümde uygulama içi banner ve oyun sonu geçiş reklamları için Google AdMob altyapısı kullanılmaktadır.'
+                    : 'Uygulamanın bu sürümü tamamen reklamsızdır. Üçüncü parti reklam ağı veya izleme (tracking / IDFA) kullanılmamaktadır; kullanıcı verileri reklam amacıyla takip edilmez veya üçüncü taraflarla paylaşılmaz.',
               ),
               const SizedBox(height: 10),
               _buildSectionCard(
                 icon: Icons.workspace_premium_outlined,
-                title: '4. Uygulama İçi Satın Alımlar ve Geri Yükleme',
-                body:
-                    'Uygulamada şans kutusu, altın paketi veya abonelik satışı bulunmamaktadır. Tek satın alım seçeneği ömür boyu geçerli "Reklamsız Mod"dur. Ödemeler doğrudan Apple App Store veya Google Play Store güvenli ödeme altyapısı üzerinden gerçekleşir; kredi kartı bilgileriniz tarafımızca görülmez veya saklanmaz. Cihaz değiştirdiğinizde "Satın Alımı Geri Yükle (Restore Purchases)" butonuyla hakkınızı ücretsiz geri yükleyebilirsiniz.',
+                title: '4. Oyun İçi İçerik ve Ücretlendirme',
+                body: AppConfig.enableAdsAndIapInStoreBuild
+                    ? 'Uygulamada şans kutusu veya altın paketi satışı yoktur. Ödemeler Apple App Store veya Google Play Store güvenli ödeme altyapısı üzerinden gerçekleşir.'
+                    : 'Uygulamadaki tüm oyun modları ücretsizdir; şans kutusu, altın paketi veya zorunlu abonelik bulunmamaktadır.',
               ),
               const SizedBox(height: 10),
               _buildSectionCard(
