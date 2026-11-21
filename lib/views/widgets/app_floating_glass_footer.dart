@@ -30,7 +30,7 @@ class AppFloatingGlassFooter extends StatelessWidget {
     final loc = context.watch<LocaleProvider>();
     final items = [
       (icon: Icons.sports_soccer, label: loc.t('tab_games')),
-      (icon: Icons.military_tech_outlined, label: loc.t('tab_leaderboard')),
+      (icon: Icons.hub_rounded, label: loc.t('tab_lobby')),
       (icon: Icons.person_outline, label: loc.t('tab_profile')),
     ];
 

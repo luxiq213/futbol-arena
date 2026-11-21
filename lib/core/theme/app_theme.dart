@@ -77,29 +77,32 @@ class AppTheme {
         ),
       ),
       cardTheme: CardThemeData(
-        color: AppColors.surface,
+        color: const Color(0xFF0C221A),
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
-          side: const BorderSide(color: AppColors.border, width: 1.0),
+          side: BorderSide(
+            color: Colors.white.withValues(alpha: 0.11),
+            width: 1.0,
+          ),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: AppColors.surface,
-        hintStyle: const TextStyle(color: AppColors.textMuted, fontSize: 13),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+        fillColor: const Color(0xFF071711),
+        hintStyle: const TextStyle(color: AppColors.textMuted, fontSize: 13.5),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 15),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: AppColors.border, width: 1.0),
+          borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.14), width: 1.0),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: AppColors.border, width: 1.0),
+          borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.14), width: 1.0),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: AppColors.gold, width: 1.2),
+          borderSide: const BorderSide(color: AppColors.gold, width: 1.4),
         ),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(

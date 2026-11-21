@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/config/app_config.dart';
 import '../../core/constants/app_colors.dart';
+import '../../data/models/user_model.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/locale_provider.dart';
 import '../legal/privacy_and_terms_screen.dart';
@@ -137,6 +138,220 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  void _showSettingsSheet(
+    BuildContext context,
+    UserModel user,
+    LocaleProvider loc,
+  ) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetCtx) {
+        final liveLoc = sheetCtx.watch<LocaleProvider>();
+        return Container(
+          padding: EdgeInsets.fromLTRB(
+            18,
+            14,
+            18,
+            MediaQuery.of(sheetCtx).padding.bottom + 20,
+          ),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Color(0xFF0E2B1F), Color(0xFF061610)],
+            ),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+            border: Border.all(
+              color: AppColors.pitchGreen.withValues(alpha: 0.6),
+              width: 1.2,
+            ),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Center(
+                child: Container(
+                  width: 38,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.25),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 14),
+              Row(
+                children: [
+                  const Icon(
+                    Icons.settings_outlined,
+                    color: AppColors.gold,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 8),
+                  const Expanded(
+                    child: Text(
+                      'Ayarlar & Hesap',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w900,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close, color: AppColors.textMuted),
+                    onPressed: () => Navigator.pop(sheetCtx),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+
+              // 1. Language Switcher
+              _buildSettingsTile(
+                icon: Icons.language_rounded,
+                iconColor: AppColors.greenLight,
+                title: liveLoc.t('language_label'),
+                subtitle:
+                    '${liveLoc.currentLanguage.nativeName} (${liveLoc.currentLanguage.shortCode}) • 20 Dil',
+                onTap: () {
+                  Navigator.pop(sheetCtx);
+                  showLanguageSelectorSheet(context);
+                },
+              ),
+              const SizedBox(height: 9),
+
+              // 2. Privacy & Terms
+              _buildSettingsTile(
+                icon: Icons.policy_outlined,
+                iconColor: AppColors.gold,
+                title: liveLoc.t('privacy_and_terms'),
+                subtitle: 'Veri güvenliği ve kullanım koşulları',
+                onTap: () {
+                  Navigator.pop(sheetCtx);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const PrivacyAndTermsScreen(),
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 9),
+
+              // 3. Sign In / Switch Account
+              _buildSettingsTile(
+                icon: user.isGuest
+                    ? Icons.login_rounded
+                    : Icons.logout_rounded,
+                iconColor: Colors.lightBlueAccent,
+                title: user.isGuest
+                    ? liveLoc.t('open_perm_account')
+                    : liveLoc.t('logout_btn'),
+                subtitle: user.isGuest
+                    ? 'E-posta ile kalıcı hesap aç veya giriş yap'
+                    : 'Farklı bir hesaba geçiş yap',
+                onTap: () {
+                  Navigator.pop(sheetCtx);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const LoginScreen()),
+                  );
+                },
+              ),
+              const SizedBox(height: 9),
+
+              // 4. Permanent Account Deletion
+              _buildSettingsTile(
+                icon: Icons.delete_forever_outlined,
+                iconColor: Colors.redAccent,
+                title: liveLoc.t('delete_account_btn'),
+                subtitle: 'Hesabını ve tüm profil verilerini kalıcı olarak sil',
+                isDanger: true,
+                onTap: () {
+                  Navigator.pop(sheetCtx);
+                  _confirmDeleteAccount(context, loc);
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildSettingsTile({
+    required IconData icon,
+    required Color iconColor,
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
+    bool isDanger = false,
+  }) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(13),
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 11),
+        decoration: BoxDecoration(
+          color: isDanger
+              ? Colors.redAccent.withValues(alpha: 0.10)
+              : AppColors.surface.withValues(alpha: 0.92),
+          borderRadius: BorderRadius.circular(13),
+          border: Border.all(
+            color: isDanger
+                ? Colors.redAccent.withValues(alpha: 0.48)
+                : AppColors.border,
+          ),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 38,
+              height: 38,
+              decoration: BoxDecoration(
+                color: iconColor.withValues(alpha: 0.16),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(icon, color: iconColor, size: 19),
+            ),
+            const SizedBox(width: 11),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w800,
+                      color: isDanger ? Colors.redAccent : Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: const TextStyle(
+                      fontSize: 10.5,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              Icons.chevron_right_rounded,
+              size: 19,
+              color: isDanger ? Colors.redAccent : AppColors.textMuted,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
@@ -226,6 +441,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ],
                 ),
               ),
+              const SizedBox(width: 6),
+              IconButton(
+                tooltip: 'Ayarlar',
+                onPressed: () => _showSettingsSheet(context, user, loc),
+                style: IconButton.styleFrom(
+                  backgroundColor: Colors.white.withValues(alpha: 0.08),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(11),
+                    side: BorderSide(
+                      color: AppColors.gold.withValues(alpha: 0.45),
+                    ),
+                  ),
+                ),
+                icon: const Icon(
+                  Icons.settings_outlined,
+                  color: AppColors.gold,
+                  size: 20,
+                ),
+              ),
             ],
           ),
         ),
@@ -259,17 +493,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
         const SizedBox(height: 14),
 
-        // App Language Selector Card (10 Languages)
+        // Quick Settings Trigger Card (Language, Privacy, Account Deletion)
         InkWell(
           borderRadius: BorderRadius.circular(14),
-          onTap: () => showLanguageSelectorSheet(context),
+          onTap: () => _showSettingsSheet(context, user, loc),
           child: Container(
             padding: const EdgeInsets.all(13),
             decoration: BoxDecoration(
               color: AppColors.surface.withValues(alpha: 0.90),
               borderRadius: BorderRadius.circular(14),
               border: Border.all(
-                color: AppColors.borderGreen.withValues(alpha: 0.55),
+                color: AppColors.gold.withValues(alpha: 0.45),
                 width: 1.0,
               ),
             ),
@@ -279,13 +513,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: AppColors.pitchGreen.withValues(alpha: 0.16),
+                    color: AppColors.gold.withValues(alpha: 0.16),
                     borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: AppColors.pitchGreen, width: 0.9),
+                    border: Border.all(color: AppColors.gold, width: 0.9),
                   ),
                   child: const Icon(
-                    Icons.language_rounded,
-                    color: AppColors.greenLight,
+                    Icons.settings_outlined,
+                    color: AppColors.gold,
                     size: 21,
                   ),
                 ),
@@ -294,9 +528,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        loc.t('language_label'),
-                        style: const TextStyle(
+                      const Text(
+                        'Ayarlar & Hesap İşlemleri',
+                        style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w800,
                           color: Colors.white,
@@ -304,11 +538,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        '${loc.currentLanguage.nativeName} (${loc.currentLanguage.shortCode}) • 20 Dil',
+                        'Dil (${loc.currentLanguage.shortCode}) • Gizlilik • Hesap Silme',
                         style: const TextStyle(
                           fontSize: 11,
-                          color: AppColors.greenLight,
-                          fontWeight: FontWeight.w700,
+                          color: AppColors.textSecondary,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ],
@@ -593,60 +827,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
               MaterialPageRoute(builder: (_) => const LoginScreen()),
             );
           },
-        ),
-
-        const SizedBox(height: 14),
-
-        // Privacy Policy & Terms Link (App Store & Google Play Mandatory)
-        InkWell(
-          borderRadius: BorderRadius.circular(12),
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const PrivacyAndTermsScreen()),
-            );
-          },
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
-            decoration: BoxDecoration(
-              color: Colors.black.withValues(alpha: 0.25),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppColors.border),
-            ),
-            child: Row(
-              children: [
-                const Icon(Icons.policy_outlined, size: 17, color: AppColors.gold),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    loc.t('privacy_and_terms'),
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-                const Icon(Icons.chevron_right_rounded, size: 18, color: AppColors.textMuted),
-              ],
-            ),
-          ),
-        ),
-
-        const SizedBox(height: 10),
-
-        // Delete Account Button (App Store Guideline 5.1.1(v) & Google Play Mandatory)
-        TextButton.icon(
-          onPressed: () => _confirmDeleteAccount(context, loc),
-          icon: const Icon(Icons.delete_forever_outlined, size: 16, color: Colors.redAccent),
-          label: Text(
-            loc.t('delete_account_btn'),
-            style: const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              color: Colors.redAccent,
-            ),
-          ),
         ),
       ],
     );

@@ -18,7 +18,7 @@ void main() {
 
     // Verify natural footer tabs exist
     expect(find.text('Oyunlar'), findsOneWidget);
-    expect(find.text('Sıralama'), findsOneWidget);
+    expect(find.text('Lobi'), findsOneWidget);
     expect(find.text('Profil'), findsOneWidget);
   });
 }

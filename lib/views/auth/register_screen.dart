@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
@@ -21,6 +22,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _passwordController = TextEditingController();
   String _selectedAvatar = 'goat_10';
   String _selectedTeam = 'Galatasaray';
+  bool _awaitingOAuthSignIn = false;
 
   final List<String> _teams = [
     'Galatasaray',
@@ -80,6 +82,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
+    final isAppleDevice = defaultTargetPlatform == TargetPlatform.iOS ||
+        defaultTargetPlatform == TargetPlatform.macOS;
+
+    if (_awaitingOAuthSignIn &&
+        auth.currentUser != null &&
+        !auth.currentUser!.isGuest &&
+        !auth.isLoading) {
+      _awaitingOAuthSignIn = false;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && Navigator.of(context).canPop()) {
+          Navigator.of(context).pop();
+        }
+      });
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -278,6 +294,63 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 textColor: AppColors.textPrimary,
                 isLoading: auth.isLoading,
                 onPressed: _onRegister,
+              ),
+
+              const SizedBox(height: 16),
+
+              if (isAppleDevice) ...[
+                ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    foregroundColor: Colors.black,
+                    minimumSize: const Size.fromHeight(48),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  onPressed: auth.isLoading
+                      ? null
+                      : () async {
+                          final ok = await auth.loginWithApple();
+                          if (context.mounted && ok) Navigator.of(context).pop();
+                        },
+                  icon: const Icon(Icons.apple, size: 22),
+                  label: const Text(
+                    'Apple ile Kayıt Ol / Devam Et',
+                    style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w700),
+                  ),
+                ),
+                const SizedBox(height: 10),
+              ],
+
+              OutlinedButton.icon(
+                style: OutlinedButton.styleFrom(
+                  backgroundColor: AppColors.surface.withValues(alpha: 0.92),
+                  foregroundColor: Colors.white,
+                  minimumSize: const Size.fromHeight(48),
+                  side: BorderSide(color: Colors.white.withValues(alpha: 0.28)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                onPressed: auth.isLoading
+                    ? null
+                    : () async {
+                        _awaitingOAuthSignIn = true;
+                        final launched = await auth.loginWithGoogle();
+                        if (!launched && mounted) {
+                          _awaitingOAuthSignIn = false;
+                        }
+                      },
+                icon: const Icon(
+                  Icons.g_mobiledata_rounded,
+                  color: AppColors.gold,
+                  size: 26,
+                ),
+                label: const Text(
+                  'Google ile Kayıt Ol / Devam Et',
+                  style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w700),
+                ),
               ),
 
               const SizedBox(height: 16),

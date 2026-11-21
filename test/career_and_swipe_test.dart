@@ -14,6 +14,7 @@ import 'package:futbol_party/providers/career_game_provider.dart';
 import 'package:futbol_party/providers/common_player_game_provider.dart';
 import 'package:futbol_party/providers/football_bridge_game_provider.dart';
 import 'package:futbol_party/providers/league_draft_provider.dart';
+import 'package:futbol_party/views/games/online_lobby/lobby_hub_screen.dart';
 import 'package:futbol_party/views/profile/profile_screen.dart';
 import 'package:futbol_party/views/widgets/player_avatar_widget.dart';
 
@@ -373,7 +374,7 @@ void main() {
   });
 
   group('Swipe Navigation & Category Filtering Tests', () {
-    testWidgets('Horizontal swipe transitions between Oyunlar, Sıralama, and Profil', (WidgetTester tester) async {
+    testWidgets('Horizontal swipe transitions between Oyunlar, Lobi, and Profil', (WidgetTester tester) async {
       await tester.pumpWidget(const FutbolPartyApp());
       await tester.pump(const Duration(milliseconds: 200));
 
@@ -382,10 +383,10 @@ void main() {
       expect(find.text('Futbolcu Kariyeri Yap'), findsOneWidget);
 
       // Test tapping footer tabs for direct animated transition
-      await tester.tap(find.text('Sıralama'));
+      await tester.tap(find.text('Lobi'));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 400));
-      expect(find.text('Genel Sıralama'), findsOneWidget);
+      expect(find.byType(LobbyHubScreen), findsOneWidget);
 
       await tester.tap(find.text('Profil'));
       await tester.pump();
@@ -400,7 +401,7 @@ void main() {
       // Test horizontal fling gesture between screens
       await tester.fling(find.byType(PageView), const Offset(-600, 0), 2000);
       await tester.pump(const Duration(milliseconds: 400));
-      expect(find.text('Genel Sıralama'), findsOneWidget);
+      expect(find.byType(LobbyHubScreen), findsOneWidget);
     });
 
     testWidgets('Home screen displays all game modes directly without category filter pills', (WidgetTester tester) async {

@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'package:flutter/foundation.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../core/services/iap_service.dart';
 import '../core/services/supabase_service.dart';
 import '../data/models/user_model.dart';
@@ -8,18 +10,48 @@ class AuthProvider extends ChangeNotifier {
   final AuthRepository _repo = AuthRepository();
   UserModel? _currentUser;
   bool _isLoading = true;
+  String? _lastAuthError;
+  StreamSubscription<AuthState>? _authSub;
 
   UserModel? get currentUser => _currentUser;
   bool get isLoading => _isLoading;
+  String? get lastAuthError => _lastAuthError;
   bool get isAuthenticated => _currentUser != null;
 
   AuthProvider() {
     _loadUser();
+    _authSub = SupabaseService.instance.authStateChanges.listen((state) async {
+      if (state.event == AuthChangeEvent.signedIn && state.session?.user != null) {
+        final authUser = state.session!.user;
+        if (_currentUser != null && !_currentUser!.isGuest && _currentUser!.id == authUser.id) {
+          return;
+        }
+        final pts = (_currentUser != null && _currentUser!.points > 500)
+            ? _currentUser!.points
+            : 500;
+        final resolved = await SupabaseService.instance.resolveUserFromAuthUser(
+          authUser,
+          initialPoints: pts,
+        );
+        if (resolved != null) {
+          _currentUser = resolved;
+          await _repo.saveUser(resolved);
+          _isLoading = false;
+          notifyListeners();
+        }
+      }
+    });
     IapService.instance.initialize(
       onAdFreeEntitlementGranted: () async {
         await setAdFreeMode(true);
       },
     );
+  }
+
+  @override
+  void dispose() {
+    _authSub?.cancel();
+    super.dispose();
   }
 
   Future<void> _loadUser() async {
@@ -68,7 +100,54 @@ class AuthProvider extends ChangeNotifier {
       _isLoading = false;
       notifyListeners();
       return true;
-    } catch (_) {
+    } catch (e) {
+      _lastAuthError = e.toString();
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> loginWithApple() async {
+    _isLoading = true;
+    _lastAuthError = null;
+    notifyListeners();
+    try {
+      final pts = (_currentUser != null && _currentUser!.points > 500)
+          ? _currentUser!.points
+          : 500;
+      final remoteUser = await SupabaseService.instance.signInWithApple(
+        initialPoints: pts,
+      );
+      if (remoteUser != null) {
+        _currentUser = remoteUser;
+        await _repo.saveUser(remoteUser);
+        _isLoading = false;
+        notifyListeners();
+        return true;
+      }
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    } catch (e) {
+      _lastAuthError = e.toString();
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> loginWithGoogle() async {
+    _isLoading = true;
+    _lastAuthError = null;
+    notifyListeners();
+    try {
+      final launched = await SupabaseService.instance.signInWithGoogleOAuth();
+      _isLoading = false;
+      notifyListeners();
+      return launched;
+    } catch (e) {
+      _lastAuthError = e.toString();
       _isLoading = false;
       notifyListeners();
       return false;
@@ -114,7 +193,8 @@ class AuthProvider extends ChangeNotifier {
       _isLoading = false;
       notifyListeners();
       return true;
-    } catch (_) {
+    } catch (e) {
+      _lastAuthError = e.toString();
       _isLoading = false;
       notifyListeners();
       return false;

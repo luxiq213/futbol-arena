@@ -16,115 +16,176 @@ class ClubCrestWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final radius = BorderRadius.circular(size * 0.28);
-
-    return Container(
+    return SizedBox(
       width: size,
       height: size,
-      decoration: BoxDecoration(
-        borderRadius: radius,
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.32),
-          width: (size * 0.035).clamp(1.0, 2.0),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: club.primaryColor.withValues(alpha: 0.28),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          // Soft colored club aura underneath the shield
+          Positioned.fill(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: club.primaryColor.withValues(alpha: 0.28),
+                    blurRadius: size * 0.22,
+                    spreadRadius: -size * 0.08,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
+              ),
+            ),
           ),
+
+          // Heraldic shield silhouette with club kit pattern + gloss
+          Positioned.fill(
+            child: ClipPath(
+              clipper: const _ShieldCrestClipper(),
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  CustomPaint(
+                    painter: _ClubPatternPainter(
+                      primary: club.primaryColor,
+                      secondary: club.secondaryColor,
+                      accent: club.accentColor,
+                      pattern: club.pattern,
+                    ),
+                  ),
+                  // Diagonal broadcast sheen
+                  Positioned(
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    height: size * 0.48,
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            Colors.white.withValues(alpha: 0.28),
+                            Colors.white.withValues(alpha: 0.04),
+                            Colors.transparent,
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          // Crisp metallic shield rim
+          Positioned.fill(
+            child: CustomPaint(
+              painter: _ShieldBorderPainter(
+                strokeWidth: (size * 0.036).clamp(1.1, 2.2),
+              ),
+            ),
+          ),
+
+          // Center Medallion or Short Name
+          if (showShortName)
+            Container(
+              padding: EdgeInsets.symmetric(
+                horizontal: size * 0.13,
+                vertical: size * 0.045,
+              ),
+              decoration: BoxDecoration(
+                color: const Color(0xFF04110B).withValues(alpha: 0.88),
+                borderRadius: BorderRadius.circular(size * 0.13),
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.34),
+                  width: 1.0,
+                ),
+              ),
+              child: Text(
+                club.shortName,
+                style: TextStyle(
+                  fontSize: size * 0.21,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 0.6,
+                  color: Colors.white,
+                ),
+              ),
+            )
+          else
+            Container(
+              width: size * 0.38,
+              height: size * 0.38,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: const Color(0xFF04110B).withValues(alpha: 0.84),
+                border: Border.all(
+                  color: AppColors.gold.withValues(alpha: 0.82),
+                  width: 1.1,
+                ),
+              ),
+              child: Center(
+                child: Icon(
+                  club.isNationalTeam ? Icons.flag_rounded : Icons.sports_soccer,
+                  size: size * 0.21,
+                  color: club.isNationalTeam ? AppColors.greenLight : AppColors.gold,
+                ),
+              ),
+            ),
         ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular((size * 0.28) - 1.2),
-        child: Stack(
-          alignment: Alignment.center,
-          fit: StackFit.expand,
-          children: [
-            // Clean Club Pattern
-            CustomPaint(
-              painter: _ClubPatternPainter(
-                primary: club.primaryColor,
-                secondary: club.secondaryColor,
-                accent: club.accentColor,
-                pattern: club.pattern,
-              ),
-            ),
-
-            // Top Soft Gloss Highlight
-            Positioned(
-              top: 0,
-              left: 0,
-              right: 0,
-              height: size * 0.45,
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      Colors.white.withValues(alpha: 0.26),
-                      Colors.transparent,
-                    ],
-                  ),
-                ),
-              ),
-            ),
-
-            // Center Medallion or Short Name
-            if (showShortName)
-              Center(
-                child: Container(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: size * 0.12,
-                    vertical: size * 0.04,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppColors.background.withValues(alpha: 0.86),
-                    borderRadius: BorderRadius.circular(size * 0.14),
-                    border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.28),
-                      width: 1.0,
-                    ),
-                  ),
-                  child: Text(
-                    club.shortName,
-                    style: TextStyle(
-                      fontSize: size * 0.22,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 0.5,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              )
-            else
-              Center(
-                child: Container(
-                  width: size * 0.40,
-                  height: size * 0.40,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: AppColors.background.withValues(alpha: 0.80),
-                    border: Border.all(
-                      color: AppColors.gold.withValues(alpha: 0.75),
-                      width: 1.0,
-                    ),
-                  ),
-                  child: Center(
-                    child: Icon(
-                      club.isNationalTeam ? Icons.flag_rounded : Icons.sports_soccer,
-                      size: size * 0.23,
-                      color: club.isNationalTeam ? AppColors.greenLight : AppColors.gold,
-                    ),
-                  ),
-                ),
-              ),
-          ],
-        ),
       ),
     );
   }
+}
+
+Path _buildShieldPath(Size size) {
+  final w = size.width;
+  final h = size.height;
+  return Path()
+    ..moveTo(w * 0.10, h * 0.08)
+    ..quadraticBezierTo(w * 0.50, 0.0, w * 0.90, h * 0.08)
+    ..lineTo(w * 0.90, h * 0.52)
+    ..cubicTo(w * 0.90, h * 0.77, w * 0.64, h * 0.91, w * 0.50, h * 0.98)
+    ..cubicTo(w * 0.36, h * 0.91, w * 0.10, h * 0.77, w * 0.10, h * 0.52)
+    ..close();
+}
+
+class _ShieldCrestClipper extends CustomClipper<Path> {
+  const _ShieldCrestClipper();
+
+  @override
+  Path getClip(Size size) => _buildShieldPath(size);
+
+  @override
+  bool shouldReclip(covariant CustomClipper<Path> oldClipper) => false;
+}
+
+class _ShieldBorderPainter extends CustomPainter {
+  final double strokeWidth;
+  const _ShieldBorderPainter({required this.strokeWidth});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final path = _buildShieldPath(size);
+    final rimPaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeWidth
+      ..shader = LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [
+          Colors.white.withValues(alpha: 0.62),
+          Colors.white.withValues(alpha: 0.22),
+          AppColors.gold.withValues(alpha: 0.45),
+        ],
+      ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
+    canvas.drawPath(path, rimPaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _ShieldBorderPainter oldDelegate) =>
+      oldDelegate.strokeWidth != strokeWidth;
 }
 
 class _ClubPatternPainter extends CustomPainter {

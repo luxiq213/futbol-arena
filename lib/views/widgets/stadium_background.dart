@@ -33,20 +33,40 @@ class StadiumBackground extends StatelessWidget {
       child: Stack(
         fit: StackFit.expand,
         children: [
-          // Top soft stadium floodlight ambient glow (no harsh lines or corner rectangles)
+          // Top dual stadium floodlight ambient glows
           Positioned(
-            top: -80,
-            left: 0,
-            right: 0,
-            height: 260,
+            top: -90,
+            left: -40,
+            right: -40,
+            height: 290,
             child: IgnorePointer(
               child: DecoratedBox(
                 decoration: BoxDecoration(
                   gradient: RadialGradient(
-                    center: Alignment.topCenter,
-                    radius: 1.1,
+                    center: const Alignment(-0.45, -0.85),
+                    radius: 1.05,
                     colors: [
-                      AppColors.pitchGreen.withValues(alpha: 0.14),
+                      AppColors.pitchGreen.withValues(alpha: 0.17),
+                      Colors.transparent,
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+          Positioned(
+            top: -100,
+            left: -30,
+            right: -30,
+            height: 250,
+            child: IgnorePointer(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: RadialGradient(
+                    center: const Alignment(0.55, -0.9),
+                    radius: 0.95,
+                    colors: [
+                      AppColors.gold.withValues(alpha: 0.07),
                       Colors.transparent,
                     ],
                   ),
@@ -55,10 +75,63 @@ class StadiumBackground extends StatelessWidget {
             ),
           ),
 
+          // Subtle tactical pitch markings watermark
+          if (showFieldLines)
+            Positioned.fill(
+              child: IgnorePointer(
+                child: CustomPaint(
+                  painter: _StadiumFieldLinesPainter(),
+                ),
+              ),
+            ),
+
           // Foreground Content
           SafeArea(bottom: safeBottom, child: child),
         ],
       ),
     );
   }
+}
+
+class _StadiumFieldLinesPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final w = size.width;
+    final h = size.height;
+
+    final chalk = Paint()
+      ..color = Colors.white.withValues(alpha: 0.036)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.2;
+
+    // Subtle alternating turf bands in the top hero area
+    final bandPaint = Paint()..color = AppColors.pitchGreen.withValues(alpha: 0.022);
+    const bandCount = 6;
+    final bandWidth = w / bandCount;
+    for (int i = 0; i < bandCount; i += 2) {
+      canvas.drawRect(
+        Rect.fromLTWH(i * bandWidth, 0, bandWidth, h * 0.42),
+        bandPaint,
+      );
+    }
+
+    // Halfway line & center circle
+    final centerY = h * 0.48;
+    canvas.drawLine(Offset(18, centerY), Offset(w - 18, centerY), chalk);
+    canvas.drawCircle(Offset(w / 2, centerY), w * 0.24, chalk);
+    canvas.drawCircle(
+      Offset(w / 2, centerY),
+      3.5,
+      Paint()..color = Colors.white.withValues(alpha: 0.06),
+    );
+
+    // Subtle upper penalty arc silhouette
+    canvas.drawRect(
+      Rect.fromCenter(center: Offset(w / 2, 54), width: w * 0.56, height: 108),
+      chalk,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _StadiumFieldLinesPainter oldDelegate) => false;
 }

@@ -10,15 +10,16 @@ import '../../widgets/custom_button.dart';
 import '../../widgets/stadium_background.dart';
 import 'active_room_screen.dart';
 import 'matchmaking_screen.dart';
-import '../party_mode/party_setup_screen.dart';
 import '../league_draft/league_draft_screen.dart';
 
 class LobbyHubScreen extends StatefulWidget {
   final GameTargetType initialGameTarget;
+  final bool isEmbedded;
 
   const LobbyHubScreen({
     super.key,
     this.initialGameTarget = GameTargetType.commonPlayer,
+    this.isEmbedded = false,
   });
 
   @override
@@ -28,6 +29,8 @@ class LobbyHubScreen extends StatefulWidget {
 class _LobbyHubScreenState extends State<LobbyHubScreen> {
   final TextEditingController _codeController = TextEditingController();
   late GameTargetType _selectedGame;
+  GameDifficulty _selectedDifficulty = GameDifficulty.medium;
+  CommonPlayerPairMode _selectedPairFormat = CommonPlayerPairMode.clubVsClub;
   GridThemeType _selectedGridTheme = GridThemeType.mixed;
 
   @override
@@ -92,6 +95,8 @@ class _LobbyHubScreenState extends State<LobbyHubScreen> {
       MaterialPageRoute(
         builder: (_) => MatchmakingScreen(
           targetGame: _selectedGame,
+          difficulty: _selectedDifficulty,
+          commonPlayerPairFormat: _selectedPairFormat,
           gridTheme: _selectedGridTheme,
         ),
       ),
@@ -102,18 +107,9 @@ class _LobbyHubScreenState extends State<LobbyHubScreen> {
   Widget build(BuildContext context) {
     final roomProvider = context.watch<OnlineRoomProvider>();
 
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      extendBodyBehindAppBar: true,
-      appBar: AppBar(
-        title: const Text('Online Lobi & Davet'),
-      ),
-      body: StadiumBackground(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
+    final content = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
               // 0. Compact Online League Draft Lobby Banner (18-20 Teams, Friend Invites + Auto AI Bots)
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 9),
@@ -239,6 +235,52 @@ class _LobbyHubScreenState extends State<LobbyHubScreen> {
                         }).toList(),
                       ),
                     ),
+                    if (_selectedGame == GameTargetType.commonPlayer) ...[
+                      const SizedBox(height: 10),
+                      const Text(
+                        '3-2-1 FORMATI:',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 0.7,
+                          color: AppColors.gold,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          children: CommonPlayerPairMode.values.map((mode) {
+                            final isSelected = _selectedPairFormat == mode;
+                            return GestureDetector(
+                              onTap: () => setState(() => _selectedPairFormat = mode),
+                              child: Container(
+                                margin: const EdgeInsets.only(right: 6),
+                                padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 10),
+                                decoration: BoxDecoration(
+                                  color: isSelected
+                                      ? AppColors.gold.withValues(alpha: 0.16)
+                                      : AppColors.surfaceLight,
+                                  borderRadius: BorderRadius.circular(9),
+                                  border: Border.all(
+                                    color: isSelected ? AppColors.gold : AppColors.border,
+                                    width: isSelected ? 1.3 : 0.8,
+                                  ),
+                                ),
+                                child: Text(
+                                  mode.label,
+                                  style: TextStyle(
+                                    fontSize: 10.5,
+                                    fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                                    color: isSelected ? AppColors.gold : AppColors.textSecondary,
+                                  ),
+                                ),
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                      ),
+                    ],
                     if (_selectedGame == GameTargetType.footballGrid) ...[
                       const SizedBox(height: 10),
                       const Text(
@@ -285,6 +327,52 @@ class _LobbyHubScreenState extends State<LobbyHubScreen> {
                         ),
                       ),
                     ],
+                    const SizedBox(height: 10),
+                    const Text(
+                      'ZORLUK SEVİYESİ:',
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0.7,
+                        color: AppColors.greenLight,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Row(
+                      children: GameDifficulty.values.map((diff) {
+                        final isSelected = _selectedDifficulty == diff;
+                        return Expanded(
+                          child: GestureDetector(
+                            onTap: () => setState(() => _selectedDifficulty = diff),
+                            child: Container(
+                              margin: EdgeInsets.only(
+                                right: diff == GameDifficulty.values.last ? 0 : 6,
+                              ),
+                              padding: const EdgeInsets.symmetric(vertical: 7),
+                              decoration: BoxDecoration(
+                                color: isSelected
+                                    ? AppColors.pitchGreen.withValues(alpha: 0.26)
+                                    : AppColors.surfaceLight,
+                                borderRadius: BorderRadius.circular(9),
+                                border: Border.all(
+                                  color: isSelected ? AppColors.gold : AppColors.border,
+                                  width: isSelected ? 1.3 : 0.8,
+                                ),
+                              ),
+                              child: Text(
+                                diff.label,
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                                  color: isSelected ? Colors.white : AppColors.textSecondary,
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
                   ],
                 ),
               ),
@@ -435,56 +523,24 @@ class _LobbyHubScreenState extends State<LobbyHubScreen> {
                 ),
               ),
 
-              const SizedBox(height: 14),
-
-              // 5. Local Table-Top Party Option
-              Container(
-                padding: const EdgeInsets.all(15),
-                decoration: BoxDecoration(
-                  color: AppColors.surface.withValues(alpha: 0.90),
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: AppColors.border),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Row(
-                      children: [
-                        Icon(Icons.groups_2_outlined, color: AppColors.silver, size: 19),
-                        SizedBox(width: 8),
-                        Text(
-                          'Aynı Cihazda Yan Yana • Parti Turnuvası',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w800,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    const Text(
-                      'Arkadaşlarınla aynı masadaysan tek telefondan sırayla süreye karşı eleme usulü yarış.',
-                      style: TextStyle(fontSize: 11.5, color: AppColors.textMuted),
-                    ),
-                    const SizedBox(height: 10),
-                    CustomButton(
-                      text: 'Yan Yana Parti Modunu Aç',
-                      isOutlined: true,
-                      icon: Icons.timer_outlined,
-                      onPressed: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(builder: (_) => const PartySetupScreen()),
-                        );
-                      },
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 20),
+              const SizedBox(height: 16),
             ],
-          ),
+          );
+
+    if (widget.isEmbedded) {
+      return content;
+    }
+
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      extendBodyBehindAppBar: true,
+      appBar: AppBar(
+        title: const Text('Online Lobi & Davet'),
+      ),
+      body: StadiumBackground(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: content,
         ),
       ),
     );

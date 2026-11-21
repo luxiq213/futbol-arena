@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
@@ -18,6 +19,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
+  bool _awaitingOAuthSignIn = false;
 
   @override
   void dispose() {
@@ -57,9 +59,58 @@ class _LoginScreenState extends State<LoginScreen> {
     Navigator.of(context).pop();
   }
 
+  void _onAppleLogin() async {
+    final auth = context.read<AuthProvider>();
+    final ok = await auth.loginWithApple();
+    if (!mounted) return;
+    if (ok) {
+      Navigator.of(context).pop();
+    } else {
+      AppNotification.show(
+        context,
+        title: 'Apple ile Giriş Yapılamadı',
+        message: 'İşlem iptal edildi veya tamamlanamadı.',
+        type: AppNotificationType.warning,
+        icon: Icons.apple,
+      );
+    }
+  }
+
+  void _onGoogleLogin() async {
+    _awaitingOAuthSignIn = true;
+    final auth = context.read<AuthProvider>();
+    final launched = await auth.loginWithGoogle();
+    if (!mounted) return;
+    if (!launched) {
+      _awaitingOAuthSignIn = false;
+      AppNotification.show(
+        context,
+        title: 'Google ile Giriş Yapılamadı',
+        message: 'Bağlantı başlatılamadı, lütfen tekrar deneyin.',
+        type: AppNotificationType.error,
+        icon: Icons.g_mobiledata_rounded,
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
+    final isAppleDevice = defaultTargetPlatform == TargetPlatform.iOS ||
+        defaultTargetPlatform == TargetPlatform.macOS;
+
+    // Auto-close LoginScreen only when an active Google OAuth flow completes
+    if (_awaitingOAuthSignIn &&
+        auth.currentUser != null &&
+        !auth.currentUser!.isGuest &&
+        !auth.isLoading) {
+      _awaitingOAuthSignIn = false;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && Navigator.of(context).canPop()) {
+          Navigator.of(context).pop();
+        }
+      });
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -196,7 +247,88 @@ class _LoginScreenState extends State<LoginScreen> {
                 onPressed: _onGuestPlay,
               ),
 
-              const SizedBox(height: 28),
+              const SizedBox(height: 20),
+
+              Row(
+                children: [
+                  Expanded(
+                    child: Divider(
+                      color: Colors.white.withValues(alpha: 0.16),
+                    ),
+                  ),
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 10),
+                    child: Text(
+                      'VEYA HIZLI GİRİŞ',
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.textMuted,
+                        letterSpacing: 0.7,
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: Divider(
+                      color: Colors.white.withValues(alpha: 0.16),
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 16),
+
+              if (isAppleDevice) ...[
+                ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    foregroundColor: Colors.black,
+                    minimumSize: const Size.fromHeight(48),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  onPressed: auth.isLoading ? null : _onAppleLogin,
+                  icon: const Icon(Icons.apple, size: 22),
+                  label: const Text(
+                    'Apple ile Devam Et',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+              ],
+
+              OutlinedButton.icon(
+                style: OutlinedButton.styleFrom(
+                  backgroundColor: AppColors.surface.withValues(alpha: 0.92),
+                  foregroundColor: Colors.white,
+                  minimumSize: const Size.fromHeight(48),
+                  side: BorderSide(
+                    color: Colors.white.withValues(alpha: 0.28),
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                onPressed: auth.isLoading ? null : _onGoogleLogin,
+                icon: const Icon(
+                  Icons.g_mobiledata_rounded,
+                  color: AppColors.gold,
+                  size: 26,
+                ),
+                label: const Text(
+                  'Google ile Devam Et',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 24),
 
               // REGISTER REDIRECT
               Row(

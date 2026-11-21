@@ -1,5 +1,8 @@
 import 'dart:async';
+import 'dart:convert';
+import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../data/models/game_room_model.dart';
 import '../../data/models/play_mode_model.dart';
@@ -16,6 +19,9 @@ class SupabaseService {
   bool get isReady => _initialized && AppConfig.isSupabaseConfigured;
 
   SupabaseClient get _client => Supabase.instance.client;
+
+  Stream<AuthState> get authStateChanges =>
+      isReady ? _client.auth.onAuthStateChange : const Stream.empty();
 
   Future<void> initialize() async {
     if (_initialized || !AppConfig.isSupabaseConfigured) return;
@@ -104,6 +110,87 @@ class SupabaseService {
     );
     await upsertUserProfile(fallback);
     return fallback;
+  }
+
+  /// Resolves or initializes a `UserModel` row in `public.profiles` from any Supabase Auth [User].
+  Future<UserModel?> resolveUserFromAuthUser(
+    User authUser, {
+    String? preferredName,
+    int initialPoints = 500,
+  }) async {
+    if (!isReady) return null;
+    final existing = await fetchUserProfile(authUser.id);
+    if (existing != null) return existing;
+
+    final metaName = preferredName?.trim().isNotEmpty == true
+        ? preferredName!.trim()
+        : (authUser.userMetadata?['full_name']?.toString() ??
+            authUser.userMetadata?['name']?.toString() ??
+            authUser.userMetadata?['username']?.toString() ??
+            authUser.email?.split('@').first ??
+            'Kaptan');
+
+    final userModel = UserModel(
+      id: authUser.id,
+      username: metaName.trim().isNotEmpty ? metaName.trim() : 'Kaptan',
+      email: authUser.email ?? '',
+      avatar: authUser.userMetadata?['avatar']?.toString() ?? 'goat_10',
+      favoriteTeam:
+          authUser.userMetadata?['favorite_team']?.toString() ?? 'Galatasaray',
+      points: initialPoints,
+      isGuest: false,
+    );
+    await upsertUserProfile(userModel);
+    return userModel;
+  }
+
+  /// Native iOS Sign in with Apple -> authenticates directly with Supabase ID token.
+  Future<UserModel?> signInWithApple({int initialPoints = 500}) async {
+    if (!isReady) return null;
+
+    final rawNonce = _client.auth.generateRawNonce();
+    final hashedNonce = sha256.convert(utf8.encode(rawNonce)).toString();
+
+    final credential = await SignInWithApple.getAppleIDCredential(
+      scopes: [
+        AppleIDAuthorizationScopes.email,
+        AppleIDAuthorizationScopes.fullName,
+      ],
+      nonce: hashedNonce,
+    );
+
+    final idToken = credential.identityToken;
+    if (idToken == null || idToken.isEmpty) {
+      throw const AuthException('Apple kimlik belirteci alınamadı.');
+    }
+
+    final res = await _client.auth.signInWithIdToken(
+      provider: OAuthProvider.apple,
+      idToken: idToken,
+      nonce: rawNonce,
+    );
+    final authUser = res.user;
+    if (authUser == null) return null;
+
+    final given = credential.givenName?.trim() ?? '';
+    final family = credential.familyName?.trim() ?? '';
+    final fullName = [given, family].where((s) => s.isNotEmpty).join(' ');
+
+    return resolveUserFromAuthUser(
+      authUser,
+      preferredName: fullName.isNotEmpty ? fullName : null,
+      initialPoints: initialPoints,
+    );
+  }
+
+  /// Google OAuth via Supabase Auth in-app web session (`io.supabase.futbolarena://login-callback/`).
+  Future<bool> signInWithGoogleOAuth() async {
+    if (!isReady) return false;
+    return _client.auth.signInWithOAuth(
+      OAuthProvider.google,
+      redirectTo: 'io.supabase.futbolarena://login-callback/',
+      authScreenLaunchMode: LaunchMode.inAppBrowserView,
+    );
   }
 
   Future<UserModel?> fetchUserProfile(String userId) async {
